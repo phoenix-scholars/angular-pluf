@@ -1,0 +1,22 @@
+{
+  "name": "angular-pluf",
+  "homepage": "https://github.com/phoenix-scholars/angular-pluf",
+  "authors": [
+    "Mostafa Barmshory <mostafa.barmshory@dpq.co.ir>"
+  ],
+  "description": "AngularJS client for Pluf framework",
+  "main": "",
+  "moduleType": [],
+  "keywords": [
+    "Pluf",
+    "AngularJS"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
