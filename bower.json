@@ -1,8 +1,10 @@
 {
   "name": "angular-pluf",
+  "version": "0.3.0",
   "homepage": "https://github.com/phoenix-scholars/angular-pluf",
   "authors": [
-    "Mostafa Barmshory <mostafa.barmshory@dpq.co.ir>"
+    "Mostafa Barmshory <mostafa.barmshory@dpq.co.ir>",
+    "Hadi mansouri <mohammad.hadi.mansouri@dpq.co.ir>"
   ],
   "description": "AngularJS client for Pluf framework",
   "main": "",

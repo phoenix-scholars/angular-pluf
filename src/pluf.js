@@ -24,7 +24,7 @@ angular.module("pluf.core", [])
     setData: function(data) {
       angular.extend(this, data);
     },
-    /**
+    /*
      * تعیین می‌کند که آیا ساختارهای داده‌ای نشان دارند. زمانی که یک ساختار
      * داده‌ای شناسه معتبر داشته باشد و سمت کارگذار ذخیره شده باشد به عنوان یک
      * داده نشان دار در نظر گرفته می‌شود.
@@ -37,7 +37,7 @@ angular.module("pluf.core", [])
     isAdministrator: function() {
       return !(this.id && this.id > 0 && this.administrator);
     },
-    /**
+    /*
      * تعیین می‌کنه که آیا داده‌های کاربر منقضی شده یا نه. در صورتی که داده‌ها
      * منقضی شده باشه دیگه نباید از آنها استفاده کرد.
      */
@@ -48,7 +48,7 @@ angular.module("pluf.core", [])
   return pObject;
 })
 
-/**
+/*
  * ساختار پایه گزارش خطا در سیستم.
  */
 .factory('PException', function(PObject) {
@@ -73,7 +73,7 @@ angular.module("pluf.core", [])
   pStatus.prototype = {
     _s: 0,
     _p: 0,
-    progress : function(p){
+    progress: function(p) {
       this_p = p;
     },
     preloading: function(m) {
@@ -208,27 +208,26 @@ angular.module("pluf.core", [])
    * اجرای یک دستور
    */
   this.execute = function($ci) {
-    var def = $q.defer();
     var scope = this;
     var args = Array.prototype.slice.call(arguments);
     args = args.slice(1);
-    $timeout(function() {
-      if (!($ci in scope._handlers)) {
-        def.reject(new PException({
-          message: 'command not found :' + $ci,
-          statuse: 400,
-          code: 4404
-        }));
-        return;
-      }
-      // TODO: maso, 11394:‌ با استفاده از متد slice پیاده سازی شود.
-      for (var i = 0; i in scope._handlers[$ci]; i++) {
-        var handler = scope._handlers[$ci][i];
-        handler['handle'].apply(handler, args);
-      }
-      def.resolve();
-    }, 1);
-    return def.promise;
+
+    if (!($ci in scope._handlers)) {
+      var def = $q.defer();
+      def.reject(new PException({
+        message: 'command not found :' + $ci,
+        statuse: 400,
+        code: 4404
+      }));
+      return def.promise;
+    }
+
+    var promises = [];
+    for (var i = 0; i in scope._handlers[$ci]; i++) {
+      var handler = scope._handlers[$ci][i];
+      promises.push(handler['handle'].apply(handler, args));
+    }
+    return $q.all(promises);
   }
 })
 /**
@@ -646,11 +645,12 @@ angular
                       return deferred.promise;
                     }
                     var scope = this;
-                    return $http.get('/api/user/logout').success(
-                            function(data) {
-                              scope._su = null;
-                              return scope._su;
-                            }).error(function(data) {
+                    return $http.get('/api/user/logout')//
+                    .success(function(data) {
+                      scope._su = null;
+                      return scope._su;
+                    })//
+                    .error(function(data) {
                       throw new PException(data);
                     });
                   }
@@ -676,7 +676,7 @@ angular
                   }
                 })
 
-        /**
+        /*
          * 
          */
         .run(
