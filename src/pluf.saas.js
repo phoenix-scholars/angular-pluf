@@ -1,31 +1,41 @@
 'use strict';
-/*
- * مدیریت نرم‌افزارها را انجام می‌دهد
- */
 angular.module('pluf.saas', ['pluf'])
-/*
+/*******************************************************************************
+ * PApplication
+ * =============================================================================
  * هر نسخه می‌تواند از یک نوع نرم افزار خاص نصب شده استفاده کند. البته نرم
  * افزارهای باید تنها از خدمات ارائه شده در نسخه نصبی استفاده کنند. هر نرم افزار
  * می‌تواند شامل تنظیم‌های متفاتی باشد.
- */
-.factory('PApplication', function($http, $q, PObject) {
-  var pApplication = function() {
-    PObject.apply(this, arguments);
-  };
-  pApplication.prototype = new PObject();
+ ******************************************************************************/
+.factory(
+        'PApplication',
+        function($http, $q, $window, PObject) {
+          var pApplication = function() {
+            PObject.apply(this, arguments);
+          };
+          pApplication.prototype = new PObject();
 
-  pApplication.prototype.lunch = function() {}
-  
-  return pApplication;
-})
+          pApplication.prototype.setTenant = function($t) {
+            this._tenant = $t;
+            return this;
+          }
+          pApplication.prototype.run = function() {
+            $window.location = $window.location.origin + '/' + this._tenant.id
+                    + '/' + this.id;
+          }
 
-/*
+          return pApplication;
+        })
+
+/*******************************************************************************
+ * PTenant
+ * =============================================================================
  * ساختار داده‌ای یک ملک را تعیین می‌کنه
- */
+ ******************************************************************************/
 .factory(
         'PTenant',
-        function($http, $httpParamSerializerJQLike, $window, $q, PObject,
-                PProfile, PApplication, PaginatorPage) {
+        function($http, $httpParamSerializerJQLike, $location, $window, $q,
+                PObject, PProfile, PApplication, PaginatorPage) {
           var pTenant = function() {
             PObject.apply(this, arguments);
           };
@@ -38,14 +48,10 @@ angular.module('pluf.saas', ['pluf'])
               t.setData(d);
               return t;
             }
-            var t = new PApplication(d);
+            var t = new PApplication(d).setTenant(this);
             this._pool[t.id] = t;
             return t;
           }
-          /*
-           * با استفاده از این فراخوانی یکی از خصوصیت‌های یک نرم‌افزار کاربردی
-           * به روز می‌شود.
-           */
           pTenant.prototype.update = function(key, value) {
             var scope = this;
             var par = {};
@@ -110,13 +116,20 @@ angular.module('pluf.saas', ['pluf'])
               throw new PException(data);
             });
           }
-          
+          pTenant.prototype.run = function() {
+            // XXX: maso, 1394: Check domain, subdomain and id
+            $window.location = $window.location.origin + '/' + this.id;
+          }
+
           return pTenant;
         })
-/*
+
+/*******************************************************************************
+ * $tenant
+ * =============================================================================
  * یک نسخه نصب شده از نرم افزار را تعیین می‌کند که شامل دسته از کاربران،
  * تنظیم‌ها، و داده‌ها می‌شود.
- */
+ ******************************************************************************/
 .service(
         '$tenant',
         function($http, $httpParamSerializerJQLike, $q, $act, $usr, $window,
@@ -217,10 +230,11 @@ angular.module('pluf.saas', ['pluf'])
             });
           }
         })
-
-/**
- *
- */
+/*******************************************************************************
+ * Configurations
+ * =============================================================================
+ * تنظیم‌های کلی این بسته اینجا انجام می‌شود.
+ ******************************************************************************/
 .run(
         function($window, $act, $tenant) {
           /**
