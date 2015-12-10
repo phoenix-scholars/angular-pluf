@@ -35,7 +35,7 @@ angular.module('pluf.saas', ['pluf'])
 .factory(
         'PTenant',
         function($http, $httpParamSerializerJQLike, $location, $window, $q,
-                PObject, PProfile, PApplication, PaginatorPage) {
+                PObject, PException, PProfile, PApplication, PaginatorPage) {
           var pTenant = function() {
             PObject.apply(this, arguments);
           };
