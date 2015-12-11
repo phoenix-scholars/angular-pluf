@@ -135,15 +135,15 @@ angular.module('pluf.saas', ['pluf'])
         function($http, $httpParamSerializerJQLike, $q, $act, $usr, $window,
                 PTenant, PApplication, PException, PaginatorParameter,
                 PaginatorPage) {
-          this._pool = [];
+          this._tenant = [];
           this.ret = function(d) {
-            if (d.id in this._pool) {
-              var t = this._pool[d.id];
+            if (d.id in this._tenant) {
+              var t = this._tenant[d.id];
               t.setData(d);
               return t;
             }
             var t = new PTenant(d);
-            this._pool[t.id] = t;
+            this._tenant[t.id] = t;
             return t;
           }
           /*
@@ -196,8 +196,12 @@ angular.module('pluf.saas', ['pluf'])
               url: '/api/saas/app/list',
               params: $params.getParameter(),
             }).then(function(res) {
-              // XXX: maso, 1394: Create list of tenant object
               var page = new PaginatorPage(res.data);
+              page.items = [];
+              for (var i = 0; i < page.counts; i++) {
+                var t = scope.ret(res.data.items[i]);
+                page.items.push(t);
+              }
               return page;
             }, function(data) {
               throw new PException(data);
@@ -216,14 +220,12 @@ angular.module('pluf.saas', ['pluf'])
               url: '/api/saas/app/userList',
               params: param.getParameter(),
             }).then(function(res) {
-              // XXX: maso, 1394: Create list of tenant object
               var page = new PaginatorPage(res.data);
-              var items = [];
+              page.items = [];
               for (var i = 0; i < page.counts; i++) {
-                var t = scope.ret(page.items[i]);
-                items.push(t);
+                var t = scope.ret(res.data.items[i]);
+                page.items.push(t);
               }
-              page.items = items;
               return page;
             }, function(data) {
               throw new PException(data);
