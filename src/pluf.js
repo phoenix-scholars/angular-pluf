@@ -16,7 +16,7 @@ angular.module("pluf.core", [])
     if (data) {
       this.setData(data);
     }
-  };
+  }
   pObject.prototype = {
     /*
      * داده‌های دریافتی را تعیین می‌کند
@@ -703,7 +703,7 @@ angular
                                       var a = arguments[0];
                                       return $usr.login(a.username, a.password);
                                     }
-                                  });
+                                  })
 
                   /**
                    * خروج کاربر جاری از سیستم
@@ -721,7 +721,7 @@ angular
                     handle: function() {
                       return $usr.logout();
                     }
-                  });
+                  })
 
                   /**
                    * دستور به روز کردن اطلاعات کاربر جاری
