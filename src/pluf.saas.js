@@ -116,6 +116,18 @@ angular.module('pluf.saas', ['pluf'])
               throw new PException(data);
             });
           }
+          pTenant.prototype.app = function(appName) {
+            var scope = this;
+            return $http({
+              method: 'GET',
+              url: '/api/saas/spa/' + appName,
+            }).then(function(res) {
+              var t = scope.ret(res.data);
+              return t;
+            }, function(data) {
+              throw new PException(data);
+            });
+          }
           pTenant.prototype.run = function() {
             // XXX: maso, 1394: Check domain, subdomain and id
             $window.location = $window.location.origin + '/' + this.id;
@@ -132,8 +144,9 @@ angular.module('pluf.saas', ['pluf'])
  ******************************************************************************/
 .service(
         '$tenant',
-        function($http, $httpParamSerializerJQLike, $q, $act, $usr, $window,
-                PTenant, PApplication, PException, PaginatorParameter,
+        function(//
+        $http, $httpParamSerializerJQLike, $q, $window,//
+        $act, $usr, PTenant, PApplication, PException, PaginatorParameter,
                 PaginatorPage) {
           this._tenant = [];
           this.ret = function(d) {
@@ -162,7 +175,8 @@ angular.module('pluf.saas', ['pluf'])
            */
           this.get = function(id) {
             var scope = this;
-            return $http.get('/api/saas/app/' + id).then(function(res) {
+            return $http.get('/api/saas/app/' + id)//
+            .then(function(res) {
               return scope.ret(res.data);
             }, function(res) {
               throw new PException(res.data);
@@ -237,28 +251,45 @@ angular.module('pluf.saas', ['pluf'])
  * =============================================================================
  * تنظیم‌های کلی این بسته اینجا انجام می‌شود.
  ******************************************************************************/
-.run(
-        function($window, $act, $tenant) {
-          /**
-           * اضافه کردن دستورها و دستگیره‌ها
-           */
-          $act.command({
-            id: 'pluf.saas.lunch',
-            label: 'application',
-            description: 'go to an application page',
-            category: 'saas',
-          }).commandHandler(
-                  {
-                    commandId: 'pluf.saas.lunch',
-                    handle: function() {
-                      if (arguments.length < 1) { throw new PException(
-                              'application id is not defined'); }
-                      var a = arguments[0];
-                      return $tenant.get(a).then(function(tenant) {
-                        return tenant.defaultApplication();
-                      }).then(function(app) {
-                        return app.run();
-                      });
-                    }
-                  });
-        });
+.run(function($window, $act, $tenant) {
+  /**
+   * اضافه کردن دستورها و دستگیره‌ها
+   */
+  $act//
+  .command({
+    id: 'pluf.saas.lunch',
+    category: 'saas',
+  }).commandHandler({
+    commandId: 'pluf.saas.lunch',
+    handle: function() {
+      if (arguments.length < 1) {//
+        throw new PException('no app found');
+      }
+      var a = arguments[0];
+      return $tenant.get(a).then(function(tenant) {
+        return tenant.defaultApplication();
+      }).then(function(app) {
+        return app.run();
+      });
+    }
+  })
+  // run spa
+
+  .command({
+    id: 'pluf.saas.app.lunch',
+    category: 'saas',
+  }).commandHandler({
+    commandId: 'pluf.saas.app.lunch',
+    handle: function() {
+      if (arguments.length < 1) {//
+        throw new PException('no app found');
+      }
+      var a = arguments[0];
+      return $tenant.session().then(function(tenant) {
+        return tenant.app(a);
+      }).then(function(app) {
+        return app.run();
+      });
+    }
+  });
+});

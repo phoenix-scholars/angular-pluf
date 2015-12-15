@@ -1,17 +1,34 @@
 'use strict';
 
-angular.module('pluf', ['pluf.paginator', 'pluf.user', 'pluf.core']);
+angular.module('pluf', [//
+'pluf.paginator',//
+'pluf.user',// /
+'pluf.core'//
+])
+//
+.run(function($rootScope) {
+  $rootScope.appc = {
+    pluf: {
+      version: '0.1.0'
+    }
+  }
+})
 
 /*
  * ساختار داده‌ای مورد نیاز برای تولید خطا و مدیریت آن را ایجاد می‌کند.
  */
 angular.module("pluf.core", [])
 
-/*
+/*******************************************************************************
+ * $PObject
+ * =============================================================================
  * ساختارهای پایه برای تمام اشیا سیستم را ایجاد می‌کند. با استفاده از کلاس
  * بسیاری از فراخوانی‌های مشترک در یک کلاس جمع خواهد شد.
- */
+ ******************************************************************************/
 .factory('PObject', function() {
+  /**
+   * Example
+   */
   var pObject = function(data) {
     if (data) {
       this.setData(data);
@@ -24,7 +41,7 @@ angular.module("pluf.core", [])
     setData: function(data) {
       angular.extend(this, data);
     },
-    /*
+    /**
      * تعیین می‌کند که آیا ساختارهای داده‌ای نشان دارند. زمانی که یک ساختار
      * داده‌ای شناسه معتبر داشته باشد و سمت کارگذار ذخیره شده باشد به عنوان یک
      * داده نشان دار در نظر گرفته می‌شود.
@@ -48,9 +65,11 @@ angular.module("pluf.core", [])
   return pObject;
 })
 
-/*
+/*******************************************************************************
+ * $PObject
+ * =============================================================================
  * ساختار پایه گزارش خطا در سیستم.
- */
+ ******************************************************************************/
 .factory('PException', function(PObject) {
   var pException = function() {
     PObject.apply(this, arguments);
@@ -58,8 +77,16 @@ angular.module("pluf.core", [])
   pException.prototype = new PObject();
   return pException;
 })
-/*
+
+/*******************************************************************************
+ * $PObject
+ * =============================================================================
+ ******************************************************************************/
+/**
+ * حالت را در سیستم ایجاد می‌کند از این کلاس برای تعیین حالت بخش‌های متفاوتی از
+ * سیستم استفاده می‌شود که ممکن است به صورت پویا تغییر کنند.
  * 
+ * @namespace pluf
  */
 .factory('PStatus', function(PObject) {
   var pStatus = function() {
@@ -107,6 +134,10 @@ angular.module("pluf.core", [])
   return pStatus;
 })
 
+/*******************************************************************************
+ * $PObject
+ * =============================================================================
+ ******************************************************************************/
 /**
  * مدیریت داده‌های محلی کاربر را انجام می‌دهد. این داده‌ها به صورت محلی در
  * مرورگر ذخیره سازی می‌شوند.‌
@@ -115,6 +146,10 @@ angular.module("pluf.core", [])
   return this;
 })
 
+/*******************************************************************************
+ * $PObject
+ * =============================================================================
+ ******************************************************************************/
 /**
  * Command Service (cs) سیستم مدیریت دستورها در سیستم را ایجاد می‌کند. دستور و
  * دستگیره از اکلیپس الهام شده است.
@@ -230,11 +265,36 @@ angular.module("pluf.core", [])
     return $q.all(promises);
   }
 })
+
+/*******************************************************************************
+ * $PObject
+ * =============================================================================
+ ******************************************************************************/
 /**
  * مدیریت منوها را ایجاد می‌کند
  */
-.service('$menu', function($q, $timeout, $act) {
+.service('$menu', function($q, $timeout, $act, $window) {
   this._menus = [];
+
+  this._addMenu = function(id, menu) {
+    if (!(id in this._menus)) {
+      this._menus[id] = [];
+    }
+
+    // خصوصیت‌های مشترک
+    if (!('visible' in menu)) {
+      menu.visible = function() {
+        return true;
+      }
+    }
+    if (!('enable' in menu)) {
+      menu.enable = function() {
+        return true;
+      }
+    }
+    this._menus[id].push(menu);
+  }
+
   this.menu = function(id) {
     var def = $q.defer();
     var scope = this;
@@ -246,13 +306,12 @@ angular.module("pluf.core", [])
     }, 1);
     return def.promise;
   }
+
   /**
    * یک موجودیت جدید را به منو اضافه می‌کند.
    */
   this.add = function(id, menu) {
-    if (!(id in this._menus)) {
-      this._menus[id] = [];
-    }
+
     if ('command' in menu) {
       var scope = this;
       $act.getCommand(menu.command).then(function(command) {
@@ -266,11 +325,6 @@ angular.module("pluf.core", [])
             return $act.execute.apply($act, args);
           } else {
             return $act.execute(menu.command);
-          }
-        }
-        if (!('visible' in menu)) {
-          menu.visible = function() {
-            return command.visible();
           }
         }
         if (!('enable' in menu)) {
@@ -288,24 +342,30 @@ angular.module("pluf.core", [])
           menu.priority = command.description;
         }
         // XXX: maso, 1394: خصوصیت‌های دیگر اضافه شود.
-        scope._menus[id].push(menu);
+        scope._addMenu(id, menu);
       });
     } else if ('action' in menu) {
       menu.active = function() {
         return menu.action();
       }
-      if (!('visible' in menu)) {
-        menu.visible = function() {
-          return true;
-        }
+      // XXX: maso, 1394: خصوصیت‌های دیگر اضافه شود.
+      this._addMenu(id, menu);
+    } else if ('link' in menu) {
+      menu.active = function() {
+        return $window.location = menu.link;
       }
       // XXX: maso, 1394: خصوصیت‌های دیگر اضافه شود.
-      this._menus[id].push(menu);
+      this._addMenu(id, menu);
     }
 
     return this;
   }
 })
+
+/*******************************************************************************
+ * $PObject
+ * =============================================================================
+ ******************************************************************************/
 /**
  * یک سیستم ساده است برای اعلام پیام در سیستم. با استفاده از این کلاس می‌توان
  * پیام‌های متفاوتی که در سیستم وجود دارد را به صورت همگانی اعلام کرد.
@@ -394,9 +454,11 @@ angular.module("pluf.core", [])
   }
 });
 
-/**
+/*******************************************************************************
+ * $PObject
+ * =============================================================================
  * ساختار داده‌ای برای جستجو را تعیین می‌کند.
- */
+ ******************************************************************************/
 angular.module("pluf.paginator", [])
 /**
  * 
@@ -443,9 +505,12 @@ angular.module("pluf.paginator", [])
   };
   return pagParam;
 })
-/**
+
+/*******************************************************************************
+ * $PObject
+ * =============================================================================
  * ساختار داده‌ای نرم‌افزار را ایجاد می‌کند.
- */
+ ******************************************************************************/
 .factory('PaginatorPage', function(PObject) {
   var paginatorPage = function() {
     PObject.apply(this, arguments);
@@ -454,333 +519,337 @@ angular.module("pluf.paginator", [])
   return paginatorPage;
 });
 
-/**
+/*******************************************************************************
+ * $PObject
+ * =============================================================================
  * مدیریت کاربر: این سرویس تنها ابزارهایی را که برای مدیریت عادی یک کاربر مورد
  * نیاز است ارائه می‌کند. برای نمونه ورود به سیستم، خروج و یا به روز کردن
  * تنظیم‌های کاربری. مدیریت کاربران در سطح سیستم در سرویس‌های دیگر ارائه می‌شود.
- */
+ ******************************************************************************/
+
 angular
-        .module("pluf.user", [])
+//
+.module(//
+"pluf.user", //
+[])
 
-        /**
-         * 
-         */
-        .factory(
-                'PProfile',
-                function($http, $httpParamSerializerJQLike, $q, PObject,
-                        PException) {
-                  /**
-                   * یک نمونه جدید از این موجودیت ایجاد می کند.
-                   */
-                  var pProfile = function() {
-                    PObject.apply(this, arguments);
-                  };
-                  pProfile.prototype = new PObject();
+/*******************************************************************************
+ * $PObject
+ * =============================================================================
+ ******************************************************************************/
+.factory('PProfile', function(//
+$http, $httpParamSerializerJQLike, $q, //
+PObject, PException//
+) {
+  /**
+   * یک نمونه جدید از این موجودیت ایجاد می کند.
+   */
+  var pProfile = function() {
+    PObject.apply(this, arguments);
+  };
+  pProfile.prototype = new PObject();
 
-                  /**
-                   * به روز رسانی پروفایل کاربری
-                   */
-                  pProfile.prototype.update = function(key, value) {
-                    if (this.user.isAnonymous()) {
-                      var deferred = $q.defer();
-                      deferred.reject();
-                      return deferred.promise;
-                    }
-                    var scope = this;
-                    var param = {};
-                    param[key] = value;
-                    return $http({
-                      method: 'POST',
-                      url: '/api/user/profile',
-                      data: $httpParamSerializerJQLike(param),
-                      headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                      }
-                    }).then(function(data) {
-                      scope.setData(data);
-                      return scope;
-                    }, function(data) {
-                      throw new PException(data);
-                    });
-                  }
+  /**
+   * به روز رسانی پروفایل کاربری
+   */
+  pProfile.prototype.update = function(key, value) {
+    if (this.user.isAnonymous()) {
+      var deferred = $q.defer();
+      deferred.reject();
+      return deferred.promise;
+    }
+    var scope = this;
+    var param = {};
+    param[key] = value;
+    return $http({
+      method: 'POST',
+      url: '/api/user/profile',
+      data: $httpParamSerializerJQLike(param),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }).then(function(data) {
+      scope.setData(data);
+      return scope;
+    }, function(data) {
+      throw new PException(data);
+    });
+  }
 
-                  return pProfile;
-                })
-        /**
-         * 
-         */
-        .factory(
-                'PUser',
-                function($http, $q, $httpParamSerializerJQLike, PObject,
-                        PProfile, PException) {
-                  var pUser = function() {
-                    PObject.apply(this, arguments);
-                  };
-                  pUser.prototype = new PObject();
+  return pProfile;
+})
+/**
+ * 
+ */
+.factory('PUser', function(//
+$http, $q, $httpParamSerializerJQLike,//
+PObject, PProfile, PException//
+) {
+  var pUser = function() {
+    PObject.apply(this, arguments);
+  };
+  pUser.prototype = new PObject();
 
-                  /**
-                   * به روز کردن اطلاعات کاربر
-                   */
-                  pUser.prototype.update = function(key, value) {
-                    var deferred = $q.defer();
-                    var scope = this;
-                    var param = {};
-                    param[key] = value;
-                    return $http({
-                      method: 'POST',
-                      url: '/api/user/' + this.id,
-                      data: $httpParamSerializerJQLike(param),
-                      headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                      }
-                    }).then(function(data) {
-                      scope.setData(data.data);
-                      return scope;
-                    }, function(data) {
-                      throw new PException(data);
-                    });
-                  }
+  /**
+   * به روز کردن اطلاعات کاربر
+   */
+  pUser.prototype.update = function(key, value) {
+    var deferred = $q.defer();
+    var scope = this;
+    var param = {};
+    param[key] = value;
+    return $http({
+      method: 'POST',
+      url: '/api/user/' + this.id,
+      data: $httpParamSerializerJQLike(param),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }).then(function(data) {
+      scope.setData(data.data);
+      return scope;
+    }, function(data) {
+      throw new PException(data);
+    });
+  }
 
-                  /**
-                   * پروفایل کاربر را تعیین می‌کند.
-                   * 
-                   * @returns
-                   */
-                  pUser.prototype.profile = function() {
-                    if (this.isAnonymous()) {
-                      var deferred = $q.defer();
-                      deferred.reject();
-                      return deferred.promise;
-                    }
-                    if (this._prof && !this._prof.isAnonymous()) {
-                      var deferred = $q.defer();
-                      deferred.resolve(this._prof);
-                      return deferred.promise;
-                    }
-                    var scope = this;
-                    return $http({
-                      method: 'GET',
-                      url: '/api/user/' + this.id + '/profile',
-                    }).then(function(res) {
-                      scope._prof = new PProfile(res.data);
-                      scope._prof.user = scope;
-                      return scope._prof;
-                    }, function(res) {
-                      throw new PException(res.data);
-                    });
-                  }
-                  return pUser;
-                })
+  /**
+   * پروفایل کاربر را تعیین می‌کند.
+   * 
+   * @returns
+   */
+  pUser.prototype.profile = function() {
+    if (this.isAnonymous()) {
+      var deferred = $q.defer();
+      deferred.reject();
+      return deferred.promise;
+    }
+    if (this._prof && !this._prof.isAnonymous()) {
+      var deferred = $q.defer();
+      deferred.resolve(this._prof);
+      return deferred.promise;
+    }
+    var scope = this;
+    return $http({
+      method: 'GET',
+      url: '/api/user/' + this.id + '/profile',
+    }).then(function(res) {
+      scope._prof = new PProfile(res.data);
+      scope._prof.user = scope;
+      return scope._prof;
+    }, function(res) {
+      throw new PException(res.data);
+    });
+  }
+  return pUser;
+})
 
-        /**
-         * 
-         */
-        .service(
-                '$usr',
-                function($http, $httpParamSerializerJQLike, $q, $act, PUser,
-                        PException) {
-                  /**
-                   * تعیین می‌کنه که آیا کاربر جاری وارد سیستم شده یا نه.
-                   */
-                  this.isAnonymous = function() {
-                    return (this._su == null) || this._su.isAnonymous();
-                  }
-                  /**
-                   * ورود کاربر به سیستم
-                   */
-                  this.login = function($login, $password) {
-                    if (!this.isAnonymous()) {
-                      var deferred = $q.defer();
-                      deferred.resolve(this);
-                      return deferred.promise;
-                    }
-                    var scope = this;
-                    return $http({
-                      method: 'POST',
-                      url: '/api/user/login',
-                      data: $httpParamSerializerJQLike({
-                        'login': $login,
-                        'password': $password
-                      }),
-                      headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                      }
-                    }).then(function() {
-                      return scope.session();
-                    }, function(data) {
-                      throw new PException(data);
-                    }).then(function(data) {
-                      // scope._su = new PUser(data.data);
-                      return data;
-                    }, function(data) {
-                      throw new PException(data);
-                    });
-                  }
-                  /**
-                   * کاربری که در نشست تعیین شده است را بازیابی می‌کند.
-                   * 
-                   * @returns
-                   */
-                  this.session = function() {
-                    var scope = this;
-                    if (!this.isAnonymous()) {
-                      var deferred = $q.defer();
-                      deferred.resolve(this._su);
-                      return deferred.promise;
-                    }
-                    return $http.get('/api/user/account').then(function(data) {
-                      scope._su = new PUser(data.data);
-                      return scope._su;
-                    }, function(data) {
-                      throw new PException(data);
-                    });
-                  }
-                  /**
-                   * خروج از سیستم
-                   */
-                  this.logout = function() {
-                    if (this.isAnonymous()) {
-                      var deferred = $q.defer();
-                      deferred.resolve(this);
-                      return deferred.promise;
-                    }
-                    var scope = this;
-                    return $http.get('/api/user/logout')//
-                    .success(function(data) {
-                      scope._su = null;
-                      return scope._su;
-                    })//
-                    .error(function(data) {
-                      throw new PException(data);
-                    });
-                  }
+/**
+ * 
+ */
+.service('$usr', function(//
+$http, $httpParamSerializerJQLike, $q,//
+$act, PUser, PException//
+) {
+  /**
+   * تعیین می‌کنه که آیا کاربر جاری وارد سیستم شده یا نه.
+   */
+  this.isAnonymous = function() {
+    return (this._su == null) || this._su.isAnonymous();
+  }
+  /**
+   * ورود کاربر به سیستم
+   */
+  this.login = function($login, $password) {
+    if (!this.isAnonymous()) {
+      var deferred = $q.defer();
+      deferred.resolve(this);
+      return deferred.promise;
+    }
+    var scope = this;
+    return $http({
+      method: 'POST',
+      url: '/api/user/login',
+      data: $httpParamSerializerJQLike({
+        'login': $login,
+        'password': $password
+      }),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }).then(function() {
+      return scope.session();
+    }, function(data) {
+      throw new PException(data);
+    }).then(function(data) {
+      // scope._su = new PUser(data.data);
+      return data;
+    }, function(data) {
+      throw new PException(data);
+    });
+  }
+  /**
+   * کاربری که در نشست تعیین شده است را بازیابی می‌کند.
+   * 
+   * @returns
+   */
+  this.session = function() {
+    var scope = this;
+    if (!this.isAnonymous()) {
+      var deferred = $q.defer();
+      deferred.resolve(this._su);
+      return deferred.promise;
+    }
+    return $http.get('/api/user/account').then(function(data) {
+      scope._su = new PUser(data.data);
+      return scope._su;
+    }, function(data) {
+      throw new PException(data);
+    });
+  }
+  /**
+   * خروج از سیستم
+   */
+  this.logout = function() {
+    if (this.isAnonymous()) {
+      var deferred = $q.defer();
+      deferred.resolve(this);
+      return deferred.promise;
+    }
+    var scope = this;
+    return $http.get('/api/user/logout')//
+    .success(function(data) {
+      scope._su = null;
+      return scope._su;
+    })//
+    .error(function(data) {
+      throw new PException(data);
+    });
+  }
 
-                  /**
-                   * ثبت نام یک کاربر جدید
-                   */
-                  this.signup = function(detail) {
-                    var scope = this;
-                    return $http({
-                      method: 'POST',
-                      url: '/api/user/signup',
-                      data: $httpParamSerializerJQLike(detail),
-                      headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                      }
-                    }).then(function(data) {
-                      var user = new PUser(data.data);
-                      return user;
-                    }, function(data) {
-                      throw new PException(data);
-                    });
-                  }
-                })
+  /**
+   * ثبت نام یک کاربر جدید
+   */
+  this.signup = function(detail) {
+    var scope = this;
+    return $http({
+      method: 'POST',
+      url: '/api/user/signup',
+      data: $httpParamSerializerJQLike(detail),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }).then(function(data) {
+      var user = new PUser(data.data);
+      return user;
+    }, function(data) {
+      throw new PException(data);
+    });
+  }
+})
 
-        /*
-         * 
-         */
-        .run(
-                function($usr, $act) {
-                  /*
-                   * وارد شدن به عنوان یک کاربر به سیستم.
-                   */
-                  $act
-                          .command({
-                            id: 'pluf.user.login',
-                            label: 'login',
-                            description: 'login a user',
-                            visible: function() {
-                              return !$usr.isAnonymous();
-                            },
-                            category: 'usr',
-                          })
-                          .commandHandler(
-                                  {
-                                    commandId: 'pluf.user.login',
-                                    handle: function() {
-                                      if (arguments.length < 1) { throw new PException(
-                                              'credentioal are not pass into the command.'); }
-                                      var a = arguments[0];
-                                      return $usr.login(a.username, a.password);
-                                    }
-                                  })
+/*
+ * 
+ */
+.run(function($usr, $act) {
+  /*
+   * وارد شدن به عنوان یک کاربر به سیستم.
+   */
+  $act.command({
+    id: 'pluf.user.login',
+    label: 'login',
+    description: 'login a user',
+    visible: function() {
+      return !$usr.isAnonymous();
+    },
+    category: 'usr',
+  }).commandHandler({
+    commandId: 'pluf.user.login',
+    handle: function() {
+      if (arguments.length < 1) {//
+        throw new PException('no credentioal');
+      }
+      var a = arguments[0];
+      return $usr.login(a.username, a.password);
+    }
+  })
 
-                  /**
-                   * خروج کاربر جاری از سیستم
-                   */
-                  $act.command({
-                    id: 'pluf.user.logout',
-                    label: 'logout',
-                    description: 'logout the user',
-                    visible: function() {
-                      return !$usr.isAnonymous();
-                    },
-                    category: 'usr',
-                  }).commandHandler({
-                    commandId: 'pluf.user.logout',
-                    handle: function() {
-                      return $usr.logout();
-                    }
-                  })
+  /**
+   * خروج کاربر جاری از سیستم
+   */
+  $act.command({
+    id: 'pluf.user.logout',
+    label: 'logout',
+    description: 'logout the user',
+    visible: function() {
+      return !$usr.isAnonymous();
+    },
+    category: 'usr',
+  }).commandHandler({
+    commandId: 'pluf.user.logout',
+    handle: function() {
+      return $usr.logout();
+    }
+  })
 
-                  /**
-                   * دستور به روز کردن اطلاعات کاربر جاری
-                   */
-                  $act
-                  /*
-                   * 
-                   */
-                  .command({
-                    id: 'pluf.user.update',
-                    label: 'update',
-                    description: 'update the current user',
-                    visible: function() {
-                      return !$usr.isAnonymous();
-                    },
-                  })
-                  /*
-                   * 
-                   */
-                  .commandHandler(
-                          {
-                            commandId: 'pluf.user.update',
-                            handle: function() {
-                              if (arguments.length < 1) { throw new PException(
-                                      'first param must be {key, value}'); }
-                              var a = arguments[0];
-                              return $usr.session().then(function(user) {
-                                return user.update(a.key, a.value);
-                              });
-                            }
-                          });
+  /**
+   * دستور به روز کردن اطلاعات کاربر جاری
+   */
+  $act
+  /*
+   * 
+   */
+  .command({
+    id: 'pluf.user.update',
+    label: 'update',
+    description: 'update the current user',
+    visible: function() {
+      return !$usr.isAnonymous();
+    },
+  })
+  /*
+   * 
+   */
+  .commandHandler({
+    commandId: 'pluf.user.update',
+    handle: function() {
+      if (arguments.length < 1) {//
+        throw new PException('bad param');
+      }
+      var a = arguments[0];
+      return $usr.session().then(function(user) {
+        return user.update(a.key, a.value);
+      });
+    }
+  });
 
-                  $act
-                  /*
-                   * 
-                   */
-                  .command({
-                    id: 'pluf.user.profile.update',
-                    label: 'update profile',
-                    description: 'update the current user profile',
-                    visible: function() {
-                      return !$usr.isAnonymous();
-                    },
-                  })
-                  /*
-                   * 
-                   */
-                  .commandHandler(
-                          {
-                            commandId: 'pluf.user.profile.update',
-                            handle: function() {
-                              if (arguments.length < 1) { throw new PException(
-                                      'first param must be {key, value}'); }
-                              var a = arguments[0];
-                              return $usr.session().then(function(user) {
-                                return user.profile();
-                              }).then(function(profile) {
-                                return profile.update(a.key, a.value);
-                              });
-                            }
-                          });
-                });
+  $act
+  /*
+   * 
+   */
+  .command({
+    id: 'pluf.user.profile.update',
+    label: 'update profile',
+    description: 'update user profile',
+    visible: function() {
+      return !$usr.isAnonymous();
+    },
+  })
+  /*
+   * 
+   */
+  .commandHandler({
+    commandId: 'pluf.user.profile.update',
+    handle: function() {
+      if (arguments.length < 1) {//
+        throw new PException('bad param');
+      }
+      var a = arguments[0];
+      return $usr.session().then(function(user) {
+        return user.profile();
+      }).then(function(profile) {
+        return profile.update(a.key, a.value);
+      });
+    }
+  });
+});
