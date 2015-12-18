@@ -7,9 +7,17 @@ angular.module('pluf.saas', ['pluf'])
  * افزارهای باید تنها از خدمات ارائه شده در نسخه نصبی استفاده کنند. هر نرم افزار
  * می‌تواند شامل تنظیم‌های متفاتی باشد.
  ******************************************************************************/
+.factory('PApplicationDetail', function($http, $q, $window, PObject) {
+  var pApplicationDetail = function() {
+    PObject.apply(this, arguments);
+  };
+  pApplicationDetail.prototype = new PObject();
+  return pApplicationDetail;
+})
+//
 .factory(
         'PApplication',
-        function($http, $q, $window, PObject) {
+        function($http, $q, $window, PApplicationDetail, PObject) {
           var pApplication = function() {
             PObject.apply(this, arguments);
           };
@@ -18,6 +26,23 @@ angular.module('pluf.saas', ['pluf'])
           pApplication.prototype.setTenant = function($t) {
             this._tenant = $t;
             return this;
+          }
+          pApplication.prototype.detail = function() {
+            if (this._detail) {
+              var def = $q.defer();
+              def.resolve(this._detail);
+              return def.promise;
+            }
+            var scope = this;
+            return $http({
+              method: 'GET',
+              url: '/api/saas/spa/' + this.id + '/detail',
+            }).then(function(res) {
+              scope._detail = new PApplicationDetail(res.data);
+              return scope._detail;
+            }, function(data) {
+              throw new PException(data);
+            });
           }
           pApplication.prototype.run = function() {
             $window.location = $window.location.origin + '/' + this._tenant.id
@@ -35,7 +60,8 @@ angular.module('pluf.saas', ['pluf'])
 .factory(
         'PTenant',
         function($http, $httpParamSerializerJQLike, $location, $window, $q,
-                PObject, PException, PProfile, PApplication, PaginatorPage) {
+                PObject, PException, PProfile, PApplication, 
+                PaginatorParameter, PaginatorPage) {
           var pTenant = function() {
             PObject.apply(this, arguments);
           };
@@ -98,6 +124,9 @@ angular.module('pluf.saas', ['pluf'])
            * آنها را دارد.
            */
           pTenant.prototype.apps = function($params) {
+            if (!$params) {
+              $params = new PaginatorParameter();
+            }
             var scope = this;
             return $http({
               method: 'GET',
@@ -149,6 +178,11 @@ angular.module('pluf.saas', ['pluf'])
         $act, $usr, PTenant, PApplication, PException, PaginatorParameter,
                 PaginatorPage) {
           this._tenant = [];
+          /**
+           * ایجاد مدل داده‌ای برای یک ملک
+           * 
+           * همه فراخوانی‌های دا
+           */
           this.ret = function(d) {
             if (d.id in this._tenant) {
               var t = this._tenant[d.id];

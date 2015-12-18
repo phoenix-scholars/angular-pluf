@@ -100,8 +100,23 @@ angular.module("pluf.core", [])
   pStatus.prototype = {
     _s: 0,
     _p: 0,
-    progress: function(p) {
-      this_p = p;
+    setProgress: function(p) {
+      this._p = p;
+      return this;
+    },
+    progress : function(){
+      return this._p;
+    },
+    setTask : function(t, sb){
+      this._t = t;
+      this._sb = sb;
+      return this;
+    },
+    task : function() {
+      return this._t;
+    },
+    subTask : function(){
+      return this._sb;
     },
     preloading: function(m) {
       this._m = m;
