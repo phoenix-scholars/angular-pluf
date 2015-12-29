@@ -95,6 +95,15 @@
 		// Paginated list of apps
 	});
 
+## اجرا کردن 
+
+این دستور یک tenant را اجرا می‌کند.
+
+	ID        : pluf.saas.lunch
+	Parameter : Tenant ID
+	
+
+
 # PApplication
 
 این ساختار داده‌ای برای نمایش امکاناتی است که کاربر به آنها دسترسی دارد.

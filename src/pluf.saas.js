@@ -223,7 +223,7 @@ angular.module('pluf.saas', ['pluf'])
             var scope = this;
             return $http({
               method: 'POST',
-              url: '/api/saas/app/create',
+              url: '/api/saas/app/create?XDEBUG_SESSION_START=ECLIPSE_DBGP&KEY=14513358957011',
               data: $httpParamSerializerJQLike(t),
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
