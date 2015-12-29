@@ -701,7 +701,11 @@ PObject, PProfile, PException//
 		var deferred = $q.defer();
 		var scope = this;
 		var param = {};
-		param[key] = value;
+		if (typeof key != 'undefined' && typeof value != 'undefined') {
+			param[key] = value;
+		} else {
+			param = this;
+		}
 		return $http({
 			method : 'POST',
 			url : '/api/user/' + this.id,
@@ -755,12 +759,25 @@ PObject, PProfile, PException//
 $http, $httpParamSerializerJQLike, $q,//
 $act, PUser, PException//
 ) {
-	/**
-	 * تعیین می‌کنه که آیا کاربر جاری وارد سیستم شده یا نه.
-	 */
-	this.isAnonymous = function() {
-		return (this._su == null) || this._su.isAnonymous();
+
+	this._u = {}
+	this._getUser = function(id) {
+		return this._u[id];
 	}
+	this._setUser = function(u) {
+		this._u[u.id] = u;
+	}
+	this._ret = function(id, data) {
+		var instance = this._getUser(id);
+		if (instance) {
+			instance.setData(data);
+		} else {
+			instance = new PUser(data);
+			this._setUser(instance);
+		}
+		return instance;
+	}
+
 	/**
 	 * ورود کاربر به سیستم
 	 */
@@ -846,6 +863,48 @@ $act, PUser, PException//
 		}).then(function(data) {
 			var user = new PUser(data.data);
 			return user;
+		}, function(data) {
+			throw new PException(data);
+		});
+	}
+	/**
+	 * فهرست کاربران را به صورت صفحه بندی شده در اختیار قرار می‌دهد. این فهرست
+	 * برای کاربردهای متفاوتی استفاده می‌شود مثل اضافه کردن به کاربران مجاز.
+	 */
+	this.users = function(p) {
+		var scope = this;
+		return $http({
+			method : 'GET',
+			url : '/api/user/find',
+			params : p.getParameter()
+		}).then(function(data) {
+			var user = new PUser(data.data);
+			return user;
+			var page = new PaginatorPage(res.data);
+			var items = [];
+			for (var i = 0; i < page.counts; i++) {
+				var t = scope._ret(page.items[i].id, page.items[i]);
+				items.push(t);
+			}
+			page.items = items;
+			return page;
+		}, function(data) {
+			throw new PException(data);
+		});
+	}
+
+	/**
+	 * کاربر مورد نظر با شناسه تعیین شده را دریافت کرده و به عنوان نتیجه
+	 * برمی‌گرداند.
+	 */
+	this.user = function(login) {
+		var scope = this;
+		return $http({
+			method : 'GET',
+			url : '/api/user/user/' + login,
+		}).then(function(data) {
+			var t = scope._ret(data.data.id, data.data);
+			return t;
 		}, function(data) {
 			throw new PException(data);
 		});
