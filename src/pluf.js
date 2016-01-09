@@ -759,7 +759,7 @@ PObject, PProfile, PException//
 $http, $httpParamSerializerJQLike, $q,//
 $act, PUser, PException//
 ) {
-
+	this._su = new PUser()
 	this._u = {}
 	this._getUser = function(id) {
 		return this._u[id];
@@ -778,6 +778,12 @@ $act, PUser, PException//
 		return instance;
 	}
 
+	/**
+	 * به صورت همزمان تعیین می‌کند که آیا کاربر جاری شناخته شده است یا نه.
+	 */
+	this.isAnonymous = function() {
+		return this._su.isAnonymous()
+	}
 	/**
 	 * ورود کاربر به سیستم
 	 */
@@ -816,7 +822,7 @@ $act, PUser, PException//
 	 */
 	this.session = function() {
 		var scope = this;
-		if (!this.isAnonymous()) {
+		if (!this._su.isAnonymous()) {
 			var deferred = $q.defer();
 			deferred.resolve(this._su);
 			return deferred.promise;
@@ -840,7 +846,10 @@ $act, PUser, PException//
 		var scope = this;
 		return $http.get('/api/user/logout')//
 		.success(function(data) {
-			scope._su = null;
+			scope._su.setData({
+				id : 0,
+				login : null
+			});
 			return scope._su;
 		})//
 		.error(function(data) {

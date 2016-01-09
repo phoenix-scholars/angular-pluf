@@ -84,7 +84,7 @@ angular.module('pluf.saas', ['pluf'])
             par[key] = value;
             return $http({
               method: 'POST',
-              url: '/api/saas/app/' + this.id,
+              url: '/api/saas/' + this.id,
               data: $httpParamSerializerJQLike(par),
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -130,7 +130,7 @@ angular.module('pluf.saas', ['pluf'])
             var scope = this;
             return $http({
               method: 'GET',
-              url: '/api/saas/app/' + this.id + '/sap/list',
+              url: '/api/' + this.id + '/saas/spa/find',
               params: $params.getParameter(),
             }).then(function(res) {
               var page = new PaginatorPage(res.data);
@@ -198,7 +198,7 @@ angular.module('pluf.saas', ['pluf'])
            */
           this.session = function() {
             var scope = this;
-            return $http.get('/api/saas/app').then(function(res) {
+            return $http.get('/api/saas/curent').then(function(res) {
               return scope.ret(res.data);
             }, function(res) {
               throw new PException(res.data);
