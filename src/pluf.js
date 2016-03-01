@@ -78,7 +78,89 @@ angular.module("pluf.core", [])
  * حالت را در سیستم ایجاد می‌کند از این کلاس برای تعیین حالت بخش‌های متفاوتی از
  * سیستم استفاده می‌شود که ممکن است به صورت پویا تغییر کنند.
  * 
+ * میزان پیشرفت کار درحقیقت یک مانیتور است که اطلاعاتی راجع به فرآنید انجام کار
+ * را تعیین می‌کند. در اینجا موارد زیر برای یک حالت در نظر گرفته شده است:
+ * 
+ * <ul>
+ * <li>task : string</li>
+ * <li>subTask : string</li>
+ * <li>state : int {wait:0, working:1, finish:2, error:3}</li>
+ * <li>totalWork : int</li>
+ * <li>worked : int</li>
+ * </ul>
+ * 
  * @namespace pluf
+ */
+.factory('PProgressMonitor', function(PObject) {
+	var PProgressMonitor = function() {
+		PObject.apply(this, arguments);
+	};
+	var pProgressMonitor = function(data) {
+		if (data) {
+			this._s = 1;
+			this._tw = 100;
+			this._t = 0;
+			this.setData(data);
+		}
+	};
+	pProgressMonitor.prototype = {
+		WAIT : 0,
+		WORKING : 1,
+		FINISH : 2,
+		ERROR : 3,
+		setWorked : function(w) {
+			this._w = w;
+			return this;
+		},
+		addWorked : function(w) {
+			if (this._w) {
+				this._w += w;
+			} else {
+				this._w = w;
+			}
+			return this;
+		},
+		worked : function() {
+			return this._w;
+		},
+		setTotalWork : function(tw) {
+			this._tw = tw;
+			return this;
+		},
+		totalWork : function() {
+			return this._tw;
+		},
+		percentage : function() {
+			return this._w * 100 / this._tw;
+		},
+		setTask : function(t) {
+			this._t = t;
+			return this;
+		},
+		task : function() {
+			return this._t;
+		},
+		setSubTask : function(st) {
+			this._st = st
+			return this;
+		},
+		subTask : function() {
+			return this._st;
+		},
+		setState : function(s) {
+			this._s = s;
+			return this;
+		},
+		state : function() {
+			return this._s;
+		},
+	}
+	return pProgressMonitor;
+})
+/**
+ * حالت را تعیین می‌کند
+ * 
+ * @depricated
  */
 .factory('PStatus', function(PObject) {
 	var pStatus = function() {
@@ -86,12 +168,12 @@ angular.module("pluf.core", [])
 	};
 	var pStatus = function(data) {
 		if (data) {
+			this._s = 0;
+			this._p = 0;
 			this.setData(data);
 		}
 	};
 	pStatus.prototype = {
-		_s : 0,
-		_p : 0,
 		setProgress : function(p) {
 			this._p = p;
 			return this;
