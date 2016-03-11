@@ -527,6 +527,9 @@ angular.module("pluf.core", [])
 				if (!('description' in menu)) {
 					menu.priority = command.description;
 				}
+				if (!('visible' in menu)) {
+					menu.visible = command.visible;
+				}
 				// XXX: maso, 1394: خصوصیت‌های دیگر اضافه شود.
 				scope._addMenu(id, menu);
 			});
@@ -1014,7 +1017,7 @@ $act, PUser, PException//
 		label : 'login',
 		description : 'login a user',
 		visible : function() {
-			return !$usr.isAnonymous();
+			return $usr.isAnonymous();
 		},
 		category : 'usr',
 	}).commandHandler({
