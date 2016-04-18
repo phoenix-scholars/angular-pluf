@@ -1120,13 +1120,37 @@ angular.module("pluf.cms",[])
 	};
  	pContent.prototype = new PObject();
 	// XXX:maso, 1395: به روز کردن محتوی
-	pContent.update = function(){
+	pContent.prototype.update = function(){
 	}
 	// XXX:maso, 1395: حذف محتوی
-	pContent.delete = function(){
+	pContent.prototype.delete = function(){
 	}
 	// XXX: maso, 1395: محتوی صفحه را می‌دهد
-	pContent.value = function(){
+	pContent.prototype.value = function(){
+		var deferred = $q.defer();
+		deferred.resolve({
+	    "title":"One Company, Many Services.",
+	    "service" :[
+	      {
+	        "icon" : "build",
+	        "title" : "Repair",
+	        "text" : "Our iTechs come to you to repair your iPhone, iPad, iPod, or Samsung device."
+	      },{
+	        "icon" : "attach_money",
+	        "title" : "Sell",
+	        "text" : "Device trade-in that gets you the most cash for your used or damaged gadget."
+	      },{
+	        "icon" : "security",
+	        "title" : "Protect",
+	        "text" : "Fast, low-cost mobile device protection with iCracked Advantage."
+	      },{
+	        "icon" : "business_center",
+	        "title" : "For Business",
+	        "text" : "Mobile device repair for your business or enterprise that comes to you."
+	      }
+	    ]
+	  });
+		return deferred.promise;
 	}
  	return pContent;
  })
@@ -1137,13 +1161,16 @@ angular.module("pluf.cms",[])
 	};
 	pNamedContent.prototype = new PObject();
 	// XXX: maso, 1395: به روز کردن صفحه
-	pNamedContent.update = function(){
+	pNamedContent.prototype.update = function(){
 	}
 	// XXX: maso, 1395: حذف صفحه
-	pNamedContent.delete = function(){
+	pNamedContent.prototype.delete = function(){
 	}
 	// XXX: maso, 1395: تعیین محتوی
-	pNamedContent.content = function(){
+	pNamedContent.prototype.content = function(){
+		var deferred = $q.defer();
+		deferred.resolve(new PContent({id:2}));
+		return deferred.promise;
 	}
 	return pNamedContent;
 })
@@ -1152,6 +1179,10 @@ angular.module("pluf.cms",[])
 	this.content = function(id){}
 	this.contents = function(p){}
 	this.newNamedContent = function(nc){}
-	this.namedContent = function(name){}
+	this.namedContent = function(name){
+		var deferred = $q.defer();
+		deferred.resolve(new PNamedContent({id:1, tilte:'Named page'}));
+		return deferred.promise;
+	}
 	this.namedContents = function(p){}
 })
