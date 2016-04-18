@@ -1,9 +1,10 @@
 'use strict';
 
 angular.module('pluf', [//
-'pluf.paginator',//
-'pluf.user',// /
-'pluf.core'//
+	'pluf.paginator',
+	'pluf.user',
+	'pluf.core',
+	'pluf.cms'
 ])
 
 /*
@@ -37,7 +38,7 @@ angular.module("pluf.core", [])
 		 * تعیین می‌کند که آیا ساختارهای داده‌ای نشان دارند. زمانی که یک ساختار
 		 * داده‌ای شناسه معتبر داشته باشد و سمت کارگذار ذخیره شده باشد به عنوان
 		 * یک داده نشان دار در نظر گرفته می‌شود.
-		 * 
+		 *
 		 * @returns {Boolean}
 		 */
 		isAnonymous : function() {
@@ -77,10 +78,10 @@ angular.module("pluf.core", [])
 /**
  * حالت را در سیستم ایجاد می‌کند از این کلاس برای تعیین حالت بخش‌های متفاوتی از
  * سیستم استفاده می‌شود که ممکن است به صورت پویا تغییر کنند.
- * 
+ *
  * میزان پیشرفت کار درحقیقت یک مانیتور است که اطلاعاتی راجع به فرآنید انجام کار
  * را تعیین می‌کند. در اینجا موارد زیر برای یک حالت در نظر گرفته شده است:
- * 
+ *
  * <ul>
  * <li>task : string</li>
  * <li>subTask : string</li>
@@ -88,7 +89,7 @@ angular.module("pluf.core", [])
  * <li>totalWork : int</li>
  * <li>worked : int</li>
  * </ul>
- * 
+ *
  * @namespace pluf
  */
 .factory('PProgressMonitor', function(PObject) {
@@ -159,7 +160,7 @@ angular.module("pluf.core", [])
 })
 /**
  * حالت را تعیین می‌کند
- * 
+ *
  * @depricated
  */
 .factory('PStatus', function(PObject) {
@@ -192,6 +193,10 @@ angular.module("pluf.core", [])
 		subTask : function() {
 			return this._sb;
 		},
+		setSubTask: function(sb){
+			this._sb = sb;
+			return this;
+		},
 		preloading : function(m) {
 			this._m = m;
 			this._s = 0;
@@ -218,6 +223,10 @@ angular.module("pluf.core", [])
 		},
 		message : function() {
 			return this._m;
+		},
+		setMessage: function(m) {
+			this._m = m;
+			return this;
 		}
 	}
 	return pStatus;
@@ -650,7 +659,7 @@ angular.module("pluf.core", [])
  ******************************************************************************/
 angular.module("pluf.paginator", [])
 /**
- * 
+ *
  */
 .factory('PaginatorParameter', function() {
 	var pagParam = function(paginatorParam) {
@@ -716,12 +725,7 @@ angular.module("pluf.paginator", [])
  * تنظیم‌های کاربری. مدیریت کاربران در سطح سیستم در سرویس‌های دیگر ارائه می‌شود.
  ******************************************************************************/
 
-angular
-//
-.module(//
-"pluf.user", //
-[])
-
+angular.module("pluf.user",[])
 /*******************************************************************************
  * $PObject
  * =============================================================================
@@ -768,7 +772,7 @@ PObject, PException//
 	return pProfile;
 })
 /**
- * 
+ *
  */
 .factory('PUser', function(//
 $http, $q, $httpParamSerializerJQLike,//
@@ -808,7 +812,7 @@ PObject, PProfile, PException//
 
 	/**
 	 * پروفایل کاربر را تعیین می‌کند.
-	 * 
+	 *
 	 * @returns
 	 */
 	pUser.prototype.profile = function() {
@@ -838,7 +842,7 @@ PObject, PProfile, PException//
 })
 
 /**
- * 
+ *
  */
 .service('$usr', function(//
 $http, $httpParamSerializerJQLike, $q,//
@@ -902,7 +906,7 @@ $act, PUser, PException//
 	}
 	/**
 	 * کاربری که در نشست تعیین شده است را بازیابی می‌کند.
-	 * 
+	 *
 	 * @returns
 	 */
 	this.session = function() {
@@ -1006,7 +1010,7 @@ $act, PUser, PException//
 })
 
 /*
- * 
+ *
  */
 .run(function($usr, $act) {
 	/*
@@ -1072,7 +1076,7 @@ $act, PUser, PException//
 		}
 	})
 	/*
-	 * 
+	 *
 	 */
 	.command({
 		id : 'pluf.user.profile.update',
@@ -1083,7 +1087,7 @@ $act, PUser, PException//
 		},
 	})
 	/*
-	 * 
+	 *
 	 */
 	.commandHandler({
 		commandId : 'pluf.user.profile.update',
@@ -1099,4 +1103,55 @@ $act, PUser, PException//
 			});
 		}
 	})
+})
+
+/*******************************************************************************
+ * $cms
+ * =============================================================================
+ * ساختارهای و  سرویس‌های مورد استفاده در مدیریت منابع را ایجاد می‌کند. این ساختارهای در
+ * ایجاد صفحه‌های متفاوتی از سایت که به صورت ایستا ایجاد می‌شوند کاربرد دارند.
+ ******************************************************************************/
+angular.module("pluf.cms",[])
+
+.factory('PContent', function($http, $httpParamSerializerJQLike, $q, PObject,
+	PException) {
+	var pContent = function() {
+		PObject.apply(this, arguments);
+	};
+ 	pContent.prototype = new PObject();
+	// XXX:maso, 1395: به روز کردن محتوی
+	pContent.update = function(){
+	}
+	// XXX:maso, 1395: حذف محتوی
+	pContent.delete = function(){
+	}
+	// XXX: maso, 1395: محتوی صفحه را می‌دهد
+	pContent.value = function(){
+	}
+ 	return pContent;
+ })
+.factory('PNamedContent', function($http, $httpParamSerializerJQLike, $q,
+	PObject, PException, PContent){
+	var pNamedContent = function() {
+		PObject.apply(this, arguments);
+	};
+	pNamedContent.prototype = new PObject();
+	// XXX: maso, 1395: به روز کردن صفحه
+	pNamedContent.update = function(){
+	}
+	// XXX: maso, 1395: حذف صفحه
+	pNamedContent.delete = function(){
+	}
+	// XXX: maso, 1395: تعیین محتوی
+	pNamedContent.content = function(){
+	}
+	return pNamedContent;
+})
+.service('$cms', function($q, $timeout, $act, $window, PContent, PNamedContent) {
+	this.newContent = function(c){}
+	this.content = function(id){}
+	this.contents = function(p){}
+	this.newNamedContent = function(nc){}
+	this.namedContent = function(name){}
+	this.namedContents = function(p){}
 })
