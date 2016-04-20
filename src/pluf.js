@@ -976,8 +976,6 @@ $act, PUser, PException//
 			url : '/api/user/find',
 			params : p.getParameter()
 		}).then(function(data) {
-			var user = new PUser(data.data);
-			return user;
 			var page = new PaginatorPage(res.data);
 			var items = [];
 			for (var i = 0; i < page.counts; i++) {
@@ -1174,15 +1172,67 @@ angular.module("pluf.cms",[])
 	}
 	return pNamedContent;
 })
-.service('$cms', function($q, $timeout, $act, $window, PContent, PNamedContent) {
+.service('$cms', function($q, $timeout, $act, $window, PContent, PNamedContent,
+	PaginatorPage) {
+	this._nc = {}
+	this._getnc = function(id){
+		return this._nc[id];
+	}
+	this._retnc = function(id, d) {
+		var i = this._nc[id];
+		if (i) {
+			i.setData(d);
+		} else {
+			i = new PNamedContent(d);
+			this._nc[nc.id] = nc;
+		}
+		return i;
+	}
+	this._c ={}
+	this._retc = function(id, c){
+		var i = this._c[id];
+		if (i) {
+			i.setData(c);
+		} else {
+			i = new PContent(c);
+			this._c[c.id] = c;
+		}
+		return i;
+	}
 	this.newContent = function(c){}
 	this.content = function(id){}
 	this.contents = function(p){}
 	this.newNamedContent = function(nc){}
-	this.namedContent = function(name){
-		var deferred = $q.defer();
-		deferred.resolve(new PNamedContent({id:1, tilte:'Named page'}));
-		return deferred.promise;
+	this.namedContent = function(n){
+		var t = this._getnc(n);
+		if(t){
+			var deferred = $q.defer();
+			deferred.resolve(t);
+			return deferred.promise;
+		}
+		return $http({
+			method : 'GET',
+			url : '/api/saascms/page/'+n,
+		}).then(function(res){
+			return _retn(n, res.data);
+		})
 	}
-	this.namedContents = function(p){}
+	this.namedContents = function(p){
+		var scope = this;
+		return $http({
+			method : 'GET',
+			url : '/api/saascms/page/find',
+			params : p.getParameter()
+		}).then(function(res) {
+			var page = new PaginatorPage(res.data);
+			page.items = [];
+			for (var i = 0; i < res.data.counts; i++) {
+				var t = scope._retnc(page.items[i].name, page.items[i]);
+				page.items.push(t);
+			}
+			return page;
+		}, function(data) {
+			throw new PException(data);
+		});
+	}
 })
