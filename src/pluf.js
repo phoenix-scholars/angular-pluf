@@ -1125,30 +1125,28 @@ angular.module("pluf.cms",[])
 	}
 	// XXX: maso, 1395: محتوی صفحه را می‌دهد
 	pContent.prototype.value = function(){
-		var deferred = $q.defer();
-		deferred.resolve({
-	    "title":"One Company, Many Services.",
-	    "service" :[
-	      {
-	        "icon" : "build",
-	        "title" : "Repair",
-	        "text" : "Our iTechs come to you to repair your iPhone, iPad, iPod, or Samsung device."
-	      },{
-	        "icon" : "attach_money",
-	        "title" : "Sell",
-	        "text" : "Device trade-in that gets you the most cash for your used or damaged gadget."
-	      },{
-	        "icon" : "security",
-	        "title" : "Protect",
-	        "text" : "Fast, low-cost mobile device protection with iCracked Advantage."
-	      },{
-	        "icon" : "business_center",
-	        "title" : "For Business",
-	        "text" : "Mobile device repair for your business or enterprise that comes to you."
-	      }
-	    ]
-	  });
-		return deferred.promise;
+		// if(this._cvalue()){
+		// 	var deferred = $q.defer();
+		// 	deferred.resolve(this._cvalue());
+		// 	return deferred.promise;
+		// }
+		return $http({
+			method: 'GET',
+			url: '/api/saascms/content/'+this.id+'/download'
+		}).then(function(res){
+			// scope._setCvalue(res.data);
+			return res.data;
+		})
+	}
+	pContent.prototype.setValue = function(d){
+		var scope = this;
+		return $http({
+			method:'POST',
+			url: '/api/saascms/content/'+this.id+'/download',
+			data: d,
+		}).then(function(res){
+			return scope;
+		});
 	}
  	return pContent;
  })
@@ -1164,16 +1162,24 @@ angular.module("pluf.cms",[])
 	// XXX: maso, 1395: حذف صفحه
 	pNamedContent.prototype.delete = function(){
 	}
-	// XXX: maso, 1395: تعیین محتوی
-	pNamedContent.prototype.content = function(){
-		var deferred = $q.defer();
-		deferred.resolve(new PContent({id:2}));
-		return deferred.promise;
+	// // XXX: maso, 1395: تعیین محتوی
+	// pNamedContent.prototype.content = function(){
+	// 	var deferred = $q.defer();
+	// 	deferred.resolve(new PContent({id:2}));
+	// 	return deferred.promise;
+	// }
+	pNamedContent.prototype.value = function(){
+		return this.content.value();
+	}
+	pNamedContent.prototype.setValue = function(v){
+		return this.content.setValue(v);
 	}
 	return pNamedContent;
 })
-.service('$cms', function($q, $timeout, $act, $window, PContent, PNamedContent,
-	PaginatorPage) {
+.service('$cms', function($http, $httpParamSerializerJQLike, $q, $timeout,
+	$act, $window, PContent,
+	PNamedContent,
+	PaginatorPage, PException) {
 	this._nc = {}
 	this._getnc = function(id){
 		return this._nc[id];
@@ -1184,25 +1190,93 @@ angular.module("pluf.cms",[])
 			i.setData(d);
 		} else {
 			i = new PNamedContent(d);
-			this._nc[nc.id] = nc;
+			this._nc[id] = i;
 		}
 		return i;
 	}
 	this._c ={}
+	this._getc = function(id){
+		return this._c[id];
+	}
 	this._retc = function(id, c){
 		var i = this._c[id];
 		if (i) {
 			i.setData(c);
 		} else {
 			i = new PContent(c);
-			this._c[c.id] = c;
+			this._c[c.id] = i;
 		}
 		return i;
 	}
-	this.newContent = function(c){}
-	this.content = function(id){}
-	this.contents = function(p){}
-	this.newNamedContent = function(nc){}
+	this.newContent = function(c){
+		var scope = this;
+		return $http({
+			method: 'POST',
+			url: '/api/saascms/content/new',
+			data : $httpParamSerializerJQLike(c),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
+		}).then(function(res){
+			return scope._retc(res.data.id, res.data);
+		}).catch(function(data) {
+			throw new PException(data);
+		})
+	}
+	this.content = function(i){
+		var t = this._getc(i);
+		if(t){
+			var deferred = $q.defer();
+			deferred.resolve(t);
+			return deferred.promise;
+		}
+		t = this;
+		return $http({
+			method : 'GET',
+			url : '/api/saascms/content/'+i,
+		}).then(function(res){
+			return t._retc(i, res.data);
+		})
+	}
+	this.contents = function(p){
+		var scope = this;
+		return $http({
+			method : 'GET',
+			url : '/api/saascms/contet/find',
+			params : p.getParameter()
+		}).then(function(res) {
+			var page = new PaginatorPage(res.data);
+			page.items = [];
+			for (var i = 0; i < res.data.counts; i++) {
+				var t = scope._retc(page.items[i].id, page.items[i]);
+				page.items.push(t);
+			}
+			return page;
+		}, function(data) {
+			throw new PException(data);
+		});
+	}
+	this.newNamedContent = function(n, c){
+		var scope = this;
+		var nc;
+		return $http({
+			method: 'POST',
+			url: '/api/saascms/page/new',
+			data: $httpParamSerializerJQLike({
+				content: c.id,
+				name: n
+			}),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
+		}).then(function(res){
+			nc = scope._retnc(res.data.name, res.data);
+			return scope.content(nc.content);
+		}).then(function(c){
+			nc.content = c;
+			return nc;
+		})
+	}
 	this.namedContent = function(n){
 		var t = this._getnc(n);
 		if(t){
@@ -1210,11 +1284,17 @@ angular.module("pluf.cms",[])
 			deferred.resolve(t);
 			return deferred.promise;
 		}
+		var scope = this;
+		var nc;
 		return $http({
 			method : 'GET',
 			url : '/api/saascms/page/'+n,
 		}).then(function(res){
-			return _retn(n, res.data);
+			nc = scope._retnc(res.data.name, res.data);
+			return scope.content(nc.content);
+		}).then(function(c){
+			nc.content = c;
+			return nc;
 		})
 	}
 	this.namedContents = function(p){
@@ -1227,8 +1307,12 @@ angular.module("pluf.cms",[])
 			var page = new PaginatorPage(res.data);
 			page.items = [];
 			for (var i = 0; i < res.data.counts; i++) {
-				var t = scope._retnc(page.items[i].name, page.items[i]);
-				page.items.push(t);
+				page.items.push(
+					scope._retnc(
+						res.data.items[i].name,
+						res.data.items[i]
+					)
+				)	;
 			}
 			return page;
 		}, function(data) {
