@@ -7,13 +7,20 @@
     "Hadi mansouri <mohammad.hadi.mansouri@dpq.co.ir>"
   ],
   "description": "AngularJS client for Pluf framework",
-  "main": "",
   "moduleType": [],
   "keywords": [
     "Pluf",
     "AngularJS"
   ],
   "license": "MIT",
+  "main": [
+    "src/pluf.admin.js",
+    "src/pluf.help.js",
+    "src/pluf.hm.js",
+    "src/pluf.jayab.js",
+    "src/pluf.js",
+    "src/pluf.saas.js"
+  ],
   "ignore": [
     "**/.*",
     "node_modules",
