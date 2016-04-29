@@ -14,21 +14,21 @@ angular.module('pluf.news', ['pluf'])
   return pFollower;
 })
 
-.service('$news', function($httpParamSerializerJQLike, $http, $q, PException, PFollower){
+.service('$news', function($httpParamSerializerJQLike, $http, $q, PException, PFollower,PaginatorPage){
 
-    this._df = [];
-    this._getf = function(i){
-      return this._df[i];
+  this._df = [];
+  this._getf = function(i){
+    return this._df[i];
+  }
+  this._retf= function(id, d){
+    var i = this._getf(id);
+    if (i) {
+      i.setData(d);
+      return i;
     }
-    this._retf= function(id, d){
-      var i = this._getf(id);
-      if (i) {
-        i.setData(d);
-        return i;
-      }
-      this._df[id] = new PFollower(d);
-      return this._df[id];
-    }
+    this._df[id] = new PFollower(d);
+    return this._df[id];
+  }
 
 
   this.validateFollower = function(f) {
@@ -70,7 +70,21 @@ angular.module('pluf.news', ['pluf'])
       return scope._retf(res.data.id, res.data);
     });
   }
-  this.followers = function(p){}
+  this.followers = function(p){
+    var scope = this;
+    return $http({
+      method: 'GET',
+      url: '/api/newspaper/follower/find',
+			params : p.getParameter()
+    }).then(function(res){
+      var page = new PaginatorPage(res.data);
+			page.items = [];
+			for (var i = 0; i < res.data.counts; i++) {
+				page.items.push(scope._retf(res.data.items[i].id, res.data.items[i]));
+			}
+			return page;
+    })
+  }
   this.follower = function(i){}
 
 })
