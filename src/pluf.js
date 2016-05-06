@@ -45,7 +45,7 @@ angular.module("pluf.core", [])
 			return !(this.id && this.id > 0);
 		},
 		isAdministrator : function() {
-			return !(this.id && this.id > 0 && this.administrator);
+			return (this.id && this.id > 0 && this.administrator);
 		},
 		/*
 		 * تعیین می‌کنه که آیا داده‌های کاربر منقضی شده یا نه. در صورتی که
@@ -251,15 +251,28 @@ angular.module("pluf.core", [])
 	pPreferenceProperty.prototype = new PPreferenceNode();
 	return pPreferenceProperty;
 })
-//
-.factory(
-		'PPreferenceSection',
-		function($rootScope, $q, $timeout, PPreferenceNode,
+/**
+ * تنظیم‌های برنامه
+ *
+ * در بسیاری از بخش‌های سیستم نیازمند وجود یک ساختار برای نگهداری تنظیم‌های کاربر هستیم. این
+ * موجودیت این امکان را فراهم می‌کند که کاربر مجموعه‌ای از خصوصیت‌ها را برای خود نگهداری کند.
+ * این ساختار توسط برنامه‌های کاربردی ایجادمی‌شود و توسط کاربر قابلیت تنظیم دارد.
+ */
+.factory('PPreferenceSection',function($rootScope, $q, $timeout, PPreferenceNode,
 				PPreferenceProperty, PException) {
 			var pPreferenceSection = function() {
 				PPreferenceNode.apply(this, arguments);
 			};
 			pPreferenceSection.prototype = new PPreferenceNode();
+			/**
+			 * یک بخش دجدید در تنظیم‌ها ایجاد می‌کند.
+			 *
+			 * بخش در حقیقت یک گره نامدار است که کاربران می‌توانند با استفاده از فراخوانی‌های در نظر
+			 * گرفته شده به آن دسترسی داشته باشند.
+			 *
+			 * @param  {[type]} $data [description]
+			 * @return {[type]}       [description]
+			 */
 			pPreferenceSection.prototype.addSection = function($data) {
 				var def = $q.defer();
 				var scope = this;
@@ -270,15 +283,31 @@ angular.module("pluf.core", [])
 				}, 1);
 				return def.promise;
 			}
+			/**
+			 * یک ساختار را به عنوان داده جدید اضاهف می‌کند.
+			 *
+			 * @param  {[type]} $data [description]
+			 * @return {[type]}       [description]
+			 */
 			pPreferenceSection.prototype.addProperty = function($data) {
-
+				// XXX: maso, 1395: اضافه کردن خصوصیت
 			}
+			/**
+			 * یک گره از خصوصیت‌ها را در اختیار کاربران قرار می‌دهد
+			 *
+			 * آدرس‌دهی تمام گره‌ها با استفاده از یک مسیر تعیین می‌شود که کاملا شبیه به ادرس دهی‌های
+			 * لینوکس است. برای نمونه آدرس زیر یک گره را در ریشه تعیین می‌کند:
+			 *
+			 * /node-name
+			 *
+			 * @param  String $path مسیر گره را تعیین می‌‌کند
+			 * @return promise  یک فراخوانی غیر همزمان که در اختیار کاربران قرار میگیرد.
+			 */
 			pPreferenceSection.prototype.node = function($path) {
 				if ($path.startsWith("/")) {
 					$path = $path.substr(1);
 					return $rootScope.appc.node($path);
 				}
-
 				var def = $q.defer();
 				var scope = this;
 				$timeout(function() {
@@ -322,7 +351,14 @@ angular.module("pluf.core", [])
 	return this;
 })
 
-//
+/**
+ * تظیم‌های کلی سیستم
+ *
+ * در کل نرم‌افزار یک موجودیت به نام appc وجود دارد که تمام تنظیم‌های سیستم در آن قرار می‌گیرد
+ * به این ترتیب نرم افزارها می‌توانند تنظیم‌های مورد نظر خود را ذخیره کرده و در بخش‌های متفاوت
+ * از آن استفاده کنند.
+ *
+ */
 .run(function($rootScope, PPreferenceSection) {
 	$rootScope.appc = new PPreferenceSection();
 	$rootScope.appc.addSection({
@@ -653,14 +689,12 @@ angular.module("pluf.core", [])
 });
 
 /*******************************************************************************
- * $PObject
+ *                                صفحه بندی
  * =============================================================================
- * ساختار داده‌ای برای جستجو را تعیین می‌کند.
+ * بسیاری از داده‌هایی که در سیستم موجود است به صورت صفحه بندی شده در اختیار کاربران قرار
+ * می‌گیرد. در این بخش ابزارهایی برای کار با صفحه بندی ارائه شده است.
  ******************************************************************************/
 angular.module("pluf.paginator", [])
-/**
- *
- */
 .factory('PaginatorParameter', function() {
 	var pagParam = function(paginatorParam) {
 		if (paginatorParam) {
@@ -683,6 +717,18 @@ angular.module("pluf.paginator", [])
 			this.param['_px_q'] = $query;
 			return this;
 		},
+		/**
+		 * تعیین صفحه مورد نظر
+		 *
+		 * این فراخوانی صفحه‌ای را تعیین می‌کند که مورد نظر کاربر است. برای نمونه اگر صفحه دوم از
+		 * یک کاوش مد نظر باشد باید مقدار یک به عنوان ورودی این تابع استفاده شود.
+		 *
+		 * اندیس تمام صفحه‌ها از صفر شروع می‌شود. بنابر این صفحه اول اندیس صفر و صفحه دوم
+		 * اندیس یک دارد.
+		 *
+		 * @param  int $page شماره صفحه
+		 * @return PaginatorParameter    خود شئی به عنوان خروجی برگردانده می‌شود.
+		 */
 		setPage : function($page) {
 			this.param['_px_p'] = $page;
 			return this;
@@ -730,8 +776,7 @@ angular.module("pluf.user",[])
  * $PObject
  * =============================================================================
  ******************************************************************************/
-.factory('PProfile', function(//
-$http, $httpParamSerializerJQLike, $q, //
+.factory('PProfile', function($http, $httpParamSerializerJQLike, $q, //
 PObject, PException//
 ) {
 	/**
@@ -873,6 +918,9 @@ $act, PUser, PException//
 	this.isAnonymous = function() {
 		return this._su.isAnonymous()
 	}
+	this.isAdministrator = function() {
+		return this._su.isAdministrator();
+	}
 	/**
 	 * ورود کاربر به سیستم
 	 */
@@ -937,7 +985,8 @@ $act, PUser, PException//
 		.success(function(data) {
 			scope._su.setData({
 				id : 0,
-				login : null
+				login : null,
+				administrator: false
 			});
 			return scope._su;
 		})//
@@ -1110,7 +1159,6 @@ $act, PUser, PException//
  * ایجاد صفحه‌های متفاوتی از سایت که به صورت ایستا ایجاد می‌شوند کاربرد دارند.
  ******************************************************************************/
 angular.module("pluf.cms",[])
-
 .factory('PContent', function($http, $httpParamSerializerJQLike, $q, PObject,
 	PException) {
 	var pContent = function() {
