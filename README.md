@@ -1,9 +1,10 @@
 # angular-pluf
 
-AngularJS client of Pluf framework.
+این بسته ارتباط با سرورهای پلاف را پیاده سازی کرده و یک لایه کاملا مجازی از این نوع سرورها ارائه می کند.
 
 
-# Install with bower
+# نصب
 
+برای نصب این بسته با استفاده از ابزار bower باید دستور زیر را اجرا کنید.
 
 	bower install angular-pluf --save

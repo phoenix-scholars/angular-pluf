@@ -7,20 +7,44 @@ angular.module('pluf', [//
 	'pluf.cms'
 ])
 
-/*
- * ساختار داده‌ای مورد نیاز برای تولید خطا و مدیریت آن را ایجاد می‌کند.
- */
+/**
+	* @ngdoc module
+	* @name pluf.core
+	* @description
+  * ساختار داده‌ای مورد نیاز برای تولید خطا و مدیریت آن را ایجاد می‌کند.
+  */
 angular.module("pluf.core", [])
 
-/*******************************************************************************
- * $PObject
- * =============================================================================
- * ساختارهای پایه برای تمام اشیا سیستم را ایجاد می‌کند. با استفاده از کلاس
- * بسیاری از فراخوانی‌های مشترک در یک کلاس جمع خواهد شد.
- ******************************************************************************/
+ /**
+	* @memberof pluf.core
+	* @ngdoc factory
+	* @name PObject
+	*
+	* @description
+	* مهم‌ترین موجودیت در سیستم است.
+	*
+	* @attr {Integer} id
+	* شناسه موجودیت را تعیین می‌کند.
+	*
+	* @example
+	*   Usage:
+	*   <map MAP_OPTIONS_OR_MAP_EVENTS ..>
+	*     ... Any children directives
+	*   </map>
+	*
+	*   <map center="[40.74, -74.18]" on-click="doThat()">
+	*   </map>
+	*
+	*   <map geo-fallback-center="[40.74, -74.18]" zoom-to-inlude-markers="true">
+	*   </map>
+  */
 .factory('PObject', function() {
 	/**
-	 * Example
+   * این فراخوانی یک نمونه جدید از این موجودیت ایجاد کرده و مقادیر داده ورودی را به عنوان داده‌های
+   * این موجودیت قرار می‌دهد.
+   *
+   * @memberof PObject
+   * @param {data} ساختار داده‌ای موجودیت مورد نظر
 	 */
 	var pObject = function(data) {
 		if (data) {
@@ -28,8 +52,11 @@ angular.module("pluf.core", [])
 		}
 	}
 	pObject.prototype = {
-		/*
+		/**
 		 * داده‌های دریافتی را تعیین می‌کند
+		 *
+		 * @memberof PObject
+		 * @param {data} ساختار داده‌ای اولیه
 		 */
 		setData : function(data) {
 			angular.extend(this, data);
@@ -37,19 +64,24 @@ angular.module("pluf.core", [])
 		/**
 		 * تعیین می‌کند که آیا ساختارهای داده‌ای نشان دارند. زمانی که یک ساختار
 		 * داده‌ای شناسه معتبر داشته باشد و سمت کارگذار ذخیره شده باشد به عنوان
-		 * یک داده نشان دار در نظر گرفته می‌شود.
+		 * یک داده نشان دار در نظر گرفته می‌شود. در غیر این صورت داده نا معتبر بوده و نباید در
+		 * پردازش‌ها در نظر گرفته شود.
 		 *
-		 * @returns {Boolean}
+		 * نمونه‌ای از کاربردهای این فراخونی تعیین حالت کاربر است. در صورتی که خروجی این
+		 * فراخوانی مقدار درستی باشد به معنی نا معتبر بودن کاربر است.
+		 *
+		 * @memberof PObject
+		 * @returns {Boolean} معتبر بودن ساختار داده
 		 */
 		isAnonymous : function() {
 			return !(this.id && this.id > 0);
 		},
-		isAdministrator : function() {
-			return (this.id && this.id > 0 && this.administrator);
-		},
-		/*
+		/**
 		 * تعیین می‌کنه که آیا داده‌های کاربر منقضی شده یا نه. در صورتی که
 		 * داده‌ها منقضی شده باشه دیگه نباید از آنها استفاده کرد.
+		 *
+		 * @memberof PObject
+		 * @returns {Boolean} معتبر بودن
 		 */
 		expire : function() {
 			return false;
@@ -58,11 +90,14 @@ angular.module("pluf.core", [])
 	return pObject;
 })
 
-/*******************************************************************************
- * $PObject
- * =============================================================================
- * ساختار پایه گزارش خطا در سیستم.
- ******************************************************************************/
+/**
+	* @memberof pluf.core
+	* @ngdoc factory
+	* @name PException
+	* @description
+	* ساختار اصلی خطا در کل سیستم را تعریف می‌کند. این ساختار داده‌ای مشابه با ساختارهایی است
+	* که در قرارداد پلاف تعیین شده است علاوه بر این امکاناتی برای کار با یک خطای تولید شده دارد.
+	*/
 .factory('PException', function(PObject) {
 	var pException = function() {
 		PObject.apply(this, arguments);
@@ -71,17 +106,19 @@ angular.module("pluf.core", [])
 	return pException;
 })
 
-/*******************************************************************************
- * $PObject
- * =============================================================================
- ******************************************************************************/
+
 /**
+	* @memberof pluf.core
+	* @ngdoc factory
+	* @name PProgressMonitor
+	* @description
  * حالت را در سیستم ایجاد می‌کند از این کلاس برای تعیین حالت بخش‌های متفاوتی از
  * سیستم استفاده می‌شود که ممکن است به صورت پویا تغییر کنند.
  *
  * میزان پیشرفت کار درحقیقت یک مانیتور است که اطلاعاتی راجع به فرآنید انجام کار
  * را تعیین می‌کند. در اینجا موارد زیر برای یک حالت در نظر گرفته شده است:
  *
+ * @example
  * <ul>
  * <li>task : string</li>
  * <li>subTask : string</li>
@@ -89,8 +126,6 @@ angular.module("pluf.core", [])
  * <li>totalWork : int</li>
  * <li>worked : int</li>
  * </ul>
- *
- * @namespace pluf
  */
 .factory('PProgressMonitor', function(PObject) {
 	var PProgressMonitor = function() {
@@ -270,8 +305,8 @@ angular.module("pluf.core", [])
 			 * بخش در حقیقت یک گره نامدار است که کاربران می‌توانند با استفاده از فراخوانی‌های در نظر
 			 * گرفته شده به آن دسترسی داشته باشند.
 			 *
-			 * @param  {[type]} $data [description]
-			 * @return {[type]}       [description]
+			 * @param  section $data داده‌های بخشی که باید ایجاد شود
+			 * @return promise       یک دستگیره برای اجرای غیر همزمان
 			 */
 			pPreferenceSection.prototype.addSection = function($data) {
 				var def = $q.defer();
@@ -286,8 +321,8 @@ angular.module("pluf.core", [])
 			/**
 			 * یک ساختار را به عنوان داده جدید اضاهف می‌کند.
 			 *
-			 * @param  {[type]} $data [description]
-			 * @return {[type]}       [description]
+			 * @param  property $data خصوصیت مورد نظر
+			 * @return promise       قول اجرا
 			 */
 			pPreferenceSection.prototype.addProperty = function($data) {
 				// XXX: maso, 1395: اضافه کردن خصوصیت
@@ -334,10 +369,15 @@ angular.module("pluf.core", [])
 			}
 			return pPreferenceSection;
 		})
+
 /**
- * مدیریت داده‌های محلی کاربر را انجام می‌دهد. این داده‌ها به صورت محلی در
- * مرورگر ذخیره سازی می‌شوند.‌
- */
+	* @memberof pluf.core
+	* @ngdoc service
+	* @name $preference
+	* @description
+	* مدیریت داده‌های محلی کاربر را انجام می‌دهد. این داده‌ها به صورت محلی در
+	* مرورگر ذخیره سازی می‌شوند.‌
+	*/
 .service('$preference', function($rootScope) {
 	this.addSection = function($sec) {
 		return $rootScope.appc.addSection($sec);
@@ -376,13 +416,20 @@ angular.module("pluf.core", [])
 		})
 	})
 })
-/*******************************************************************************
- * $PObject
- * =============================================================================
- ******************************************************************************/
 /**
- * Command Service (cs) سیستم مدیریت دستورها در سیستم را ایجاد می‌کند. دستور و
- * دستگیره از اکلیپس الهام شده است.
+	* @memberof pluf.core
+	* @ngdoc service
+	* @name $act
+	* @description
+ *
+ * در این مدل دو مفهوم کلی تعریف می‌شود که عبارتند از دستور و دستگیره. دستور یک عبارت رشته‌ای
+ * است که یک عمل مجازی را تعیین می‌کند و دستگیره عملی است که در مقابل هر دستور اجرا
+ * می‌شود. برای نمونه فرض کنید که یک دستور ورود به سیستم وجود دارد که نام آن به صورت زیر
+ * تعیین شده است:
+ *
+ * user.login
+ *
+ * فراخوانی این دستور منجر به اجرا شدن تمام دستگیره‌هایی مرتبط خواهد شد.
  */
 .service('$act', function($q, $timeout, PException) {
 	this._categories = [];
@@ -497,13 +544,13 @@ angular.module("pluf.core", [])
 	}
 })
 
-/*******************************************************************************
- * $PObject
- * =============================================================================
- ******************************************************************************/
 /**
- * مدیریت منوها را ایجاد می‌کند
- */
+	* @memberof pluf.core
+	* @ngdoc service
+	* @name $menu
+	* @description
+	* مدیریت منوها را ایجاد می‌کند
+	*/
 .service('$menu', function($q, $timeout, $act, $window) {
 	this._menus = [];
 
@@ -596,14 +643,14 @@ angular.module("pluf.core", [])
 	}
 })
 
-/*******************************************************************************
- * $PObject
- * =============================================================================
- ******************************************************************************/
 /**
- * یک سیستم ساده است برای اعلام پیام در سیستم. با استفاده از این کلاس می‌توان
- * پیام‌های متفاوتی که در سیستم وجود دارد را به صورت همگانی اعلام کرد.
- */
+	* @memberof pluf.core
+	* @ngdoc service
+	* @name $notify
+	* @description
+	* یک سیستم ساده است برای اعلام پیام در سیستم. با استفاده از این کلاس می‌توان
+	* پیام‌های متفاوتی که در سیستم وجود دارد را به صورت همگانی اعلام کرد.
+	*/
 .service('$notify', function($rootScope, $timeout, $q) {
 	/*
 	 * فهرست شنودگرهای
@@ -858,7 +905,7 @@ PObject, PProfile, PException//
 	/**
 	 * پروفایل کاربر را تعیین می‌کند.
 	 *
-	 * @returns
+	 * @returns promise قول اجرای غیر هم زمان
 	 */
 	pUser.prototype.profile = function() {
 		if (this.isAnonymous()) {
@@ -882,6 +929,10 @@ PObject, PProfile, PException//
 		}, function(res) {
 			throw new PException(res.data);
 		});
+	}
+
+	pUser.prototype.isAdministrator = function() {
+		return (this.id && this.id > 0 && this.administrator);
 	}
 	return pUser;
 })
@@ -955,7 +1006,7 @@ $act, PUser, PException//
 	/**
 	 * کاربری که در نشست تعیین شده است را بازیابی می‌کند.
 	 *
-	 * @returns
+	 * @returns promise قول اجرای غیر هم زمان
 	 */
 	this.session = function() {
 		var scope = this;
