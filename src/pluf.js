@@ -108,10 +108,10 @@ angular.module("pluf.core", [])
 
 
 /**
-	* @memberof pluf.core
-	* @ngdoc factory
-	* @name PProgressMonitor
-	* @description
+ * @memberof pluf.core
+ * @ngdoc factory
+ * @name PProgressMonitor
+ * @description
  * حالت را در سیستم ایجاد می‌کند از این کلاس برای تعیین حالت بخش‌های متفاوتی از
  * سیستم استفاده می‌شود که ممکن است به صورت پویا تغییر کنند.
  *
@@ -1203,13 +1203,29 @@ $act, PUser, PException//
 	})
 })
 
-/*******************************************************************************
- * $cms
- * =============================================================================
+/**
+ * @ngdoc module
+ * @name pluf.cms
+ * @description
  * ساختارهای و  سرویس‌های مورد استفاده در مدیریت منابع را ایجاد می‌کند. این ساختارهای در
  * ایجاد صفحه‌های متفاوتی از سایت که به صورت ایستا ایجاد می‌شوند کاربرد دارند.
- ******************************************************************************/
+ */
 angular.module("pluf.cms",[])
+/**
+ * @memberof pluf.cms
+ * @ngdoc factory
+ * @name PContent
+ * @description
+ * ساختار داده‌ای محتوی را ایجاد می‌کند. این ساختار داده‌ای شامل اطلاعات کلی از محتوی است که
+ * از این میان می‌توان به موارد زیر اشاره کرد:
+ *
+ * <ul>
+ * 	<li>id</li>
+ * 	<li>name</li>
+ * 	<li>mimetype</li>
+ * 	<li>tenant</li>
+ * </ul>
+ */
 .factory('PContent', function($http, $httpParamSerializerJQLike, $q, PObject,
 	PException) {
 	var pContent = function() {
@@ -1249,6 +1265,27 @@ angular.module("pluf.cms",[])
 	}
  	return pContent;
  })
+/**
+ * @memberof pluf.cms
+ * @ngdoc factory
+ * @name PNamedContent
+ * @description
+ * ساختار داده‌ای و ابزارهای مورد نیاز با یک محتوی نامدار را تعیین می‌کند. محتوی نام دار یک محتوی
+ * است که با استفاده از یک نام منحصر به فرد قابل دسترسی است. از این مدل محتوی در جایی
+ * استفاده می‌شود که شناسه محتوی مهم نیست و محتوی به هر شکلی باید موجود باشد.
+ *
+ * برای نمونه محتویی که در صفحه اول یک سایت نمایش داده می‌شود، مستقل از این که شناسه آن
+ * چیست و در چه زمانی ایجاد شده است می‌تواند با نام مشخض به صورت زیر در دسترس باشد:
+ *
+ * <pre><code>
+ * $cms.namedContent('main').then(function(nc){
+ * 	$scope.namedContent = nc;
+ * 	return nc.value();
+ * }).then(function(content){
+ * 	// Put content in your view
+ * })
+ * </code></pre>
+ */
 .factory('PNamedContent', function($http, $httpParamSerializerJQLike, $q,
 	PObject, PException, PContent){
 	var pNamedContent = function() {
@@ -1275,6 +1312,16 @@ angular.module("pluf.cms",[])
 	}
 	return pNamedContent;
 })
+
+/**
+ * @memberof pluf.cms
+ * @ngdoc service
+ * @name $cms
+ * @description
+ *
+ * مهم‌ترین سرویسی است که در این بسته ارائه شده و کار با محتوی و اطلاعات آن را آسان می‌کند.
+ * این سرویس برای جستجو و یا گرفتن اطلاعات هر محتوایی از سیستم کاربرد دارد.
+ */
 .service('$cms', function($http, $httpParamSerializerJQLike, $q, $timeout,
 	$act, $window, PContent,
 	PNamedContent,
@@ -1307,6 +1354,13 @@ angular.module("pluf.cms",[])
 		}
 		return i;
 	}
+
+	/**
+	 * این فراخوانی یک ساختار داده‌ای جدید ایجاد می‌کند.
+	 *
+	 * @memberof $cms
+	 * @param contet contet ساختار داده‌ای محتوی برای ایجاد
+	 */
 	this.newContent = function(c){
 		var scope = this;
 		return $http({
