@@ -11,31 +11,31 @@ module.exports = function(grunt) {
       },
       core: {
         src: 'src/pluf.js',
-        dest: 'dest/pluf.min.js'
+        dest: 'dist/pluf.min.js'
       },
       admin: {
         src: 'src/pluf.admin.js',
-        dest: 'dest/pluf.admin.min.js'
+        dest: 'dist/pluf.admin.min.js'
       },
       help: {
         src: 'src/pluf.help.js',
-        dest: 'dest/pluf.help.min.js'
+        dest: 'dist/pluf.help.min.js'
       },
       hm: {
         src: 'src/pluf.hm.js',
-        dest: 'dest/pluf.hm.min.js'
+        dest: 'dist/pluf.hm.min.js'
       },
       jayab: {
         src: 'src/pluf.jayab.js',
-        dest: 'dest/pluf.jayab.min.js'
+        dest: 'dist/pluf.jayab.min.js'
       },
       news: {
         src: 'src/pluf.news.js',
-        dest: 'dest/pluf.news.min.js'
+        dest: 'dist/pluf.news.min.js'
       },
       saas: {
         src: 'src/pluf.saas.js',
-        dest: 'dest/pluf.saas.min.js'
+        dest: 'dist/pluf.saas.min.js'
       },
     },
     jsdoc : {
