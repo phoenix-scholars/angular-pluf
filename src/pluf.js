@@ -1,9 +1,8 @@
 'use strict';
 
 angular.module('pluf', [//
-	'pluf.paginator',
-	'pluf.user',
 	'pluf.core',
+	'pluf.user',
 	'pluf.cms'
 ])
 
@@ -11,7 +10,11 @@ angular.module('pluf', [//
 	* @ngdoc module
 	* @name pluf.core
 	* @description
-  * ساختار داده‌ای مورد نیاز برای تولید خطا و مدیریت آن را ایجاد می‌کند.
+	*
+	* ساختارهای داده‌ای پایه‌ای و مدیریت آنها در این ماژول پیاده سازی شده است. این ساختارهای داده‌ای
+	* کاربردهای مانند مدیریت خطا، صفحه بندی و ساختار اولیه موجودیت‌ها در سیستم را ایجاد می‌کند. این
+	* ساختارها در تمام ماژولها در دسترس است.
+  *
   */
 angular.module("pluf.core", [])
 
@@ -733,7 +736,7 @@ angular.module("pluf.core", [])
 	this.broadcast = function() {
 		return $rootScope.$broadcast.apply($rootScope, arguments);
 	}
-});
+})
 
 /*******************************************************************************
  *                                صفحه بندی
@@ -741,7 +744,6 @@ angular.module("pluf.core", [])
  * بسیاری از داده‌هایی که در سیستم موجود است به صورت صفحه بندی شده در اختیار کاربران قرار
  * می‌گیرد. در این بخش ابزارهایی برای کار با صفحه بندی ارائه شده است.
  ******************************************************************************/
-angular.module("pluf.paginator", [])
 .factory('PaginatorParameter', function() {
 	var pagParam = function(paginatorParam) {
 		if (paginatorParam) {
@@ -823,8 +825,12 @@ angular.module("pluf.user",[])
  * $PObject
  * =============================================================================
  ******************************************************************************/
-.factory('PProfile', function($http, $httpParamSerializerJQLike, $q, //
-PObject, PException//
+.factory('PProfile', function(
+	$http,
+	$httpParamSerializerJQLike,
+	$q,
+	PObject,
+	PException
 ) {
 	/**
 	 * یک نمونه جدید از این موجودیت ایجاد می کند.
