@@ -1,0 +1,30 @@
+{
+  "name": "angular-pluf",
+  "version": "0.1.0",
+  "description": "This is simple test for angular-pluf",
+  "license": "MIT",
+  "homepage": "http://dpq.co.ir",
+  "authors": [
+    "mostafa barmshory <mostafa.barmshory@dpq.co.ir>",
+    "Mohammad Hadi Mansouri <>"
+  ],
+  "keywords": [
+    "Client",
+    "Web",
+    "Example"
+  ],
+  "view" : "/test/main.html",
+  "appcache" : "no",
+  "src" : [
+    "src/*.js",
+    "test/main.js",
+    "test/ctrl/*.js"
+  ],
+  "resource" : [],
+  "logo" : { },
+  "link" : [],
+  "meta" : [],
+  "dependencies": {
+    "angular": "~1.5.0"
+  }
+}
