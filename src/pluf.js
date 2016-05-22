@@ -73,21 +73,15 @@ angular.module("pluf.core", [])
 		 * نمونه‌ای از کاربردهای این فراخونی تعیین حالت کاربر است. در صورتی که خروجی این
 		 * فراخوانی مقدار درستی باشد به معنی نا معتبر بودن کاربر است.
 		 *
+		 * زمانی که دوره زمانی زیادی از یک موجودیت گذشته باشد و با سرور هماهنگ نشده باشد نیز
+		 * مقدار این تابع درستی خواهد بود از این رو سرویس‌ها باید این مدل داده‌ها را نادیده بگیرند. این
+		 * روش در مدیریت کش کاربرد دارد.
+		 *
 		 * @memberof PObject
 		 * @returns {Boolean} معتبر بودن ساختار داده
 		 */
 		isAnonymous : function() {
 			return !(this.id && this.id > 0);
-		},
-		/**
-		 * تعیین می‌کنه که آیا داده‌های کاربر منقضی شده یا نه. در صورتی که
-		 * داده‌ها منقضی شده باشه دیگه نباید از آنها استفاده کرد.
-		 *
-		 * @memberof PObject
-		 * @returns {Boolean} معتبر بودن
-		 */
-		expire : function() {
-			return false;
 		}
 	};
 	return pObject;
@@ -100,6 +94,20 @@ angular.module("pluf.core", [])
 	* @description
 	* ساختار اصلی خطا در کل سیستم را تعریف می‌کند. این ساختار داده‌ای مشابه با ساختارهایی است
 	* که در قرارداد پلاف تعیین شده است علاوه بر این امکاناتی برای کار با یک خطای تولید شده دارد.
+	*
+	* ساختار داده‌ای خطا بسته به حالت سرور می‌تواند متفاوت باشد. زمانی که سرور در حالت رفع خطا
+	* باشد، اطلاعات بیشتری در این ساختار داده‌ای وجود دارد اما در حالت نهایی تنها اطلاعات مورد نیاز
+	* برای کاربران وجود خواهد داشت.
+	*
+	* در پروژه سین (https://gitlab.com/phoenix-scholars/seen) فهرست کامل پارامترهای ارسالی
+	* از سمت سرور و کدهای خطا تعیین شده است. در اینجا فهرست مهم‌ترین خصوصیت‌های این ساختار
+	* بیان شده است.
+	*
+	* @attr {Integer} state کد خطای تولید شده که بر اساس استاندارد کدهای HTTP تعیین می‌شود.
+	* @attr {Integer} code کد خطای ایجاد شده که بر اساس ساختارهای سرور و پرتکل سین تعیین می‌شود
+	* @attr {String} message پیام ارسالی از سمت سرور
+	* @attr {url} link آدرسی که در آن اطلاعات بیشتری در این رابطه وجود دارد
+	* @attr {Struct} data ساختار داده‌ای متناسب با خطا. در این ساختار اگر خطا در رابطه با یک پارامتر ورودی باشد تعیین خواهد شد.
 	*/
 .factory('PException', function(PObject) {
 	var pException = function() {
@@ -122,13 +130,22 @@ angular.module("pluf.core", [])
  * را تعیین می‌کند. در اینجا موارد زیر برای یک حالت در نظر گرفته شده است:
  *
  * @example
- * <ul>
- * <li>task : string</li>
- * <li>subTask : string</li>
- * <li>state : int {wait:0, working:1, finish:2, error:3}</li>
- * <li>totalWork : int</li>
- * <li>worked : int</li>
- * </ul>
+ *  // Start
+ *  PProgressMonitor monitor = new PProgressMonitor();
+ *  // Init
+ *  monitor.setTask("task name")
+ *  	.setTotalWork(10)
+ *  	.setWorked(0)
+ *  	.setState(PProgressMonitor.WORKING);
+ *  var i = 0;
+ *  for(i = 0; i < 10; i++){
+ *  	//Do something
+ *  	monitor
+ *  		.setWorked(i)
+ *  		.setSubTask('Sub task title:'+i);
+ *  }
+ *  monitor
+ *  	.setState(PProgressMonitor.FINISH);
  */
 .factory('PProgressMonitor', function(PObject) {
 	var PProgressMonitor = function() {
@@ -143,14 +160,46 @@ angular.module("pluf.core", [])
 		}
 	};
 	pProgressMonitor.prototype = {
+		/**
+		 * حالت انتظار برای این پیشرفت کار را تعیین می‌کند.
+		 * @memberof PProgressMonitor
+		 * @type {Number}
+		 */
 		WAIT : 0,
+		/**
+		 * حالت انجام کار را تعیین می‌کند
+		 * @memberof PProgressMonitor
+		 * @type {Number}
+		 */
 		WORKING : 1,
+		/**
+		 * حالت پایان را تعیین می‌کند.
+		 * @memberof PProgressMonitor
+		 * @type {Number}
+		 */
 		FINISH : 2,
+		/**
+		 * حالت خطا را برای کار تعیین می‌کند.
+		 * @memberof PProgressMonitor
+		 * @type {Number}
+		 */
 		ERROR : 3,
+		/**
+		 * تعداد کل کارهایی که تا حال انجام شده را تعیین می‌کند.
+		 * @memberof PProgressMonitor
+		 * @param  {Integer} w تعداد کل کارها
+		 * @return {PProgressMonitor}   خود پیشرفت کار را به عنوان خروجی برمی‌گرداند
+		 */
 		setWorked : function(w) {
 			this._w = w;
 			return this;
 		},
+		/**
+		 * به میزان کار انجام شده یک تعداد ثابت اضافه می‌کند.
+		 * @memberof PProgressMonitor
+		 * @param  {Integer} w تعداد کار انجام شده جدید
+		 * @return {PProgressMonitor}   خود ساختار داده‌ای پیشرفت کار
+		 */
 		addWorked : function(w) {
 			if (this._w) {
 				this._w += w;
@@ -159,219 +208,211 @@ angular.module("pluf.core", [])
 			}
 			return this;
 		},
+		/**
+		 * تعداد کارهایی که انجام شده است را تعیین می‌کند. این مقدار در متغیری به نام _w ذخیره می‌شود
+		 * که می‌تواند در نمایش نیز به کار رود اما توصیه می‌کنم که او همین فراخوانی در نمایش استفاده
+		 * کنید.
+		 * @memberof PProgressMonitor
+		 * @return {Integer} تعداد کارها
+		 */
 		worked : function() {
 			return this._w;
 		},
+		/**
+		 * تعداد کل کارهایی که باید انجام شود را تعیین می‌کند.
+		 * @memberof PProgressMonitor
+		 * @param  {Integer} tw تعداد کل کارهایی که باید انجام شود.
+		 * @return {PProgressMonitor}  خود ساختار داده‌ای پیشرفت کار.
+		 */
 		setTotalWork : function(tw) {
 			this._tw = tw;
 			return this;
 		},
+		/**
+		 * تعداد کل کارهایی که باید انجام شود را تعیین می‌کند.
+		 * @memberof PProgressMonitor
+		 * @return {Integer} تعداد کل کارها
+		 */
 		totalWork : function() {
 			return this._tw;
 		},
+		/**
+		 * میزان پیشرفت کار را به درصد تعیین می‌کند. این مقدار با روش ساده تقسم به دست می‌آیدکه
+		 * از رابطه زیر پیروی می‌کند:
+		 *
+		 * P = worked / totalWork * 100
+		 *
+		 * در صورتی که مقادیر اشتباهی برای تعداد کل کارها و کارهای انجام شده تعیین شده باشد مقدار
+		 * -۱ به عنوان نتیجه برگردانده خواهد شد.
+		 * @memberof PProgressMonitor
+		 * @return {Number} درصد پیشرفت کار
+		 */
 		percentage : function() {
 			return this._w * 100 / this._tw;
 		},
+		/**
+		 * عنوان کار اصلی را تعیین می‌کند. این عنوان در نمایش به کار گرفته می‌شود.
+		 * @memberof PProgressMonitor
+		 * @param  {String} t عنوان اصلی کار
+		 * @return {PProgressMonitor}  خود ساختار داده‌ای
+		 */
 		setTask : function(t) {
 			this._t = t;
 			return this;
 		},
+		/**
+		 * عنوان اصل کار را تعیین می‌کند.
+		 * @memberof PProgressMonitor
+		 * @return {String} عنوان اصلی کار
+		 */
 		task : function() {
 			return this._t;
 		},
+		/**
+		 * عنوان کار جاری را تعیین می‌کند. در این مدل فرض کرده‌ایم که هر کار از چندین زیر وظیفه
+		 * تشکیل می‌شود که در دوره‌های زمانی به صورت پشت سر هم انجام می‌شوند.
+		 * @param  {String} st عنوان زیر وظیفه
+		 * @return {PProgressMonitor}    خود ساختار داده‌ای پیشرفت کار.
+		 */
 		setSubTask : function(st) {
 			this._st = st
 			return this;
 		},
+		/**
+		 * عنوان زیر وظیفه را تعیین می‌کند.
+		 * @memberof PProgressMonitor
+		 * @return {String} عنوان زیر وظیفه
+		 */
 		subTask : function() {
 			return this._st;
 		},
+		/**
+		 * حالت زیر این کار را تعیین می‌کند. حالت با استفاده از یک عدد تعیین می‌شود که مقادیر متفاوت
+		 * آن معانی خاصی دارد. این مقادر در توصیف این موجودیت آورده شده است.
+		 * @memberof PProgressMonitor
+		 * @param  {Integer} s حالت کار
+		 * @return {PProgressMonitor}   خود ساختار داده‌ای
+		 */
 		setState : function(s) {
 			this._s = s;
 			return this;
 		},
+		/**
+		 * حالت کار را تعیین می‌کند.
+		 * @memberof PProgressMonitor
+		 * @return {Integer} حالت کار
+		 */
 		state : function() {
 			return this._s;
 		},
+		/**
+		 * پایان یافتن کار را تعیین می‌کند. در صورتی که کار با موفقیت و یا عدم موفقیت تمام شود این
+		 * فراخوانی مقدار درستی را برمی‌گرداند.
+		 * @memberof PProgressMonitor
+		 * @return {Boolean} درستی در صورت پایان کار
+		 */
+		isDone : function() {
+			return this._s == this.FINISH;
+		}
 	}
 	return pProgressMonitor;
 })
-/**
- * حالت را تعیین می‌کند
- *
- * @depricated
- */
-.factory('PStatus', function(PObject) {
-	var pStatus = function() {
-		PObject.apply(this, arguments);
-	};
-	var pStatus = function(data) {
-		if (data) {
-			this._s = 0;
-			this._p = 0;
-			this.setData(data);
-		}
-	};
-	pStatus.prototype = {
-		setProgress : function(p) {
-			this._p = p;
-			return this;
-		},
-		progress : function() {
-			return this._p;
-		},
-		setTask : function(t, sb) {
-			this._t = t;
-			this._sb = sb;
-			return this;
-		},
-		task : function() {
-			return this._t;
-		},
-		subTask : function() {
-			return this._sb;
-		},
-		setSubTask: function(sb){
-			this._sb = sb;
-			return this;
-		},
-		preloading : function(m) {
-			this._m = m;
-			this._s = 0;
-			return this;
-		},
-		isLoading : function() {
-			return this._s == 0;
-		},
-		loaded : function(m) {
-			this._m = m;
-			this._s = 1;
-			return this;
-		},
-		isLoaded : function() {
-			return this._s == 1;
-		},
-		error : function(m) {
-			this._m = m;
-			this._s = 2
-			return this;
-		},
-		isError : function() {
-			return this._s == 2;
-		},
-		message : function() {
-			return this._m;
-		},
-		setMessage: function(m) {
-			this._m = m;
-			return this;
-		}
-	}
-	return pStatus;
-})
 
-/*******************************************************************************
- * $PObject
- * =============================================================================
- ******************************************************************************/
+/**
+ * @memberof pluf.core
+ * @ngdoc factory
+ * @name PPreferenceNode
+ * @description
+ *
+ * یک تنظیم در سیستم را تعیین می‌کند. سیستم تنظیم‌ها به صورت یک درخت در نظر گرفته می‌شود
+ * که در آن هر گره معادل با یک تنظیم در سیستم است. این سیستم برای ایجاد تنظیم‌های کاربری
+ * در نمایش به کار گرفته می‌شود. برای نمونه زبان برنامه، لایه بندی آن و یا تم مورد استفاده از
+ * مواردی است که در این تنظیم‌ها قرار می‌گیرد.
+ *
+ * این تنظیم‌ها سمت کاربر نگهداری می‌شود و برنامه کاربری می‌تواند آنها را برای اجرای بعدی نگهداری
+ * کند.
+ */
 .factory('PPreferenceNode', function(PObject) {
 	var pPreferenceNode = function() {
 		PObject.apply(this, arguments);
 	};
 	pPreferenceNode.prototype = new PObject();
+	/**
+	 * یک بخش دجدید در تنظیم‌ها ایجاد می‌کند.
+	 *
+	 * بخش در حقیقت یک گره نامدار است که کاربران می‌توانند با استفاده از فراخوانی‌های در نظر
+	 * گرفته شده به آن دسترسی داشته باشند.
+	 * @memberof PPreferenceNode
+	 * @param  {String} n نام گره جدید در تنظیم‌ها
+	 * @return {promise(PPreferenceNode)} قول برای ایجاد گره جدید
+	 */
+	pPreferenceNode.prototype.newNode = function(n) {
+		var def = $q.defer();
+		var scope = this;
+		$timeout(function() {
+			var node = new pPreferenceNode();
+			scope.children[n] = section;
+			def.resolve(node);
+			//XXX: maso, 1395: ذخیره کرده تنظیم‌های جدید
+		}, 1);
+		return def.promise;
+	}
+	/**
+	 * گره تعیین شده با نام را پیدا کرده و به عنوان نتیجه برمی‌گرداند
+	 * @memberof PPreferenceNode
+	 * @param  {String} n نام گره مورد نظر
+	 * @return {PaginatorPage(PPreferenceNode)}  زیرگره معادل
+	 */
+	pPreferenceNode.prototype.node = function(n) {
+		//XXX: maso, 1395: از بین بچه‌ها گره مناسب را پیدا کرده و به عنو نتیجه برمی‌گرداند
+	}
+	/**
+	 * تمام زیر گره‌ها را به صورت صفحه بندی شده در اختیار می‌گذارد.
+	 * @memberof PPreferenceNode
+	 * @param  {PaginatorParameter} p پارامترهای صفحه بندی
+	 * @return {promise(PaginatorPage)}   گره‌ها به صورت صفحه بندی شده.
+	 */
+	pPreferenceNode.prototype.nodes = function(p) {
+		//XXX: maso, 1395:
+	}
+	/**
+	 * گره پدر را تعیین می‌کند.
+	 * @memberof PPreferenceNode
+	 * @return {promise(PPreferenceNode)} یک دستگیره برای انجام کار
+	 */
+	pPreferenceNode.prototype.parent = function() {
+		//XXX: maso, 1395:
+	}
 	return pPreferenceNode;
 })
-//
+/**
+ * @memberof pluf.core
+ * @ngdoc factory
+ * @name PPreferenceProperty
+ * @description
+ *
+ * ساختار یک تنظیم را تعیین می‌کند که در یک گره از تنظیم‌ها قرار می‌گیرد. همانگونه که گفته شد، هر
+ * گره می‌تواند شامل مجموعه‌ای از تنظیم‌ها باشد. تمام تنظیم‌های موجود در هر گره  با استفاده از این
+ * ساختارها ایجاد می‌شوند.
+ */
 .factory('PPreferenceProperty', function(PPreferenceNode) {
 	var pPreferenceProperty = function() {
 		PPreferenceNode.apply(this, arguments);
 	};
 	pPreferenceProperty.prototype = new PPreferenceNode();
+	/**
+	 * مقدار جدید را برای این خصوصیت تعیین می‌کند
+	 * @param {Object} v مقدار جدید
+	 */
+	pPreferenceProperty.prototype.setValue = function(v){}
+	/**
+	 * مقدار خصوصیت را تعیین می‌:کند.
+	 * @return {Object} مقدار خصوصیت
+	 */
+	pPreferenceProperty.prototype.value = function(){}
 	return pPreferenceProperty;
 })
-/**
- * تنظیم‌های برنامه
- *
- * در بسیاری از بخش‌های سیستم نیازمند وجود یک ساختار برای نگهداری تنظیم‌های کاربر هستیم. این
- * موجودیت این امکان را فراهم می‌کند که کاربر مجموعه‌ای از خصوصیت‌ها را برای خود نگهداری کند.
- * این ساختار توسط برنامه‌های کاربردی ایجادمی‌شود و توسط کاربر قابلیت تنظیم دارد.
- */
-.factory('PPreferenceSection',function($rootScope, $q, $timeout, PPreferenceNode,
-				PPreferenceProperty, PException) {
-			var pPreferenceSection = function() {
-				PPreferenceNode.apply(this, arguments);
-			};
-			pPreferenceSection.prototype = new PPreferenceNode();
-			/**
-			 * یک بخش دجدید در تنظیم‌ها ایجاد می‌کند.
-			 *
-			 * بخش در حقیقت یک گره نامدار است که کاربران می‌توانند با استفاده از فراخوانی‌های در نظر
-			 * گرفته شده به آن دسترسی داشته باشند.
-			 *
-			 * @param  section $data داده‌های بخشی که باید ایجاد شود
-			 * @return promise       یک دستگیره برای اجرای غیر همزمان
-			 */
-			pPreferenceSection.prototype.addSection = function($data) {
-				var def = $q.defer();
-				var scope = this;
-				$timeout(function() {
-					var section = new pPreferenceSection($data);
-					scope[$data.name] = section;
-					def.resolve(section);
-				}, 1);
-				return def.promise;
-			}
-			/**
-			 * یک ساختار را به عنوان داده جدید اضاهف می‌کند.
-			 *
-			 * @param  property $data خصوصیت مورد نظر
-			 * @return promise       قول اجرا
-			 */
-			pPreferenceSection.prototype.addProperty = function($data) {
-				// XXX: maso, 1395: اضافه کردن خصوصیت
-			}
-			/**
-			 * یک گره از خصوصیت‌ها را در اختیار کاربران قرار می‌دهد
-			 *
-			 * آدرس‌دهی تمام گره‌ها با استفاده از یک مسیر تعیین می‌شود که کاملا شبیه به ادرس دهی‌های
-			 * لینوکس است. برای نمونه آدرس زیر یک گره را در ریشه تعیین می‌کند:
-			 *
-			 * /node-name
-			 *
-			 * @param  String $path مسیر گره را تعیین می‌‌کند
-			 * @return promise  یک فراخوانی غیر همزمان که در اختیار کاربران قرار میگیرد.
-			 */
-			pPreferenceSection.prototype.node = function($path) {
-				if ($path.startsWith("/")) {
-					$path = $path.substr(1);
-					return $rootScope.appc.node($path);
-				}
-				var def = $q.defer();
-				var scope = this;
-				$timeout(function() {
-					var $segments = [];
-					if ($path.indexOf("/") > -1) {
-						$segments = $path.split("/");
-					} else {
-						$segments.push($path);
-					}
-					var $node = scope;
-					while ($segments.length > 0) {
-						var $c = $segments.shift();
-						if ($node.hasOwnProperty($c)) {
-							$node = $node[$c];
-						} else {
-							def.reject(new PException("Segment not exist : "
-									+ $path));
-							return;
-						}
-					}
-					def.resolve($node);
-				}, 1);
-				return def.promise;
-			}
-			return pPreferenceSection;
-		})
+
 
 /**
 	* @memberof pluf.core
@@ -382,42 +423,28 @@ angular.module("pluf.core", [])
 	* مرورگر ذخیره سازی می‌شوند.‌
 	*/
 .service('$preference', function($rootScope) {
-	this.addSection = function($sec) {
-		return $rootScope.appc.addSection($sec);
-	}
-	this.addProperty = function($pro) {
-		return $rootScope.appc.addProperty($pro);
-	}
-	this.node = function($path) {
-		return $rootScope.appc.node($path);
-	}
+	/**
+	 * یک گره با نام جدید ایجاد می‌کند
+	 * @memberof $preference
+	 * @param  {String} n نام گره
+	 * @return {promise(PPreferenceNode)}   دستگیره گره جدید
+	 */
+	this.newNode = function(n) {}
+	/**
+	 * گره با مسیر تعیین شده را پیدا کرده و به عنوان نتیجه برمی‌گرداند
+	 * @memberof $preference
+	 * @param  {String} path گره تنظیم‌ها
+	 * @return {promise(PPreferenceNode)}     گره مورد نظر
+	 */
+	this.node = function(path) {}
+	/**
+	 * فهرست همه گره‌ها را به صورت صفحه بندی شده در اختیار می‌گذارد
+	 * @memberof $preference
+	 * @param  {PaginatorParameter} p پارامترهای صفحه بندی
+	 * @return {promise(PaginatorPage)}  دستگیره فهرست گره‌ها
+	 */
+	this.nodes = function(p) {}
 	return this;
-})
-
-/**
- * تظیم‌های کلی سیستم
- *
- * در کل نرم‌افزار یک موجودیت به نام appc وجود دارد که تمام تنظیم‌های سیستم در آن قرار می‌گیرد
- * به این ترتیب نرم افزارها می‌توانند تنظیم‌های مورد نظر خود را ذخیره کرده و در بخش‌های متفاوت
- * از آن استفاده کنند.
- *
- */
-.run(function($rootScope, PPreferenceSection) {
-	$rootScope.appc = new PPreferenceSection();
-	$rootScope.appc.addSection({
-		name : 'pluf',
-		title : 'System info',
-		description : 'System information section.',
-		editable : false,
-		hiden : true
-	}).then(function(section) {
-		return section.addProperty({
-			name : 'version',
-			title : 'System version',
-			description : 'System version',
-			editable : false,
-		})
-	})
 })
 /**
 	* @memberof pluf.core
