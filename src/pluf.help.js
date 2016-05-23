@@ -3,10 +3,10 @@
 /**
  * @ngdoc module
  * @name pluf.help
- * 
+ *
  * @description
  * ماژول pluf.help مجموعه‌ای از امکانات را برای پیاده‌سازی یک ویکی فراهم می‌کند.
- * عناصر اصلی این ماژول Page و Book است و عملیاتی مدیریت آن‌ها مانند ایجاد، ویرایش، حذف و دریافت 
+ * عناصر اصلی این ماژول Page و Book است و عملیاتی مدیریت آن‌ها مانند ایجاد، ویرایش، حذف و دریافت
  * آنها در این ماژول قرار داده شده است.
  */
 angular.module('pluf.help', ['pluf'])
@@ -15,18 +15,18 @@ angular.module('pluf.help', ['pluf'])
  * @memberof pluf.help
  * @ngdoc factory
  * @name PWikiPageItem
- * 
+ *
  * @description
  * ساختار داده‌ای یک آیتم از نوع صفحه با کمترین اطلاعات ممکن.
- * 
+ *
  * @attr {Integer} id شناسه PageItem
- * 
+ *
  * @attr {Integer} priority
  * با این خصوصیت می‌توان برای فهرستی از صفحات یک ترتیب در نظر گرفت
- * 
+ *
  * @attr {String} title عنوان صفحه
  * @attr {String} state وضعیت صفحه
- * 
+ *
  */
 .factory('PWikiPageItem', function(PObject) {
   var wikiPageItem = function(d) {
@@ -37,10 +37,10 @@ angular.module('pluf.help', ['pluf'])
   wikiPageItem.prototype = new PObject();
   /**
    * این PageItem را به‌روزرسانی می‌کند
-   * 
-   * @memberof PWikiPageItem.prototype
+   *
+   * @memberof PWikiPageItem
    * @param {struct} data - ساختاری حاوی اطلاعاتی که باید در صفحه به‌روزرسانی شود
-   * @returns 
+   * @returns
    */
   wikiPageItem.prototype.update = function(data) {
     this.setData(data);
@@ -53,25 +53,25 @@ angular.module('pluf.help', ['pluf'])
  * @memberof pluf.help
  * @ngdoc factory
  * @name PWikiPage
- * 
+ *
  * @description
  * ساختار داده‌ای یک صفحه به همراه اطلاعات کامل صفحه.
- * 
+ *
  * @attr {Integer} id شناسه صفحه
- * 
+ *
  * @attr {Integer} priority
  * با این خصوصیت می‌توان برای فهرستی از صفحات یک ترتیب در نظر گرفت
- * 
- * @attr {String} title عنوان صفحه 
+ *
+ * @attr {String} title عنوان صفحه
  * @attr {String} state وضعیت صفحه
- * @attr {Integer} book شناسه کتابی که این صفحه متعلق به آن است 
- * @attr {String} language زبان مورد استفاده در متن صفحه 
+ * @attr {Integer} book شناسه کتابی که این صفحه متعلق به آن است
+ * @attr {String} language زبان مورد استفاده در متن صفحه
  * @attr {String} summary خلاصه‌ای از متن صفحه
  * @attr {Blob} content محتوای صفحه
- * 
+ *
  * @attr {String} content_type
  * نوع متن صفحه. مثلا: text/html, text/plain, text/markdown , ...
- * 
+ *
  * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد page
  * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
@@ -81,12 +81,12 @@ angular.module('pluf.help', ['pluf'])
       this.setData(d);
     }
   };
-  
+
   wikiPage.prototype = new PObject();
-  
+
   /**
    * اطلاعات یک صفجه را به‌روزرسانی می‌کند.
-   * 
+   *
    * @memberof PWikiPage.prototype
    * @param {struct} p ساختاری حاوی اطلاعاتی از صفحه که باید به‌روزرسانی شود
    */
@@ -106,10 +106,10 @@ angular.module('pluf.help', ['pluf'])
         throw new PException(data);
       });
     }
-  
+
   /**
    * محتوای صفحه را به قالب html تبدیل می‌کند.
-   * 
+   *
    * @memberof PWikiPage.prototype
    * @returns {String} محتوای صفحه در قالب html
    */
@@ -123,10 +123,10 @@ angular.module('pluf.help', ['pluf'])
  * @memberof pluf.help
  * @ngdoc factory
  * @name PWikiBook
- * 
+ *
  * @description
  * ساختار داده‌ای یک کتاب به همراه اطلاعات کامل صفحه.
- * 
+ *
  * @attr {Integer} id شناسه کتاب
  * @attr {String} title عنوان کتاب
  * @attr {String} state وضعیت کتاب
@@ -166,7 +166,7 @@ angular.module('pluf.help', ['pluf'])
             }
           /**
            * اولین صفحه کتاب را برمی‌گرداند
-           * 
+           *
            * @memberof PWikiPage.prototype
            */
           pWikiBook.prototype.getFirstPage = function() {
@@ -179,7 +179,7 @@ angular.module('pluf.help', ['pluf'])
           }
           /**
            * فهرستی از صفحات کتاب را برمی‌گرداند
-           * 
+           *
            * @memberof PWikiPage.prototype
            * @returns فهرستی از صفحات کتاب را برمی‌گرداند
            */
@@ -200,7 +200,7 @@ angular.module('pluf.help', ['pluf'])
           }
           /**
            * یک صفحه را به یک کتاب اضافه می‌کند
-           * 
+           *
            * @memberof PWikiBook.prototype
            * @param {PWikiPage} page صفحه‌ای که به کتاب اضافه خواهد شد
            * @returns خود کتاب را که صفحه جدید به آن اضافه شده است برمی‌گرداند
@@ -224,10 +224,10 @@ angular.module('pluf.help', ['pluf'])
               throw new PException(data);
             });
           }
-          
+
           /**
            * اطلاعات یک کتاب را به‌روزرسانی می‌کند.
-           * 
+           *
            * @memberof PWikiBook.prototype
            * @param {struct} b ساختاری حاوی اطلاعاتی از کتاب که باید به‌روزرسانی شود
            */
@@ -247,7 +247,7 @@ angular.module('pluf.help', ['pluf'])
               throw new PException(data);
             });
           }
-          
+
           return pWikiBook;
         }
 )
@@ -256,7 +256,7 @@ angular.module('pluf.help', ['pluf'])
  * @memberof pluf.help
  * @ngdoc service
  * @name $help
- * 
+ *
  * @description
  * این سرویس امکانات مدیریت صفحه‌ها و کتاب‌های ویکی را فراهم می‌کند. با استفاده از این سرویس
  * می‌توان صفحات و کتاب‌های ویکی را ایجاد، حذف، جستجو و یا دریافت کرد.
@@ -344,10 +344,10 @@ angular.module('pluf.help', ['pluf'])
               throw new PException(data);
             });
           }
-          
+
           /**
            * کتاب با شناسه داده شده را برمی گرداند.
-           * 
+           *
            * @memberof $help
            * @param {Integer} id شناسه کتاب مورد نظر
            * @return {PWikiBook} ساختاری حاوی اطلاعات کتاب با شناسه داده شده
@@ -364,11 +364,11 @@ angular.module('pluf.help', ['pluf'])
               throw new PException(data);
             });
           }
-          
+
           /**
            * یک کتاب را بر اساس اطلاعات داده شده ایجاد می‌کند و کتاب ایجاد شده را
            * به صورت غیرهمزمان برمی‌گرداند.
-           * 
+           *
            * @memberof $help
            * @param {PWikiBook} b کتابی که باید ذخیره شود
            * @return {PWikiBook} ساختاری حاوی اطلاعات کتاب پس از ذخیره شدن
@@ -389,12 +389,12 @@ angular.module('pluf.help', ['pluf'])
               throw new PException(data);
             });
           }
-          
+
           /**
-           * صفحات ویکی را با توجه به پارامتر p مورد جستجو قرار داده و صفحات نتیجه را 
+           * صفحات ویکی را با توجه به پارامتر p مورد جستجو قرار داده و صفحات نتیجه را
            * در قالب یک ساختار صفحه‌بندی شده به صورت غیرهمزمان برمی‌گرداند.
            * پارامتر p ساختاری است که در آن خصوصیات مورد نظر برای صفحات مورد جستجو تعیین می‌شود
-           * 
+           *
            * @memberof $help
            * @param {PaginatorParameter} p ساختاری که در آن خصوصیات مورد نظر برای صفحات مورد جستجو تعیین می‌شود
            * @return {PaginatorPage} ساختاری صفحه‌بندی شده از صفحات در نتیجه جستجو
@@ -421,7 +421,7 @@ angular.module('pluf.help', ['pluf'])
 
           /**
            * صفحه با شناسه داده شده را برمی گرداند.
-           * 
+           *
            * @memberof $help
            * @param {Integer} id شناسه صفحه مورد نظر
            * @return {PWikiPage} ساختاری حاوی اطلاعات صفحه با شناسه داده شده
@@ -442,7 +442,7 @@ angular.module('pluf.help', ['pluf'])
           /**
            * یک صفحه را بر اساس اطلاعات داده شده ایجاد می‌کند و صفحه ایجاد شده را
            * به صورت غیرهمزمان برمی‌گرداند.
-           * 
+           *
            * @memberof $help
            * @param {PWikiPage} b صفحه‌ای که باید ذخیره شود
            * @return {PWikiPage} ساختاری حاوی اطلاعات صفحه پس از ذخیره شدن
@@ -463,7 +463,7 @@ angular.module('pluf.help', ['pluf'])
               throw new PException(data);
             });
           }
-          
+
         })
 
 /**
