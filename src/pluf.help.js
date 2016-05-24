@@ -335,9 +335,9 @@ angular.module('pluf.help', ['pluf'])
 )
 
 /**
- * @memberof pluf.help
  * @ngdoc service
  * @name $help
+ * @memberof pluf.help
  * 
  * @description
  * این سرویس امکانات مدیریت صفحه‌ها و کتاب‌های ویکی را فراهم می‌کند. با استفاده از این سرویس
