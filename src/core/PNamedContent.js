@@ -10,7 +10,7 @@
 		]);
 
 		/**
-		 * @memberof pluf.cms
+		 * @memberof pluf
 		 * @ngdoc factory
 		 * @name PNamedContent
 		 * @description

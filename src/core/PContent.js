@@ -9,7 +9,7 @@
 			PContent
 		]);
 	/**
-	 * @memberof pluf.cms
+	 * @memberof pluf
 	 * @ngdoc factory
 	 * @name PContent
 	 * @description

@@ -10,7 +10,7 @@
 		]);
 
 	/**
-	 * @memberof pluf.core
+	 * @memberof pluf
 	 * @ngdoc service
 	 * @name $preference
 	 * @description

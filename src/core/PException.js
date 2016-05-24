@@ -10,7 +10,7 @@
 		]);
 
 	/**
-	 * @memberof pluf.core
+	 * @memberof pluf
 	 * @ngdoc factory
 	 * @name PException
 	 * @description

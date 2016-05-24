@@ -119,7 +119,7 @@
 			PContent
 		]);
 	/**
-	 * @memberof pluf.cms
+	 * @memberof pluf
 	 * @ngdoc factory
 	 * @name PContent
 	 * @description
@@ -187,7 +187,7 @@
 		]);
 
 	/**
-	 * @memberof pluf.core
+	 * @memberof pluf
 	 * @ngdoc factory
 	 * @name PException
 	 * @description
@@ -231,7 +231,7 @@
 		]);
 
 		/**
-		 * @memberof pluf.cms
+		 * @memberof pluf
 		 * @ngdoc factory
 		 * @name PNamedContent
 		 * @description
@@ -287,7 +287,7 @@
 		.module('pluf')
 		.factory('PObject',[PObject]);
 		/**
-			* @memberof pluf.core
+			* @memberof pluf
 			* @ngdoc factory
 			* @name PObject
 			*
@@ -772,7 +772,11 @@
 		]);
 
 	/**
-	 *
+	 * @memberof pluf
+	 * @ngdoc factory
+	 * @name PUser
+	 * @description
+	 * مدل کلی کاربر را در سیستم تعیین می‌کند.
 	 */
 	function PUser($http, $q, $httpParamSerializerJQLike, PObject, PProfile, PException) {
 		var pUser = function() {
@@ -886,23 +890,25 @@
 		.factory('PaginatorParameter',[
 			PaginatorParameter
 		]);
-	/*******************************************************************************
-	 *                                صفحه بندی
-	 * =============================================================================
+	/**
+	 * @memberof pluf
+	 * @ngdoc factory
+	 * @name PaginatorParameter
+	 * @description
 	 * بسیاری از داده‌هایی که در سیستم موجود است به صورت صفحه بندی شده در اختیار کاربران قرار
 	 * می‌گیرد. در این بخش ابزارهایی برای کار با صفحه بندی ارائه شده است.
-	 ******************************************************************************/
-	/**
+	 *
+	 *
 	 * از جمله خصوصیاتی که می‌توان در این ساختار قرار داد عبارتند از:
-	 * <ul>
-	 * 	<li>_px_q</li> متن مورد جستجو در فیلدهای مختلف
-	 * 	<li>_px_p</li> شماره صفحه مورد نظر از فهرست صفحه‌بندی شده
-	 * 	<li>_px_ps</li> تعداد آیتم‌های موجود در هر صفحه
-	 * 	<li>_px_fk</li> نام خصوصیتی که برای فیلتر کردن مورد استفاده قرار می‌گیرد
-	 * 	<li>_px_fv</li> مقداری مورد نظر برای خصوصیتی که بر اساس آن فیلتر انجام می‌شود.
-	 * 	<li>_px_sk</li> نام خصوصیتی که فهرست باید بر اساس آن مرتب شود.
-	 * 	<li>_px_so</li> ترتیب مرتب‌سازی، اینکه مرتب‌سازی به صورت صعودی باشد یا نزولی
-	 * </ul>
+	 *
+	 * @attr {string} _px_q متن مورد جستجو در فیلدهای مختلف
+	 * @attr {Integer} _px_p  شماره صفحه مورد نظر از فهرست صفحه‌بندی شده
+	 * @attr {Integer}_px_ps  تعداد آیتم‌های موجود در هر صفحه
+	 * @attr {string} _px_fk نام خصوصیتی که برای فیلتر کردن مورد استفاده قرار می‌گیرد
+	 * @attr {string} _px_fv مقداری مورد نظر برای خصوصیتی که بر اساس آن فیلتر انجام می‌شود.
+	 * @attr {string} _px_sk نام خصوصیتی که فهرست باید بر اساس آن مرتب شود.
+	 * @attr {string} _px_so ترتیب مرتب‌سازی، اینکه مرتب‌سازی به صورت صعودی باشد یا نزولی
+	 *
 	 */
 	function PaginatorParameter() {
 		var pagParam = function(paginatorParam) {
@@ -1085,7 +1091,7 @@
 			if (!($ci in scope._handlers)) {
 				var def = $q.defer();
 				def.reject(new PException({
-					message : 'command not found :' + $ci,
+					message : 'Command not found :' + $ci,
 					statuse : 400,
 					code : 4404
 				}));
@@ -1393,7 +1399,7 @@
 			notify
 		]);
 	/**
-	 * @memberof pluf.core
+	 * @memberof pluf
 	 * @ngdoc service
 	 * @name $notify
 	 * @description
@@ -1499,7 +1505,7 @@
 		]);
 
 	/**
-	 * @memberof pluf.core
+	 * @memberof pluf
 	 * @ngdoc service
 	 * @name $preference
 	 * @description

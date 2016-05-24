@@ -10,7 +10,11 @@
 		]);
 
 	/**
-	 *
+	 * @memberof pluf
+	 * @ngdoc factory
+	 * @name PUser
+	 * @description
+	 * مدل کلی کاربر را در سیستم تعیین می‌کند.
 	 */
 	function PUser($http, $q, $httpParamSerializerJQLike, PObject, PProfile, PException) {
 		var pUser = function() {

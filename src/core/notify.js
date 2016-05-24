@@ -9,7 +9,7 @@
 			notify
 		]);
 	/**
-	 * @memberof pluf.core
+	 * @memberof pluf
 	 * @ngdoc service
 	 * @name $notify
 	 * @description

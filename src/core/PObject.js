@@ -6,7 +6,7 @@
 		.module('pluf')
 		.factory('PObject',[PObject]);
 		/**
-			* @memberof pluf.core
+			* @memberof pluf
 			* @ngdoc factory
 			* @name PObject
 			*

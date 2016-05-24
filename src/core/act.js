@@ -121,7 +121,7 @@
 			if (!($ci in scope._handlers)) {
 				var def = $q.defer();
 				def.reject(new PException({
-					message : 'command not found :' + $ci,
+					message : 'Command not found :' + $ci,
 					statuse : 400,
 					code : 4404
 				}));
