@@ -12,9 +12,9 @@
 angular.module('pluf.help', ['pluf'])
 
 /**
- * @memberof pluf.help
  * @ngdoc factory
  * @name PWikiPageItem
+ * @memberof pluf.help
  * 
  * @description
  * ساختار داده‌ای یک آیتم از نوع صفحه با کمترین اطلاعات ممکن.
@@ -29,30 +29,32 @@ angular.module('pluf.help', ['pluf'])
  * 
  */
 .factory('PWikiPageItem', function(PObject) {
-  var wikiPageItem = function(d) {
-    if (d) {
-      this.setData(d);
-    }
-  };
+	
+	var wikiPageItem = function(d) {
+		if (d) {
+			this.setData(d);
+		}
+	}
+  
   wikiPageItem.prototype = new PObject();
+  
   /**
-   * این PageItem را به‌روزرسانی می‌کند
+   * صفحه مربوط به این PageItem را برمی گرداند
    * 
-   * @memberof PWikiPageItem.prototype
-   * @param {struct} data - ساختاری حاوی اطلاعاتی که باید در صفحه به‌روزرسانی شود
-   * @returns 
+   * @memberof PWikiPageItem
+   * @returns {promise(PWikiPage)} صفحه مربوط به این PageItem 
    */
-  wikiPageItem.prototype.update = function(data) {
-    this.setData(data);
-    return this;
+  wikiPageItem.prototype.page = function() {
+	  // TODO: پیاده‌سازی شود
   }
+  
   return wikiPageItem;
 })
 
 /**
- * @memberof pluf.help
  * @ngdoc factory
  * @name PWikiPage
+ * @memberof pluf.help
  * 
  * @description
  * ساختار داده‌ای یک صفحه به همراه اطلاعات کامل صفحه.
@@ -76,41 +78,65 @@ angular.module('pluf.help', ['pluf'])
  * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
 .factory('PWikiPage', function(PObject) {
+	
   var wikiPage = function(d) {
     if (d) {
       this.setData(d);
     }
-  };
+  }
   
   wikiPage.prototype = new PObject();
   
   /**
-   * اطلاعات یک صفجه را به‌روزرسانی می‌کند.
+   * اطلاعات یک صفحه را به‌روزرسانی می‌کند.
    * 
-   * @memberof PWikiPage.prototype
-   * @param {struct} p ساختاری حاوی اطلاعاتی از صفحه که باید به‌روزرسانی شود
+   * @memberof PWikiPage
+   * 
+   * @param {PWikiPage} p ساختاری حاوی اطلاعاتی از صفحه که باید به‌روزرسانی شود
+   * @returns {promise(PWikiPage)} صفحه به‌روزرسانی شده
    */
-  wikiPage.prototype.updatePage = function(p) {
-      var scope = this;
-      return $http({
-        method: 'POST',
-        url: '/api/wiki/page/' + p.id,
-        data: $httpParamSerializerJQLike(p),
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }).then(function(res) {
-        scope.setData(res.data);
-        return scope;
-      }, function(data) {
-        throw new PException(data);
-      });
+  wikiPage.prototype.update = function(p) {
+	  var scope = this;
+	  return $http({
+		  method: 'POST',
+		  url: '/api/wiki/page/' + p.id,
+		  data: $httpParamSerializerJQLike(p),
+		  headers: {
+			  'Content-Type': 'application/x-www-form-urlencoded'
+		  }
+	  }).then(function(res) {
+		  scope.setData(res.data);
+		  return scope;
+	  }, function(data) {
+		  throw new PException(data);
+	  });
+    }
+  
+  /**
+   * صفحه را حذف می‌کند
+   * 
+   * @memberof PWikiPage
+   * 
+   * @returns {promise(PWikiPage)} صفحه حذف شده برگردانده می شود
+   */
+  wikiPage.prototype.remove = function() {
+	  var scope = this;
+	  return $http({
+		  method: 'DELETE',
+		  url: '/api/wiki/page/' + scope.id
+	  }).then(function(res) {
+		  scope.setData(res.data);
+		  return scope;
+	  }, function(data) {
+		  throw new PException(data);
+	  });
     }
   
   /**
    * محتوای صفحه را به قالب html تبدیل می‌کند.
    * 
-   * @memberof PWikiPage.prototype
+   * @memberof PWikiPage
+   * 
    * @returns {String} محتوای صفحه در قالب html
    */
   wikiPage.prototype.toHTML = function() {
@@ -120,9 +146,9 @@ angular.module('pluf.help', ['pluf'])
 })
 
 /**
- * @memberof pluf.help
  * @ngdoc factory
  * @name PWikiBook
+ * @memberof pluf.help
  * 
  * @description
  * ساختار داده‌ای یک کتاب به همراه اطلاعات کامل صفحه.
@@ -137,115 +163,171 @@ angular.module('pluf.help', ['pluf'])
  */
 .factory(
         "PWikiBook",
-        function(PObject, PException, PWikiPageItem, PaginatorPage, $http, $q,
-                $timeout) {
+        function(PObject, PException, PWikiPageItem, PaginatorPage, $http, $q, $timeout) {
+        	
           var pWikiBook = function() {
             PObject.apply(this, arguments);
-          };
+          }
+          
           pWikiBook.prototype = new PObject();
+          
           /**
+           * صفحه با شناسه داده شده را از فهرست صفحات کتاب بازیابی می‌کند.
+           * 
            * @private
-           * @param id شناسه کتاب
-           * @param data داده‌های کتاب
+           * @memberof PWikiBook
+           * @param id شناسه صفحه
+           * @param data داده‌های صفحه
            * @returns {PWikiPageItem}
            */
           pWikiBook.prototype._retItem = function(id, data) {
-              var item = null;
-              for ( var i in this.items) {
-                if (this.items[i].id == id) {
-                  item = this.items[i];
-                  break;
-                }
-              }
-              if (!item) {
-                item = new PWikiPageItem(data);
-                this.items.push(item);
-              }
-              item.setData(data);
-              return item;
-            }
+        	  var item = null;
+        	  for ( var i in this.items) {
+        		  if (this.items[i].id == id) {
+        			  item = this.items[i];
+        			  break;
+        		  }
+        	  }
+        	  if (!item) {
+        		  item = new PWikiPageItem(data);
+        		  this.items.push(item);
+        	  }
+        	  item.setData(data);
+        	  return item;
+          }
+          
           /**
            * اولین صفحه کتاب را برمی‌گرداند
            * 
-           * @memberof PWikiPage.prototype
+           * @memberof PWikiBook
+           * @returns {promise(PWikiPageItem)} یک PageItem مربوط به صفحه اول کتاب
            */
-          pWikiBook.prototype.getFirstPage = function() {
-            var def = $q.defer();
-            var scope = this;
-            $timeout(function() {
-              def.resolve(scope.items[0]);
-            }, 1);
-            return def.promise;
+          pWikiBook.prototype.firstPage = function() {
+        	  var def = $q.defer();
+        	  var scope = this;
+        	  $timeout(function() {
+        		  def.resolve(scope.items[0]);
+        	  }, 1);
+        	  return def.promise;
           }
+          
           /**
            * فهرستی از صفحات کتاب را برمی‌گرداند
            * 
-           * @memberof PWikiPage.prototype
-           * @returns فهرستی از صفحات کتاب را برمی‌گرداند
+           * @memberof PWikiBook
+           * @returns {promise(PaginatedPage<PWikiPageItem>)}
+           *  فهرستی صفحه بندی شده از PageItem های مربوط به صفحات کتاب
            */
           pWikiBook.prototype.pages = function() {
-            var scope = this;
-            return $http({
-              method: 'GET',
-              url: '/api/wiki/book/' + scope.id + '/pages',
-            }).then(function(res) {
-              scope.items = [];
-              for (var i = 0; i < res.data.length; i++) {
-                scope._retItem(res.data[i].id, res.data[i]);
-              }
-              return scope.items;
-            }, function(data) {
-              throw new PException(data);
-            });
+        	  var scope = this;
+        	  return $http({
+        		  method: 'GET',
+        		  url: '/api/wiki/book/' + scope.id + '/pages',
+        	  }).then(function(res) {
+        		  scope.items = [];
+        		  for (var i = 0; i < res.data.length; i++) {
+        			  scope._retItem(res.data[i].id, res.data[i]);
+        		  }
+        		  return scope.items;
+        	  }, function(data) {
+        		  throw new PException(data);
+        	  });
           }
           /**
-           * یک صفحه را به یک کتاب اضافه می‌کند
+           * یک صفحه را به کتاب اضافه می‌کند
            * 
-           * @memberof PWikiBook.prototype
+           * @memberof PWikiBook
            * @param {PWikiPage} page صفحه‌ای که به کتاب اضافه خواهد شد
-           * @returns خود کتاب را که صفحه جدید به آن اضافه شده است برمی‌گرداند
+           * @returns {promise(PWikiBook)} خود کتاب را که صفحه جدید به آن اضافه شده است برمی‌گرداند
            */
           pWikiBook.prototype.addPage = function(page) {
-        	if(page.isAnonymous()){
-        		var dif = $q.defer();
-        		$timeout(function(){
-        			var ex = new PException({message:"Page id is null!"});
-        			dif.reject(ex);
-        		}, 1);
-        		return dif.promise;
-        	}
-            var scope = this;
-            return $http({
-              method: 'POST',
-              url: '/api/wiki/book/' + scope.id + '/page/' + page.id,
-            }).then(function(res) {
-              return scope;
-            }, function(data) {
-              throw new PException(data);
-            });
+        	  if(page.isAnonymous()){
+        		  var dif = $q.defer();
+        		  $timeout(function(){
+        			  var ex = new PException({message:"Page id is null!"});
+        			  dif.reject(ex);
+        		  }, 1);
+        		  return dif.promise;
+        	  }
+        	  var scope = this;
+        	  return $http({
+        		  method: 'POST',
+        		  url: '/api/wiki/book/' + scope.id + '/page/' + page.id,
+        	  }).then(function(res) {
+        		  return scope;
+        	  }, function(data) {
+        		  throw new PException(data);
+        	  });
+          }
+          
+          /**
+           * یک صفحه را از کتاب حذف می‌کند
+           * 
+           * @memberof PWikiBook
+           * @param {PWikiPage} page صفحه‌ای که باید از کتاب حذف شود
+           * @returns {promise(PWikiPage)} صفحه حذف شده از کتاب را برمی‌گرداند
+           */
+          pWikiBook.prototype.removePage = function(page) {
+        	  if(page.isAnonymous()){
+        		  var dif = $q.defer();
+        		  $timeout(function(){
+        			  var ex = new PException({message:"Page id is null!"});
+        			  dif.reject(ex);
+        		  }, 1);
+        		  return dif.promise;
+        	  }
+        	  var scope = this;
+        	  return $http({
+        		  method: 'DELETE',
+        		  url: '/api/wiki/book/' + scope.id + '/page/' + page.id,
+        	  }).then(function(res) {
+        		  return scope;
+        	  }, function(data) {
+        		  throw new PException(data);
+        	  });
           }
           
           /**
            * اطلاعات یک کتاب را به‌روزرسانی می‌کند.
            * 
-           * @memberof PWikiBook.prototype
+           * @memberof PWikiBook
            * @param {struct} b ساختاری حاوی اطلاعاتی از کتاب که باید به‌روزرسانی شود
+           * @returns {promise(PWikiBook)} کتاب با اطلاعات به‌روزرسانی شده
            */
           pWikiBook.prototype.update = function(b) {
-            var scope = this;
-            return $http({
-              method: 'POST',
-              url: '/api/wiki/book/' + scope.id,
-              data: $httpParamSerializerJQLike(b),
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-              }
-            }).then(function(res) {
-              scope.setData(res.data);
-              return scope;
-            }, function(data) {
-              throw new PException(data);
-            });
+        	  var scope = this;
+        	  return $http({
+        		  method: 'POST',
+        		  url: '/api/wiki/book/' + scope.id,
+        		  data: $httpParamSerializerJQLike(b),
+        		  headers: {
+        			  'Content-Type': 'application/x-www-form-urlencoded'
+        		  }
+        	  }).then(function(res) {
+        		  scope.setData(res.data);
+        		  return scope;
+        	  }, function(data) {
+        		  throw new PException(data);
+        	  });
+          }
+          
+          /**
+           * کتاب را حذف می‌کند
+           * 
+           * @memberof PWikiBook
+           * @returns {promise(PWikiBook)} کتاب حذف شده
+           */
+          pWikiBook.prototype.remove = function() {
+        	  var scope = this;
+        	  return $http({
+        		  method: 'DELETE',
+        		  url: '/api/wiki/book/' + scope.id
+        	  }).then(function(res) {
+        		  scope.setData(res.data);
+        		  return scope;
+        	  }, function(data) {
+        		  throw new PException(data);
+        	  });
           }
           
           return pWikiBook;
@@ -280,14 +362,14 @@ angular.module('pluf.help', ['pluf'])
           }
           /** @private */
           this._retPage = function(id, data) {
-            var instance = this._getPage(id);
-            if (instance) {
-              instance.setData(data);
-            } else {
-              instance = new PWikiPage(data);
-              this._setPage(instance);
-            }
-            return instance;
+        	  var instance = this._getPage(id);
+        	  if (instance) {
+        		  instance.setData(data);
+        	  } else {
+        		  instance = new PWikiPage(data);
+        		  this._setPage(instance);
+        	  }
+        	  return instance;
           }
 
           /*
@@ -305,14 +387,14 @@ angular.module('pluf.help', ['pluf'])
           }
           /** @private */
           this._retBook = function(id, data) {
-            var instance = this._getBook(id);
-            if (instance) {
-              instance.setData(data);
-            } else {
-              instance = new PWikiBook(data);
-              this._setBook(instance);
-            }
-            return instance;
+        	  var instance = this._getBook(id);
+        	  if (instance) {
+        		  instance.setData(data);
+        	  } else {
+        		  instance = new PWikiBook(data);
+        		  this._setBook(instance);
+        	  }
+        	  return instance;
           }
 
           /* فراخوانی‌های عمومی */
@@ -323,26 +405,26 @@ angular.module('pluf.help', ['pluf'])
            * 
            * @memberof $help
            * @param {PaginatorParameter} p ساختاری که در آن خصوصیات مورد نظر برای کتاب‌های مورد جستجو تعیین می‌شود.
-           * @return {PaginatorPage} ساختاری صفحه‌بندی شده از کتاب‌ها در نتیجه جستجو
+           * @return {promise(PaginatorPage<PWikiBook>)} ساختاری صفحه‌بندی شده از کتاب‌ها در نتیجه جستجو
            */
           this.books = function(p) {
-            var scope = this;
-            return $http({
-              method: 'GET',
-              url: '/api/wiki/book/find',
-              params: p.getParameter(),
-            }).then(function(res) {
-              var page = new PaginatorPage(res.data);
-              var items = [];
-              for (var i = 0; i < page.counts; i++) {
-                var t = scope._retBook(page.items[i].id, page.items[i]);
-                items.push(t);
-              }
-              page.items = items;
-              return page;
-            }, function(data) {
-              throw new PException(data);
-            });
+        	  var scope = this;
+        	  return $http({
+        		  method: 'GET',
+        		  url: '/api/wiki/book/find',
+        		  params: p.getParameter(),
+        	  }).then(function(res) {
+        		  var page = new PaginatorPage(res.data);
+        		  var items = [];
+        		  for (var i = 0; i < page.counts; i++) {
+        			  var t = scope._retBook(page.items[i].id, page.items[i]);
+        			  items.push(t);
+        		  }
+        		  page.items = items;
+        		  return page;
+        	  }, function(data) {
+        		  throw new PException(data);
+        	  });
           }
           
           /**
@@ -353,16 +435,16 @@ angular.module('pluf.help', ['pluf'])
            * @return {PWikiBook} ساختاری حاوی اطلاعات کتاب با شناسه داده شده
            */
           this.book = function(id) {
-            var scope = this;
-            return $http({
-              method: 'GET',
-              url: '/api/wiki/book/' + id,
-            }).then(function(res) {
-              var book = scope._retBook(res.data.id, res.data);
-              return book;
-            }, function(data) {
-              throw new PException(data);
-            });
+        	  var scope = this;
+        	  return $http({
+        		  method: 'GET',
+        		  url: '/api/wiki/book/' + id,
+        	  }).then(function(res) {
+        		  var book = scope._retBook(res.data.id, res.data);
+        		  return book;
+        	  }, function(data) {
+        		  throw new PException(data);
+        	  });
           }
           
           /**
@@ -374,20 +456,20 @@ angular.module('pluf.help', ['pluf'])
            * @return {PWikiBook} ساختاری حاوی اطلاعات کتاب پس از ذخیره شدن
            */
           this.createBook = function(b) {
-            var scope = this;
-            return $http({
-              method: 'POST',
-              url: '/api/wiki/book/create',
-              data: $httpParamSerializerJQLike(b),
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-              }
-            }).then(function(res) {
-              var t = scope._retBook(res.data.id, res.data);
-              return t;
-            }, function(data) {
-              throw new PException(data);
-            });
+        	  var scope = this;
+        	  return $http({
+        		  method: 'POST',
+        		  url: '/api/wiki/book/create',
+        		  data: $httpParamSerializerJQLike(b),
+        		  headers: {
+        			  'Content-Type': 'application/x-www-form-urlencoded'
+        		  }
+        	  }).then(function(res) {
+        		  var t = scope._retBook(res.data.id, res.data);
+        		  return t;
+        	  }, function(data) {
+        		  throw new PException(data);
+        	  });
           }
           
           /**
@@ -397,26 +479,26 @@ angular.module('pluf.help', ['pluf'])
            * 
            * @memberof $help
            * @param {PaginatorParameter} p ساختاری که در آن خصوصیات مورد نظر برای صفحات مورد جستجو تعیین می‌شود
-           * @return {PaginatorPage} ساختاری صفحه‌بندی شده از صفحات در نتیجه جستجو
+           * @return {promise(PaginatorPage<PWikiPage>)} ساختاری صفحه‌بندی شده از صفحات در نتیجه جستجو
            */
           this.pages = function(p) {
-            var scope = this;
-            return $http({
-              method: 'GET',
-              url: '/api/wiki/page/find',
-              params: p.getParameter(),
-            }).then(function(res) {
-              var page = new PaginatorPage(res.data);
-              var items = [];
-              for (var i = 0; i < page.counts; i++) {
-                var t = scope._retPage(page.items[i].id, page.items[i]);
-                items.push(t);
-              }
-              page.items = items;
-              return page;
-            }, function(data) {
-              throw new PException(data);
-            });
+        	  var scope = this;
+        	  return $http({
+        		  method: 'GET',
+        		  url: '/api/wiki/page/find',
+        		  params: p.getParameter(),
+        	  }).then(function(res) {
+        		  var page = new PaginatorPage(res.data);
+        		  var items = [];
+        		  for (var i = 0; i < page.counts; i++) {
+        			  var t = scope._retPage(page.items[i].id, page.items[i]);
+        			  items.push(t);
+        		  }
+        		  page.items = items;
+        		  return page;
+        	  }, function(data) {
+        		  throw new PException(data);
+        	  });
           }
 
           /**
@@ -424,19 +506,19 @@ angular.module('pluf.help', ['pluf'])
            * 
            * @memberof $help
            * @param {Integer} id شناسه صفحه مورد نظر
-           * @return {PWikiPage} ساختاری حاوی اطلاعات صفحه با شناسه داده شده
+           * @return {promise(PWikiPage)} ساختاری حاوی اطلاعات صفحه با شناسه داده شده
            */
           this.page = function(id) {
-            var scope = this;
-            return $http({
-              method: 'GET',
-              url: '/api/wiki/page/' + id,
-            }).then(function(res) {
-              var page = scope._retPage(res.data.id, res.data);
-              return page;
-            }, function(data) {
-              throw new PException(data);
-            });
+        	  var scope = this;
+        	  return $http({
+        		  method: 'GET',
+        		  url: '/api/wiki/page/' + id,
+        	  }).then(function(res) {
+        		  var page = scope._retPage(res.data.id, res.data);
+        		  return page;
+        	  }, function(data) {
+        		  throw new PException(data);
+        	  });
           }
 
           /**
@@ -448,20 +530,20 @@ angular.module('pluf.help', ['pluf'])
            * @return {PWikiPage} ساختاری حاوی اطلاعات صفحه پس از ذخیره شدن
            */
           this.createPage = function(p) {
-            var scope = this;
-            return $http({
-              method: 'POST',
-              url: '/api/wiki/page/create',
-              data: $httpParamSerializerJQLike(p),
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-              }
-            }).then(function(res) {
-              var t = scope._retPage(res.data.id, res.data);
-              return t;
-            }, function(data) {
-              throw new PException(data);
-            });
+        	  var scope = this;
+        	  return $http({
+        		  method: 'POST',
+        		  url: '/api/wiki/page/create',
+        		  data: $httpParamSerializerJQLike(p),
+        		  headers: {
+        			  'Content-Type': 'application/x-www-form-urlencoded'
+        		  }
+        	  }).then(function(res) {
+        		  var t = scope._retPage(res.data.id, res.data);
+        		  return t;
+        	  }, function(data) {
+        		  throw new PException(data);
+        	  });
           }
           
         })
@@ -470,7 +552,7 @@ angular.module('pluf.help', ['pluf'])
  * فیلتر نمایش صفحه‌ها را ایجاد می‌کند.
  */
 .filter('unsafe', function($sce) {
-  return function(val) {
-    return $sce.trustAsHtml(val);
-  };
+	return function(val) {
+		return $sce.trustAsHtml(val);
+	};
 });
