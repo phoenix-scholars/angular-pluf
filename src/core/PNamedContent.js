@@ -39,7 +39,7 @@
 			pNamedContent.prototype.update = function(){
 			};
 			// XXX: maso, 1395: حذف صفحه
-			pNamedContent.prototype.delete = function(){
+			pNamedContent.prototype.remove = function(){
 			};
 			// // XXX: maso, 1395: تعیین محتوی
 			// pNamedContent.prototype.content = function(){

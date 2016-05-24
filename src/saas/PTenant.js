@@ -1,7 +1,7 @@
 (function(){
 	
 	angular
-	.module('saas')
+	.module('pluf.saas')
 	.factory('PTenant', [
 		'$http', '$httpParamSerializerJQLike', '$location', '$window', '$q',
 		'PObject', 'PException', 'PProfile', 'PApplication', 

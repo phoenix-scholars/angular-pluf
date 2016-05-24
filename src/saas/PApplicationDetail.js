@@ -1,7 +1,7 @@
 (function(){
 	
 	angular
-	.module('saas')
+	.module('pluf.saas')
 	.factory('PApplicationDetail', [
 		'$http', '$q', '$window', 'PObject', PApplicationDetail
     ]);

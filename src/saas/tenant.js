@@ -1,7 +1,7 @@
 (function(){
 	
 	angular
-	.module('saas')
+	.module('pluf.saas')
 	.service('$tenant', [
 		'$http', '$httpParamSerializerJQLike', '$q', '$window',//
 		'$act', '$usr', 'PTenant', 'PApplication', 'PException', 'PaginatorParameter',

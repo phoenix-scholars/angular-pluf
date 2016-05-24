@@ -32,7 +32,7 @@
 		pContent.prototype.update = function(){
 		};
 		// TODO:maso, 1395: حذف محتوی
-		pContent.prototype.delete = function(){
+		pContent.prototype.remove = function(){
 		};
 		// TODO: maso, 1395: محتوی صفحه را می‌دهد
 		pContent.prototype.value = function(){

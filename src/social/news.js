@@ -1,7 +1,7 @@
 (function(){
 	
 	angular.
-	module('saas')
+	module('pluf.social')
 	.service('$news', [
 		'$httpParamSerializerJQLike', '$http', '$q', 'PException', 'PFollower', 'PaginatorPage',
 		news

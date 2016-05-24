@@ -1,7 +1,7 @@
 (function(){
 	
 	angular
-	.module('wiki')
+	.module('pluf.wiki')
 	.service('$help', [
        '$http', '$httpParamSerializerJQLike', '$q', 
        'PException', 'PWikiPage', 'PWikiBook', 'PaginatorPage',

@@ -1,7 +1,7 @@
 (function(){
 	
 	angular
-	.module('social')
+	.module('pluf.social')
 	.factory('PFollower', [
 		'PObject', 'PException', PFollower
 	]);
