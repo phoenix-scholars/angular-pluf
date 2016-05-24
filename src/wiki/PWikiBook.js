@@ -1,21 +1,23 @@
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
 (function(){
-	
+
 	angular
 	.module('wiki')
 	.factory('PWikiBook', [
-		'PObject', 'PException', 'PWikiPageItem', 'PaginatorPage', 
-		'$http', '$q', '$timeout', 
+		'PObject', 'PException', 'PWikiPageItem', 'PaginatorPage', '$http', '$q', '$timeout',
 		PWikiBook
 	]);
-	
+
 	/**
 	 * @ngdoc factory
 	 * @name PWikiBook
 	 * @memberof wiki
-	 * 
+	 *
 	 * @description
 	 * ساختار داده‌ای یک کتاب به همراه اطلاعات کامل صفحه.
-	 * 
+	 *
 	 * @attr {Integer} id شناسه کتاب
 	 * @attr {String} title عنوان کتاب
 	 * @attr {String} state وضعیت کتاب
@@ -28,13 +30,13 @@
 
 		var pWikiBook = function() {
 			PObject.apply(this, arguments);
-		}
+		};
 
 		pWikiBook.prototype = new PObject();
 
 		/**
 		 * صفحه با شناسه داده شده را از فهرست صفحات کتاب بازیابی می‌کند.
-		 * 
+		 *
 		 * @private
 		 * @memberof PWikiBook
 		 * @param id شناسه صفحه
@@ -55,11 +57,11 @@
 			}
 			item.setData(data);
 			return item;
-		}
+		};
 
 		/**
 		 * اولین صفحه کتاب را برمی‌گرداند
-		 * 
+		 *
 		 * @memberof PWikiBook
 		 * @returns {promise(PWikiPageItem)} یک PageItem مربوط به صفحه اول کتاب
 		 */
@@ -70,11 +72,11 @@
 				def.resolve(scope.items[0]);
 			}, 1);
 			return def.promise;
-		}
+		};
 
 		/**
 		 * فهرستی از صفحات کتاب را برمی‌گرداند
-		 * 
+		 *
 		 * @memberof PWikiBook
 		 * @returns {promise(PaginatedPage<PWikiPageItem>)}
 		 *  فهرستی صفحه بندی شده از PageItem های مربوط به صفحات کتاب
@@ -93,10 +95,10 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 		/**
 		 * یک صفحه را به کتاب اضافه می‌کند
-		 * 
+		 *
 		 * @memberof PWikiBook
 		 * @param {PWikiPage} page صفحه‌ای که به کتاب اضافه خواهد شد
 		 * @returns {promise(PWikiBook)} خود کتاب را که صفحه جدید به آن اضافه شده است برمی‌گرداند
@@ -119,11 +121,11 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 
 		/**
 		 * یک صفحه را از کتاب حذف می‌کند
-		 * 
+		 *
 		 * @memberof PWikiBook
 		 * @param {PWikiPage} page صفحه‌ای که باید از کتاب حذف شود
 		 * @returns {promise(PWikiPage)} صفحه حذف شده از کتاب را برمی‌گرداند
@@ -146,11 +148,11 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 
 		/**
 		 * اطلاعات یک کتاب را به‌روزرسانی می‌کند.
-		 * 
+		 *
 		 * @memberof PWikiBook
 		 * @param {struct} b ساختاری حاوی اطلاعاتی از کتاب که باید به‌روزرسانی شود
 		 * @returns {promise(PWikiBook)} کتاب با اطلاعات به‌روزرسانی شده
@@ -170,11 +172,11 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 
 		/**
 		 * کتاب را حذف می‌کند
-		 * 
+		 *
 		 * @memberof PWikiBook
 		 * @returns {promise(PWikiBook)} کتاب حذف شده
 		 */
@@ -189,10 +191,10 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 
 		return pWikiBook;
 	}
-	
-	
+
+
 })();

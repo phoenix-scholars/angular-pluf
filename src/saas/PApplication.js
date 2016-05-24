@@ -1,24 +1,27 @@
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
 (function(){
-	
+
 	angular
 	.module('pluf.saas')
 	.factory('PApplication', [
 		'$http', '$q', '$window', 'PApplicationDetail', 'PObject', PApplication
      ]);
-	
+
 	function PApplication($http, $q, $window, PApplicationDetail, PObject) {
-		
+
 		var pApplication = function() {
 			PObject.apply(this, arguments);
 		};
-		
+
 		pApplication.prototype = new PObject();
 
 		pApplication.prototype.setTenant = function($t) {
 			this._tenant = $t;
 			return this;
 		};
-		
+
 		pApplication.prototype.detail = function() {
 			if (this._detail) {
 				var def = $q.defer();
@@ -36,13 +39,12 @@
 				throw new PException(data);
 			});
 		};
-		
+
 		pApplication.prototype.run = function() {
-			$window.location = $window.location.origin + '/' + this._tenant.id
-			+ '/' + this.id;
+			$window.location = $window.location.origin + '/' + this._tenant.id + '/' + this.id;
 		};
 
 		return pApplication;
 	}
-	
+
 })();

@@ -1,19 +1,22 @@
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
 (function(){
-	
+
 	angular
 	.module('pluf.wiki')
 	.service('$help', [
-       '$http', '$httpParamSerializerJQLike', '$q', 
+       '$http', '$httpParamSerializerJQLike', '$q',
        'PException', 'PWikiPage', 'PWikiBook', 'PaginatorPage',
        help
 	]);
-				
-	
+
+
 	/**
 	 * @ngdoc service
 	 * @name $help
 	 * @memberof wiki
-	 * 
+	 *
 	 * @description
 	 * این سرویس امکانات مدیریت صفحه‌ها و کتاب‌های ویکی را فراهم می‌کند. با استفاده از این سرویس
 	 * می‌توان صفحات و کتاب‌های ویکی را ایجاد، حذف، جستجو و یا دریافت کرد.
@@ -24,15 +27,15 @@
 		 * کار با صفحه‌ها
 		 */
 		/** @private */
-		this._ppage = {}
+		this._ppage = {};
 		/** @private */
 		this._getPage = function(id) {
 			return this._ppage[id];
-		}
+		};
 		/** @private */
 		this._setPage = function(page) {
 			this._ppage[page.id] = page;
-		}
+		};
 		/** @private */
 		this._retPage = function(id, data) {
 			var instance = this._getPage(id);
@@ -43,21 +46,21 @@
 				this._setPage(instance);
 			}
 			return instance;
-		}
+		};
 
 		/*
 		 * کار با کتابها
 		 */
 		/** @private */
-		this._pbook = {}
+		this._pbook = {};
 		/** @private */
 		this._getBook = function(id) {
 			return this._pbook[id];
-		}
+		};
 		/** @private */
 		this._setBook = function(page) {
 			this._pbook[page.id] = page;
-		}
+		};
 		/** @private */
 		this._retBook = function(id, data) {
 			var instance = this._getBook(id);
@@ -68,14 +71,14 @@
 				this._setBook(instance);
 			}
 			return instance;
-		}
+		};
 
 		/* فراخوانی‌های عمومی */
 		/**
 		 * کتاب‌های ویکی را با توجه به پارامتر p مورد جستجو قرار می‌دهد و نتیجه را در قالب
 		 * یک فهرست صفحه‌بندی شده به صورت غیرهمزمان برمی‌گرداند.
 		 * پارامتر p ساختاری است که در آن خصوصیات مورد نظر برای کتاب‌های مورد جستجو تعیین می‌شود.
-		 * 
+		 *
 		 * @memberof $help
 		 * @param {PaginatorParameter} p ساختاری که در آن خصوصیات مورد نظر برای کتاب‌های مورد جستجو تعیین می‌شود.
 		 * @return {promise(PaginatorPage<PWikiBook>)} ساختاری صفحه‌بندی شده از کتاب‌ها در نتیجه جستجو
@@ -98,11 +101,11 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 
 		/**
 		 * کتاب با شناسه داده شده را برمی گرداند.
-		 * 
+		 *
 		 * @memberof $help
 		 * @param {Integer} id شناسه کتاب مورد نظر
 		 * @return {PWikiBook} ساختاری حاوی اطلاعات کتاب با شناسه داده شده
@@ -118,12 +121,12 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 
 		/**
 		 * یک کتاب را بر اساس اطلاعات داده شده ایجاد می‌کند و کتاب ایجاد شده را
 		 * به صورت غیرهمزمان برمی‌گرداند.
-		 * 
+		 *
 		 * @memberof $help
 		 * @param {PWikiBook} b کتابی که باید ذخیره شود
 		 * @return {PWikiBook} ساختاری حاوی اطلاعات کتاب پس از ذخیره شدن
@@ -143,13 +146,13 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 
 		/**
-		 * صفحات ویکی را با توجه به پارامتر p مورد جستجو قرار داده و صفحات نتیجه را 
+		 * صفحات ویکی را با توجه به پارامتر p مورد جستجو قرار داده و صفحات نتیجه را
 		 * در قالب یک ساختار صفحه‌بندی شده به صورت غیرهمزمان برمی‌گرداند.
 		 * پارامتر p ساختاری است که در آن خصوصیات مورد نظر برای صفحات مورد جستجو تعیین می‌شود
-		 * 
+		 *
 		 * @memberof $help
 		 * @param {PaginatorParameter} p ساختاری که در آن خصوصیات مورد نظر برای صفحات مورد جستجو تعیین می‌شود
 		 * @return {promise(PaginatorPage<PWikiPage>)} ساختاری صفحه‌بندی شده از صفحات در نتیجه جستجو
@@ -172,11 +175,11 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 
 		/**
 		 * صفحه با شناسه داده شده را برمی گرداند.
-		 * 
+		 *
 		 * @memberof $help
 		 * @param {Integer} id شناسه صفحه مورد نظر
 		 * @return {promise(PWikiPage)} ساختاری حاوی اطلاعات صفحه با شناسه داده شده
@@ -192,12 +195,12 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 
 		/**
 		 * یک صفحه را بر اساس اطلاعات داده شده ایجاد می‌کند و صفحه ایجاد شده را
 		 * به صورت غیرهمزمان برمی‌گرداند.
-		 * 
+		 *
 		 * @memberof $help
 		 * @param {PWikiPage} b صفحه‌ای که باید ذخیره شود
 		 * @return {PWikiPage} ساختاری حاوی اطلاعات صفحه پس از ذخیره شدن
@@ -217,9 +220,9 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 
 	}
-	
-	
+
+
 })();

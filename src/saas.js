@@ -1,3 +1,6 @@
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
 (function(){
 
 	'use strict';

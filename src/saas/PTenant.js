@@ -1,20 +1,23 @@
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
 (function(){
-	
+
 	angular
 	.module('pluf.saas')
 	.factory('PTenant', [
 		'$http', '$httpParamSerializerJQLike', '$location', '$window', '$q',
-		'PObject', 'PException', 'PProfile', 'PApplication', 
+		'PObject', 'PException', 'PProfile', 'PApplication',
 		'PaginatorParameter', 'PaginatorPage', PTenant
      ]);
-	
+
 	/*******************************************************************************
 	 * PTenant
 	 * =============================================================================
 	 * ساختار داده‌ای یک ملک را تعیین می‌کنه
 	 ******************************************************************************/
 	function PTenant($http, $httpParamSerializerJQLike, $location, $window, $q,
-			PObject, PException, PProfile, PApplication, 
+			PObject, PException, PProfile, PApplication,
 			PaginatorParameter, PaginatorPage) {
 		var pTenant = function() {
 			PObject.apply(this, arguments);
@@ -23,15 +26,16 @@
 
 		pTenant.prototype._pool = [];
 		pTenant.prototype.ret = function(d) {
+			var t;
 			if (d.id in this._pool) {
-				var t = this._pool[d.id];
+				t = this._pool[d.id];
 				t.setData(d);
 				return t;
 			}
-			var t = new PApplication(d).setTenant(this);
+			t = new PApplication(d).setTenant(this);
 			this._pool[t.id] = t;
 			return t;
-		}
+		};
 		pTenant.prototype.update = function(key, value) {
 			var scope = this;
 			var par = {};
@@ -49,7 +53,7 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 		/*
 		 * اعضای یک نرم‌افزار کاربردی را تعیین می‌کند.
 		 */
@@ -72,7 +76,7 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 		/*
 		 * فهرست تمام نرم‌افزارهایی را تعیین می‌کند که این ناحیه حق استفاده از
 		 * آنها را دارد.
@@ -98,7 +102,7 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 		pTenant.prototype.app = function(appName) {
 			var scope = this;
 			return $http({
@@ -110,14 +114,14 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 		pTenant.prototype.run = function() {
 			// XXX: maso, 1394: Check domain, subdomain and id
 			$window.location = $window.location.origin + '/' + this.id;
-		}
+		};
 
 		return pTenant;
 	}
-	
-	
+
+
 })();

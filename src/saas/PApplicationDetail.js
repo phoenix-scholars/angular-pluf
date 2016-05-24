@@ -1,11 +1,14 @@
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
 (function(){
-	
+
 	angular
 	.module('pluf.saas')
 	.factory('PApplicationDetail', [
 		'$http', '$q', '$window', 'PObject', PApplicationDetail
     ]);
-	
+
 	/*******************************************************************************
 	 * PApplication
 	 * =============================================================================
@@ -20,5 +23,5 @@
 		pApplicationDetail.prototype = new PObject();
 		return pApplicationDetail;
 	}
-	
+
 })();

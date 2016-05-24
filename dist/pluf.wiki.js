@@ -1,0 +1,627 @@
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+(function(){
+
+	'use strict';
+
+	/**
+	 * @ngdoc module
+	 * @name pluf.help
+	 *
+	 * @description
+	 * ماژول pluf.help مجموعه‌ای از امکانات را برای پیاده‌سازی یک ویکی فراهم می‌کند.
+	 * عناصر اصلی این ماژول Page و Book است و عملیاتی مدیریت آن‌ها مانند ایجاد، ویرایش، حذف و دریافت
+	 * آنها در این ماژول قرار داده شده است.
+	 */
+	angular.module('pluf.wiki', ['pluf']);
+
+})();
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+(function(){
+
+	angular
+	.module('wiki')
+	.factory('PWikiBook', [
+		'PObject', 'PException', 'PWikiPageItem', 'PaginatorPage', '$http', '$q', '$timeout',
+		PWikiBook
+	]);
+
+	/**
+	 * @ngdoc factory
+	 * @name PWikiBook
+	 * @memberof wiki
+	 *
+	 * @description
+	 * ساختار داده‌ای یک کتاب به همراه اطلاعات کامل صفحه.
+	 *
+	 * @attr {Integer} id شناسه کتاب
+	 * @attr {String} title عنوان کتاب
+	 * @attr {String} state وضعیت کتاب
+	 * @attr {String} language زبان مورد استفاده در متن صفحات کتاب
+	 * @attr {String} summary خلاصه یا توضیحی کوتاه در مورد کتاب
+	 * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد کتاب
+	 * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
+	 */
+	function PWikiBook(PObject, PException, PWikiPageItem, PaginatorPage, $http, $q, $timeout) {
+
+		var pWikiBook = function() {
+			PObject.apply(this, arguments);
+		};
+
+		pWikiBook.prototype = new PObject();
+
+		/**
+		 * صفحه با شناسه داده شده را از فهرست صفحات کتاب بازیابی می‌کند.
+		 *
+		 * @private
+		 * @memberof PWikiBook
+		 * @param id شناسه صفحه
+		 * @param data داده‌های صفحه
+		 * @returns {PWikiPageItem}
+		 */
+		pWikiBook.prototype._retItem = function(id, data) {
+			var item = null;
+			for ( var i in this.items) {
+				if (this.items[i].id == id) {
+					item = this.items[i];
+					break;
+				}
+			}
+			if (!item) {
+				item = new PWikiPageItem(data);
+				this.items.push(item);
+			}
+			item.setData(data);
+			return item;
+		};
+
+		/**
+		 * اولین صفحه کتاب را برمی‌گرداند
+		 *
+		 * @memberof PWikiBook
+		 * @returns {promise(PWikiPageItem)} یک PageItem مربوط به صفحه اول کتاب
+		 */
+		pWikiBook.prototype.firstPage = function() {
+			var def = $q.defer();
+			var scope = this;
+			$timeout(function() {
+				def.resolve(scope.items[0]);
+			}, 1);
+			return def.promise;
+		};
+
+		/**
+		 * فهرستی از صفحات کتاب را برمی‌گرداند
+		 *
+		 * @memberof PWikiBook
+		 * @returns {promise(PaginatedPage<PWikiPageItem>)}
+		 *  فهرستی صفحه بندی شده از PageItem های مربوط به صفحات کتاب
+		 */
+		pWikiBook.prototype.pages = function() {
+			var scope = this;
+			return $http({
+				method: 'GET',
+				url: '/api/wiki/book/' + scope.id + '/pages',
+			}).then(function(res) {
+				scope.items = [];
+				for (var i = 0; i < res.data.length; i++) {
+					scope._retItem(res.data[i].id, res.data[i]);
+				}
+				return scope.items;
+			}, function(data) {
+				throw new PException(data);
+			});
+		};
+		/**
+		 * یک صفحه را به کتاب اضافه می‌کند
+		 *
+		 * @memberof PWikiBook
+		 * @param {PWikiPage} page صفحه‌ای که به کتاب اضافه خواهد شد
+		 * @returns {promise(PWikiBook)} خود کتاب را که صفحه جدید به آن اضافه شده است برمی‌گرداند
+		 */
+		pWikiBook.prototype.addPage = function(page) {
+			if(page.isAnonymous()){
+				var dif = $q.defer();
+				$timeout(function(){
+					var ex = new PException({message:"Page id is null!"});
+					dif.reject(ex);
+				}, 1);
+				return dif.promise;
+			}
+			var scope = this;
+			return $http({
+				method: 'POST',
+				url: '/api/wiki/book/' + scope.id + '/page/' + page.id,
+			}).then(function(res) {
+				return scope;
+			}, function(data) {
+				throw new PException(data);
+			});
+		};
+
+		/**
+		 * یک صفحه را از کتاب حذف می‌کند
+		 *
+		 * @memberof PWikiBook
+		 * @param {PWikiPage} page صفحه‌ای که باید از کتاب حذف شود
+		 * @returns {promise(PWikiPage)} صفحه حذف شده از کتاب را برمی‌گرداند
+		 */
+		pWikiBook.prototype.removePage = function(page) {
+			if(page.isAnonymous()){
+				var dif = $q.defer();
+				$timeout(function(){
+					var ex = new PException({message:"Page id is null!"});
+					dif.reject(ex);
+				}, 1);
+				return dif.promise;
+			}
+			var scope = this;
+			return $http({
+				method: 'DELETE',
+				url: '/api/wiki/book/' + scope.id + '/page/' + page.id,
+			}).then(function(res) {
+				return scope;
+			}, function(data) {
+				throw new PException(data);
+			});
+		};
+
+		/**
+		 * اطلاعات یک کتاب را به‌روزرسانی می‌کند.
+		 *
+		 * @memberof PWikiBook
+		 * @param {struct} b ساختاری حاوی اطلاعاتی از کتاب که باید به‌روزرسانی شود
+		 * @returns {promise(PWikiBook)} کتاب با اطلاعات به‌روزرسانی شده
+		 */
+		pWikiBook.prototype.update = function(b) {
+			var scope = this;
+			return $http({
+				method: 'POST',
+				url: '/api/wiki/book/' + scope.id,
+				data: $httpParamSerializerJQLike(b),
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded'
+				}
+			}).then(function(res) {
+				scope.setData(res.data);
+				return scope;
+			}, function(data) {
+				throw new PException(data);
+			});
+		};
+
+		/**
+		 * کتاب را حذف می‌کند
+		 *
+		 * @memberof PWikiBook
+		 * @returns {promise(PWikiBook)} کتاب حذف شده
+		 */
+		pWikiBook.prototype.remove = function() {
+			var scope = this;
+			return $http({
+				method: 'DELETE',
+				url: '/api/wiki/book/' + scope.id
+			}).then(function(res) {
+				scope.setData(res.data);
+				return scope;
+			}, function(data) {
+				throw new PException(data);
+			});
+		};
+
+		return pWikiBook;
+	}
+
+
+})();
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+(function(){
+
+	angualr
+	.module('wiki')
+	.factory('PWikiPage', ['PObject', PWikiPage]);
+
+	/**
+	 * @ngdoc factory
+	 * @name PWikiPage
+	 * @memberof wiki
+	 *
+	 * @description
+	 * ساختار داده‌ای یک صفحه به همراه اطلاعات کامل صفحه.
+	 *
+	 * @attr {Integer} id شناسه صفحه
+	 *
+	 * @attr {Integer} priority
+	 * با این خصوصیت می‌توان برای فهرستی از صفحات یک ترتیب در نظر گرفت
+	 *
+	 * @attr {String} title عنوان صفحه
+	 * @attr {String} state وضعیت صفحه
+	 * @attr {Integer} book شناسه کتابی که این صفحه متعلق به آن است
+	 * @attr {String} language زبان مورد استفاده در متن صفحه
+	 * @attr {String} summary خلاصه‌ای از متن صفحه
+	 * @attr {Blob} content محتوای صفحه
+	 *
+	 * @attr {String} content_type
+	 * نوع متن صفحه. مثلا: text/html, text/plain, text/markdown , ...
+	 *
+	 * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد page
+	 * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
+	 */
+	function PWikiPage(PObject) {
+
+		var wikiPage = function(d) {
+			if (d) {
+				this.setData(d);
+			}
+		};
+
+		wikiPage.prototype = new PObject();
+
+		/**
+		 * اطلاعات یک صفحه را به‌روزرسانی می‌کند.
+		 *
+		 * @memberof PWikiPage
+		 *
+		 * @param {PWikiPage} p ساختاری حاوی اطلاعاتی از صفحه که باید به‌روزرسانی شود
+		 * @returns {promise(PWikiPage)} صفحه به‌روزرسانی شده
+		 */
+		wikiPage.prototype.update = function(p) {
+			var scope = this;
+			return $http({
+				method: 'POST',
+				url: '/api/wiki/page/' + p.id,
+				data: $httpParamSerializerJQLike(p),
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded'
+				}
+			}).then(function(res) {
+				scope.setData(res.data);
+				return scope;
+			}, function(data) {
+				throw new PException(data);
+			});
+		};
+
+		/**
+		 * صفحه را حذف می‌کند
+		 *
+		 * @memberof PWikiPage
+		 *
+		 * @returns {promise(PWikiPage)} صفحه حذف شده برگردانده می شود
+		 */
+		wikiPage.prototype.remove = function() {
+			var scope = this;
+			return $http({
+				method: 'DELETE',
+				url: '/api/wiki/page/' + scope.id
+			}).then(function(res) {
+				scope.setData(res.data);
+				return scope;
+			}, function(data) {
+				throw new PException(data);
+			});
+		};
+
+		/**
+		 * محتوای صفحه را به قالب html تبدیل می‌کند.
+		 *
+		 * @memberof PWikiPage
+		 *
+		 * @returns {String} محتوای صفحه در قالب html
+		 */
+		wikiPage.prototype.toHTML = function() {
+			return markdown.toHTML(this.content);
+		};
+		return wikiPage;
+	}
+
+})();
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+(function(){
+
+	angular
+	.module('wiki')
+	.factory('PWikiPageItem', ['PObject', PWikiPageItem]);
+
+	/**
+	 * @ngdoc factory
+	 * @name PWikiPageItem
+	 * @memberof wiki
+	 *
+	 * @description
+	 * ساختار داده‌ای یک آیتم از نوع صفحه با کمترین اطلاعات ممکن.
+	 *
+	 * @attr {Integer} id شناسه PageItem
+	 *
+	 * @attr {Integer} priority
+	 * با این خصوصیت می‌توان برای فهرستی از صفحات یک ترتیب در نظر گرفت
+	 *
+	 * @attr {String} title عنوان صفحه
+	 * @attr {String} state وضعیت صفحه
+	 *
+	 */
+	function PWikiPageItem(PObject) {
+
+		var wikiPageItem = function(d) {
+			if (d) {
+				this.setData(d);
+			}
+		};
+
+		wikiPageItem.prototype = new PObject();
+
+		/**
+		 * صفحه مربوط به این PageItem را برمی گرداند
+		 *
+		 * @memberof PWikiPageItem
+		 * @returns {promise(PWikiPage)} صفحه مربوط به این PageItem
+		 */
+		wikiPageItem.prototype.page = function() {
+			// TODO: پیاده‌سازی شود
+		};
+
+		return wikiPageItem;
+	}
+
+})();
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+(function(){
+
+	angular
+	.module('pluf.wiki')
+	.filter('unsafe', [
+       '$sce', unsafe
+    ]);
+
+	/**
+	 * فیلتر نمایش صفحه‌ها را ایجاد می‌کند.
+	 */
+	function unsafe($sce) {
+		return function(val) {
+			return $sce.trustAsHtml(val);
+		};
+	}
+
+})();
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+(function(){
+
+	angular
+	.module('pluf.wiki')
+	.service('$help', [
+       '$http', '$httpParamSerializerJQLike', '$q',
+       'PException', 'PWikiPage', 'PWikiBook', 'PaginatorPage',
+       help
+	]);
+
+
+	/**
+	 * @ngdoc service
+	 * @name $help
+	 * @memberof wiki
+	 *
+	 * @description
+	 * این سرویس امکانات مدیریت صفحه‌ها و کتاب‌های ویکی را فراهم می‌کند. با استفاده از این سرویس
+	 * می‌توان صفحات و کتاب‌های ویکی را ایجاد، حذف، جستجو و یا دریافت کرد.
+	 */
+	function help($http, $httpParamSerializerJQLike, $q, PException, PWikiPage,
+			PWikiBook, PaginatorPage) {
+		/*
+		 * کار با صفحه‌ها
+		 */
+		/** @private */
+		this._ppage = {};
+		/** @private */
+		this._getPage = function(id) {
+			return this._ppage[id];
+		};
+		/** @private */
+		this._setPage = function(page) {
+			this._ppage[page.id] = page;
+		};
+		/** @private */
+		this._retPage = function(id, data) {
+			var instance = this._getPage(id);
+			if (instance) {
+				instance.setData(data);
+			} else {
+				instance = new PWikiPage(data);
+				this._setPage(instance);
+			}
+			return instance;
+		};
+
+		/*
+		 * کار با کتابها
+		 */
+		/** @private */
+		this._pbook = {};
+		/** @private */
+		this._getBook = function(id) {
+			return this._pbook[id];
+		};
+		/** @private */
+		this._setBook = function(page) {
+			this._pbook[page.id] = page;
+		};
+		/** @private */
+		this._retBook = function(id, data) {
+			var instance = this._getBook(id);
+			if (instance) {
+				instance.setData(data);
+			} else {
+				instance = new PWikiBook(data);
+				this._setBook(instance);
+			}
+			return instance;
+		};
+
+		/* فراخوانی‌های عمومی */
+		/**
+		 * کتاب‌های ویکی را با توجه به پارامتر p مورد جستجو قرار می‌دهد و نتیجه را در قالب
+		 * یک فهرست صفحه‌بندی شده به صورت غیرهمزمان برمی‌گرداند.
+		 * پارامتر p ساختاری است که در آن خصوصیات مورد نظر برای کتاب‌های مورد جستجو تعیین می‌شود.
+		 *
+		 * @memberof $help
+		 * @param {PaginatorParameter} p ساختاری که در آن خصوصیات مورد نظر برای کتاب‌های مورد جستجو تعیین می‌شود.
+		 * @return {promise(PaginatorPage<PWikiBook>)} ساختاری صفحه‌بندی شده از کتاب‌ها در نتیجه جستجو
+		 */
+		this.books = function(p) {
+			var scope = this;
+			return $http({
+				method: 'GET',
+				url: '/api/wiki/book/find',
+				params: p.getParameter(),
+			}).then(function(res) {
+				var page = new PaginatorPage(res.data);
+				var items = [];
+				for (var i = 0; i < page.counts; i++) {
+					var t = scope._retBook(page.items[i].id, page.items[i]);
+					items.push(t);
+				}
+				page.items = items;
+				return page;
+			}, function(data) {
+				throw new PException(data);
+			});
+		};
+
+		/**
+		 * کتاب با شناسه داده شده را برمی گرداند.
+		 *
+		 * @memberof $help
+		 * @param {Integer} id شناسه کتاب مورد نظر
+		 * @return {PWikiBook} ساختاری حاوی اطلاعات کتاب با شناسه داده شده
+		 */
+		this.book = function(id) {
+			var scope = this;
+			return $http({
+				method: 'GET',
+				url: '/api/wiki/book/' + id,
+			}).then(function(res) {
+				var book = scope._retBook(res.data.id, res.data);
+				return book;
+			}, function(data) {
+				throw new PException(data);
+			});
+		};
+
+		/**
+		 * یک کتاب را بر اساس اطلاعات داده شده ایجاد می‌کند و کتاب ایجاد شده را
+		 * به صورت غیرهمزمان برمی‌گرداند.
+		 *
+		 * @memberof $help
+		 * @param {PWikiBook} b کتابی که باید ذخیره شود
+		 * @return {PWikiBook} ساختاری حاوی اطلاعات کتاب پس از ذخیره شدن
+		 */
+		this.createBook = function(b) {
+			var scope = this;
+			return $http({
+				method: 'POST',
+				url: '/api/wiki/book/create',
+				data: $httpParamSerializerJQLike(b),
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded'
+				}
+			}).then(function(res) {
+				var t = scope._retBook(res.data.id, res.data);
+				return t;
+			}, function(data) {
+				throw new PException(data);
+			});
+		};
+
+		/**
+		 * صفحات ویکی را با توجه به پارامتر p مورد جستجو قرار داده و صفحات نتیجه را
+		 * در قالب یک ساختار صفحه‌بندی شده به صورت غیرهمزمان برمی‌گرداند.
+		 * پارامتر p ساختاری است که در آن خصوصیات مورد نظر برای صفحات مورد جستجو تعیین می‌شود
+		 *
+		 * @memberof $help
+		 * @param {PaginatorParameter} p ساختاری که در آن خصوصیات مورد نظر برای صفحات مورد جستجو تعیین می‌شود
+		 * @return {promise(PaginatorPage<PWikiPage>)} ساختاری صفحه‌بندی شده از صفحات در نتیجه جستجو
+		 */
+		this.pages = function(p) {
+			var scope = this;
+			return $http({
+				method: 'GET',
+				url: '/api/wiki/page/find',
+				params: p.getParameter(),
+			}).then(function(res) {
+				var page = new PaginatorPage(res.data);
+				var items = [];
+				for (var i = 0; i < page.counts; i++) {
+					var t = scope._retPage(page.items[i].id, page.items[i]);
+					items.push(t);
+				}
+				page.items = items;
+				return page;
+			}, function(data) {
+				throw new PException(data);
+			});
+		};
+
+		/**
+		 * صفحه با شناسه داده شده را برمی گرداند.
+		 *
+		 * @memberof $help
+		 * @param {Integer} id شناسه صفحه مورد نظر
+		 * @return {promise(PWikiPage)} ساختاری حاوی اطلاعات صفحه با شناسه داده شده
+		 */
+		this.page = function(id) {
+			var scope = this;
+			return $http({
+				method: 'GET',
+				url: '/api/wiki/page/' + id,
+			}).then(function(res) {
+				var page = scope._retPage(res.data.id, res.data);
+				return page;
+			}, function(data) {
+				throw new PException(data);
+			});
+		};
+
+		/**
+		 * یک صفحه را بر اساس اطلاعات داده شده ایجاد می‌کند و صفحه ایجاد شده را
+		 * به صورت غیرهمزمان برمی‌گرداند.
+		 *
+		 * @memberof $help
+		 * @param {PWikiPage} b صفحه‌ای که باید ذخیره شود
+		 * @return {PWikiPage} ساختاری حاوی اطلاعات صفحه پس از ذخیره شدن
+		 */
+		this.createPage = function(p) {
+			var scope = this;
+			return $http({
+				method: 'POST',
+				url: '/api/wiki/page/create',
+				data: $httpParamSerializerJQLike(p),
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded'
+				}
+			}).then(function(res) {
+				var t = scope._retPage(res.data.id, res.data);
+				return t;
+			}, function(data) {
+				throw new PException(data);
+			});
+		};
+
+	}
+
+
+})();

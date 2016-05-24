@@ -26,9 +26,24 @@ module.exports = function(grunt) {
       }
     },
     concat: {
-      app: {
-        src: [ "src/core/*.js" ],
+      core: {
+        src: [
+          'src/core.js',
+          'src/core/*.js'
+        ],
         dest:'dist/pluf.js'
+      },
+      wiki: {
+        src:['src/wiki.js', 'src/wiki/*.js'],
+        dest: 'dist/pluf.wiki.js'
+      },
+      saas:{
+        src:['src/saas.js', 'src/saas/*.js'],
+        dest: 'dist/pluf.saas.js'
+      },
+      social:{
+        src:['src/social.js', 'src/social/*.js'],
+        dest: 'dist/pluf.social.js'
       }
     },
     jshint: {
@@ -42,8 +57,16 @@ module.exports = function(grunt) {
         "_":false,
         "$":false
       },
-      beforeconcat: ['src/core/*.js'],
-      afterconcat: ['dist/pluf.js']
+      beforeconcat: [
+        'src/*.js',
+        'src/*/*.js'
+      ],
+      afterconcat: [
+        'dist/pluf.js',
+        'dist/pluf.wiki.js',
+        'dist/pluf.saas.js',
+        'dist/pluf.social.js'
+      ]
     }
   });
 
@@ -54,6 +77,12 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
 
   // Default task(s).
-  grunt.registerTask('default', ['jshint:beforeconcat', 'concat', 'uglify', 'jshint:afterconcat']);
+  grunt.registerTask('default', [
+    'jshint:beforeconcat',
+    'concat',
+    'jshint:afterconcat',
+    'uglify',
+    'jsdoc'
+  ]);
 
 };

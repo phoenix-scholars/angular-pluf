@@ -1,5 +1,8 @@
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
 (function(){
-	
+
 	angular
 	.module('pluf.saas')
 	.service('$tenant', [
@@ -7,7 +10,7 @@
 		'$act', '$usr', 'PTenant', 'PApplication', 'PException', 'PaginatorParameter',
 		'PaginatorPage', tenant
      ]);
-	
+
 	/*******************************************************************************
 	 * $tenant
 	 * =============================================================================
@@ -21,19 +24,20 @@
 		this._tenant = [];
 		/**
 		 * ایجاد مدل داده‌ای برای یک ملک
-		 * 
+		 *
 		 * همه فراخوانی‌های دا
 		 */
 		this.ret = function(d) {
+			var t;
 			if (d.id in this._tenant) {
-				var t = this._tenant[d.id];
+				t = this._tenant[d.id];
 				t.setData(d);
 				return t;
 			}
-			var t = new PTenant(d);
+			t = new PTenant(d);
 			this._tenant[t.id] = t;
 			return t;
-		}
+		};
 		/*
 		 * نمونه جاری را تعیین می‌:ند
 		 */
@@ -44,7 +48,7 @@
 			}, function(res) {
 				throw new PException(res.data);
 			});
-		}
+		};
 		/*
 		 * tenant با شناسه مورد نظر را تعیین می‌کند.
 		 */
@@ -56,7 +60,7 @@
 			}, function(res) {
 				throw new PException(res.data);
 			});
-		}
+		};
 		/*
 		 * با استفاده از این فراخوانی یکی نرم افزار کاربردی جدید ایجاد می‌شود.
 		 */
@@ -74,7 +78,7 @@
 			}, function(res) {
 				throw new PException(res.data);
 			});
-		}
+		};
 		/*
 		 * فهرست را تعینن می‌کند
 		 */
@@ -95,7 +99,7 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 		/*
 		 * فهرست نرم افزارهای کاربر را تعیین می‌کند
 		 */
@@ -119,8 +123,7 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 	}
-	
-})();
 
+})();
