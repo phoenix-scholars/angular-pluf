@@ -17,6 +17,9 @@
   "appcache" : "no",
   "src" : [
     "src/core/*.js",
+    "src/saas/*.js",
+    "src/wiki/*.js",
+    "src/social/*.js",
     "test/main.js",
     "test/ctrl/*.js"
   ],
