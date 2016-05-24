@@ -10,37 +10,13 @@ module.exports = function(grunt) {
         mangle: false
       },
       core: {
-        src: 'src/pluf.js',
+        src: 'dist/pluf.js',
         dest: 'dist/pluf.min.js'
-      },
-      admin: {
-        src: 'src/pluf.admin.js',
-        dest: 'dist/pluf.admin.min.js'
-      },
-      help: {
-        src: 'src/pluf.help.js',
-        dest: 'dist/pluf.help.min.js'
-      },
-      hm: {
-        src: 'src/pluf.hm.js',
-        dest: 'dist/pluf.hm.min.js'
-      },
-      jayab: {
-        src: 'src/pluf.jayab.js',
-        dest: 'dist/pluf.jayab.min.js'
-      },
-      news: {
-        src: 'src/pluf.news.js',
-        dest: 'dist/pluf.news.min.js'
-      },
-      saas: {
-        src: 'src/pluf.saas.js',
-        dest: 'dist/pluf.saas.min.js'
-      },
+      }
     },
     jsdoc : {
       all : {
-        src: ['src/*.js', 'README.md' ],
+        src: ['src/*/*.js', 'README.md' ],
         options: {
           destination: 'docs',
           configure: 'node_modules/angular-jsdoc/common/conf.json',
@@ -48,14 +24,36 @@ module.exports = function(grunt) {
           tutorial: 'tutorials',
         }
       }
+    },
+    concat: {
+      app: {
+        src: [ "src/core/*.js" ],
+        dest:'dist/pluf.js'
+      }
+    },
+    jshint: {
+      'globals': { // Global variables.
+        "jasmine": true,
+        "angular": true,
+        "browser": true,
+        "element": true,
+        "by":true,
+        "io":true,
+        "_":false,
+        "$":false
+      },
+      beforeconcat: ['src/core/*.js'],
+      afterconcat: ['dist/pluf.js']
     }
   });
 
   // Load the plugin that provides the "uglify" task.
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-jsdoc');
+  grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
 
   // Default task(s).
-  grunt.registerTask('default', ['uglify', 'jsdoc']);
+  grunt.registerTask('default', ['jshint:beforeconcat', 'concat', 'uglify', 'jshint:afterconcat']);
 
 };

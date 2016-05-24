@@ -1,13 +1,15 @@
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
 (function(){
-	
 	angular
 		.module('pluf')
 		.service('$cms',[
-			'$http', '$httpParamSerializerJQLike', '$q', '$timeout',//
-			'PContent',	'PNamedContent', 'PaginatorPage', 'PException',//
+			'$http', '$httpParamSerializerJQLike', '$q', '$timeout',
+			'PContent',	'PNamedContent', 'PaginatorPage', 'PException',
 			cms
 		]);
-	
+
 	/**
 	 * @memberof pluf
 	 * @ngdoc service
@@ -17,12 +19,11 @@
 	 * مهم‌ترین سرویسی است که در این بسته ارائه شده و کار با محتوی و اطلاعات آن را آسان می‌کند.
 	 * این سرویس برای جستجو و یا گرفتن اطلاعات هر محتوایی از سیستم کاربرد دارد.
 	 */
-	function cms($http, $httpParamSerializerJQLike, $q, $timeout,
-		PContent, PNamedContent, PaginatorPage, PException) {
-		this._nc = {}
+	function cms($http, $httpParamSerializerJQLike, $q, $timeout,	PContent, PNamedContent, PaginatorPage, PException) {
+		this._nc = {};
 		this._getnc = function(id){
 			return this._nc[id];
-		}
+		};
 		this._retnc = function(id, d) {
 			var i = this._nc[id];
 			if (i) {
@@ -32,11 +33,11 @@
 				this._nc[id] = i;
 			}
 			return i;
-		}
-		this._c ={}
+		};
+		this._c ={};
 		this._getc = function(id){
 			return this._c[id];
-		}
+		};
 		this._retc = function(id, c){
 			var i = this._c[id];
 			if (i) {
@@ -46,7 +47,7 @@
 				this._c[c.id] = i;
 			}
 			return i;
-		}
+		};
 
 		/**
 		 * این فراخوانی یک ساختار داده‌ای جدید ایجاد می‌کند.
@@ -65,8 +66,8 @@
 				}
 			}).then(function(res){
 				return scope._retc(res.data.id, res.data);
-			})
-		}
+			});
+		};
 		this.content = function(i){
 			var t = this._getc(i);
 			if(t){
@@ -80,8 +81,8 @@
 				url : '/api/saascms/content/'+i,
 			}).then(function(res){
 				return t._retc(i, res.data);
-			})
-		}
+			});
+		};
 		this.contents = function(p){
 			var scope = this;
 			return $http({
@@ -99,7 +100,7 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
+		};
 		this.newNamedContent = function(n, c){
 			var scope = this;
 			var nc;
@@ -119,8 +120,8 @@
 			}).then(function(c){
 				nc.content = c;
 				return nc;
-			})
-		}
+			});
+		};
 		this.namedContent = function(n){
 			var t = this._getnc(n);
 			if(t){
@@ -139,8 +140,8 @@
 			}).then(function(c){
 				nc.content = c;
 				return nc;
-			})
-		}
+			});
+		};
 		this.namedContents = function(p){
 			var scope = this;
 			return $http({
@@ -162,7 +163,7 @@
 			}, function(data) {
 				throw new PException(data);
 			});
-		}
-	};
-	
+		};
+	}
+
 })();

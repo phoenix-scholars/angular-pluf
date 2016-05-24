@@ -1,26 +1,29 @@
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
 (function(){
 	angular
 		.module('pluf')
 		.service('$act',[
-		  '$q', '$timeout', 'PException',
-		  act
-		 ]);
-	
-	/**
-	 * @memberof pluf.core
-	 * @ngdoc service
-	 * @name $act
-	 * @description
-	 *
-	 * در این مدل دو مفهوم کلی تعریف می‌شود که عبارتند از دستور و دستگیره. دستور یک عبارت رشته‌ای
-	 * است که یک عمل مجازی را تعیین می‌کند و دستگیره عملی است که در مقابل هر دستور اجرا
-	 * می‌شود. برای نمونه فرض کنید که یک دستور ورود به سیستم وجود دارد که نام آن به صورت زیر
-	 * تعیین شده است:
-	 *
-	 * user.login
-	 *
-	 * فراخوانی این دستور منجر به اجرا شدن تمام دستگیره‌هایی مرتبط خواهد شد.
-	 */
+			'$q', '$timeout', 'PException',
+			act
+		]);
+
+/**
+ * @memberof pluf
+ * @ngdoc service
+ * @name $act
+ * @description
+ *
+ * در این مدل دو مفهوم کلی تعریف می‌شود که عبارتند از دستور و دستگیره. دستور یک عبارت رشته‌ای
+ * است که یک عمل مجازی را تعیین می‌کند و دستگیره عملی است که در مقابل هر دستور اجرا
+ * می‌شود. برای نمونه فرض کنید که یک دستور ورود به سیستم وجود دارد که نام آن به صورت زیر
+ * تعیین شده است:
+ *
+ * user.login
+ *
+ * فراخوانی این دستور منجر به اجرا شدن تمام دستگیره‌هایی مرتبط خواهد شد.
+ */
 	function act($q, $timeout, PException) {
 		this._categories = [];
 		this._commands = [];
@@ -44,7 +47,7 @@
 				}
 			}, 1);
 			return def.promise;
-		}
+		};
 		/**
 		 * تمام دستورهایی که در یک دسته قرار دارند را به صورت غیر همزمان تعیین
 		 * می‌کند.
@@ -59,8 +62,8 @@
 				def.resolve(scope._categories[key]);
 			}, 1);
 			return def.promise;
-		}
-	
+		};
+
 		/**
 		 * یک دستور جدید را به سیستم اضافه می‌کند
 		 */
@@ -94,8 +97,8 @@
 				}
 			}
 			return this;
-		}
-	
+		};
+
 		/**
 		 * اضافه کردن دستگیره.
 		 */
@@ -105,8 +108,8 @@
 			}
 			this._handlers[$ch.commandId].push($ch);
 			return this;
-		}
-	
+		};
+
 		/**
 		 * اجرای یک دستور
 		 */
@@ -114,7 +117,7 @@
 			var scope = this;
 			var args = Array.prototype.slice.call(arguments);
 			args = args.slice(1);
-	
+
 			if (!($ci in scope._handlers)) {
 				var def = $q.defer();
 				def.reject(new PException({
@@ -124,14 +127,14 @@
 				}));
 				return def.promise;
 			}
-	
+
 			var promises = [];
 			for (var i = 0; i in scope._handlers[$ci]; i++) {
 				var handler = scope._handlers[$ci][i];
-				promises.push(handler['handle'].apply(handler, args));
+				promises.push(handler.handle.apply(handler, args));
 			}
 			return $q.all(promises);
-		}
+		};
 	}
-	
+
 })();

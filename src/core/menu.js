@@ -1,9 +1,11 @@
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
 (function(){
-	
 	angular
-	.module('pluf')
-	.service('$menu',['$q', '$timeout', '$act', '$window', menu]);
-	
+		.module('pluf')
+		.service('$menu',['$q', '$timeout', '$act', '$window', menu]);
+
 	/**
 	 * @memberof pluf
 	 * @ngdoc service
@@ -23,15 +25,15 @@
 			if (!('visible' in menu)) {
 				menu.visible = function() {
 					return true;
-				}
+				};
 			}
 			if (!('enable' in menu)) {
 				menu.enable = function() {
 					return true;
-				}
+				};
 			}
 			this._menus[id].push(menu);
-		}
+		};
 
 		this.menu = function(id) {
 			var def = $q.defer();
@@ -43,7 +45,7 @@
 				def.resolve(scope._menus[id]);
 			}, 1);
 			return def.promise;
-		}
+		};
 
 		/**
 		 * یک موجودیت جدید را به منو اضافه می‌کند.
@@ -64,11 +66,11 @@
 						} else {
 							return $act.execute(menu.command);
 						}
-					}
+					};
 					if (!('enable' in menu)) {
 						menu.enable = function() {
 							return command.enable;
-						}
+						};
 					}
 					if (!('label' in menu) && ('label' in command)) {
 						menu.label = command.label;
@@ -88,19 +90,19 @@
 			} else if ('action' in menu) {
 				menu.active = function() {
 					return menu.action();
-				}
+				};
 				// XXX: maso, 1394: خصوصیت‌های دیگر اضافه شود.
 				this._addMenu(id, menu);
 			} else if ('link' in menu) {
 				menu.active = function() {
-					return $window.location = menu.link;
-				}
+					$window.location = menu.link;
+				};
 				// XXX: maso, 1394: خصوصیت‌های دیگر اضافه شود.
 				this._addMenu(id, menu);
 			}
 
 			return this;
-		}
+		};
 	}
-	
+// پایان
 })();
