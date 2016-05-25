@@ -67,7 +67,13 @@ module.exports = function(grunt) {
         'dist/pluf.saas.js',
         'dist/pluf.social.js'
       ]
-    }
+    },
+    jasmine : {
+      src : 'src/**/*.js',
+      options : {
+        specs : 'spec/**/*.js'
+      }
+    },
   });
 
   // Load the plugin that provides the "uglify" task.
@@ -75,14 +81,17 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-jsdoc');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-jshint');
+  // grunt.loadNpmTasks('grunt-contrib-jasmine');
 
   // Default task(s).
+  grunt.registerTask('test', ['jshint', 'jasmine']);
   grunt.registerTask('default', [
     'jshint:beforeconcat',
     'concat',
     'jshint:afterconcat',
     'uglify',
     'jsdoc'
+    // 'jasmine'
   ]);
 
 };
