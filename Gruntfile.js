@@ -1,4 +1,4 @@
-module.exports = function(grunt) {
+module.exports = function (grunt) {
 
   // Project configuration.
   grunt.initConfig({
@@ -7,72 +7,72 @@ module.exports = function(grunt) {
       options: {
         banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
         report: 'min',
-        mangle: false
+        mangle: false,
       },
       core: {
         src: 'dist/pluf.js',
-        dest: 'dist/pluf.min.js'
-      }
+        dest: 'dist/pluf.min.js',
+      },
     },
-    jsdoc : {
-      all : {
-        src: ['src/*/*.js', 'README.md' ],
+    jsdoc: {
+      all: {
+        src: ['src/*/*.js', 'README.md'],
         options: {
           destination: 'docs',
           configure: 'node_modules/angular-jsdoc/common/conf.json',
           template: 'node_modules/angular-jsdoc/angular-template',
           tutorial: 'tutorials',
-        }
-      }
+        },
+      },
     },
     concat: {
       core: {
         src: [
           'src/core.js',
-          'src/core/*.js'
+          'src/core/*.js',
         ],
-        dest:'dist/pluf.js'
+        dest: 'dist/pluf.js',
       },
       wiki: {
-        src:['src/wiki.js', 'src/wiki/*.js'],
-        dest: 'dist/pluf.wiki.js'
+        src: ['src/wiki.js', 'src/wiki/*.js'],
+        dest: 'dist/pluf.wiki.js',
       },
-      saas:{
-        src:['src/saas.js', 'src/saas/*.js'],
-        dest: 'dist/pluf.saas.js'
+      saas: {
+        src: ['src/saas.js', 'src/saas/*.js'],
+        dest: 'dist/pluf.saas.js',
       },
-      social:{
-        src:['src/social.js', 'src/social/*.js'],
-        dest: 'dist/pluf.social.js'
-      }
+      social: {
+        src: ['src/social.js', 'src/social/*.js'],
+        dest: 'dist/pluf.social.js',
+      },
     },
     jshint: {
-      'globals': { // Global variables.
-        "jasmine": true,
-        "angular": true,
-        "browser": true,
-        "element": true,
-        "by":true,
-        "io":true,
-        "_":false,
-        "$":false
+      globals: { // Global variables.
+        jasmine: true,
+        angular: true,
+        browser: true,
+        element: true,
+        by: true,
+        io: true,
+        _: false,
+        $: false,
       },
       beforeconcat: [
         'src/*.js',
-        'src/*/*.js'
+        'src/*/*.js',
       ],
       afterconcat: [
         'dist/pluf.js',
         'dist/pluf.wiki.js',
         'dist/pluf.saas.js',
-        'dist/pluf.social.js'
-      ]
+        'dist/pluf.social.js',
+      ],
     },
-    jasmine : {
-      src : 'src/**/*.js',
-      options : {
-        specs : 'spec/**/*.js'
-      }
+    jasmine: {
+      src: 'src/**/*.js',
+      options: {
+        specs: 'spec/**/*.js',
+      },
     },
   });
 
@@ -81,17 +81,17 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-jsdoc');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-jshint');
+
   // grunt.loadNpmTasks('grunt-contrib-jasmine');
 
   // Default task(s).
-  grunt.registerTask('test', ['jshint', 'jasmine']);
+  grunt.registerTask('test', ['jshint']);
   grunt.registerTask('default', [
     'jshint:beforeconcat',
     'concat',
     'jshint:afterconcat',
     'uglify',
-    'jsdoc'
-    // 'jasmine'
+    'jsdoc',
   ]);
 
 };
