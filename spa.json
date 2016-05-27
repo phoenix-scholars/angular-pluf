@@ -13,21 +13,29 @@
     "Web",
     "Example"
   ],
-  "view" : "/test/main.html",
+  "view" : "/main.html",
   "appcache" : "no",
   "src" : [
+    "bower_components/jasmine-core/lib/jasmine-core/jasmine.js",
+    "bower_components/jasmine-core/lib/jasmine-core/jasmine-html.js",
+    "bower_components/jasmine-core/lib/jasmine-core/boot.js",
+    "bower_components/angular/angular.js",
+    "bower_components/angular-mocks/angular-mocks.js",
+    "src/*.js",
     "src/core/*.js",
     "src/saas/*.js",
     "src/wiki/*.js",
     "src/social/*.js",
-    "test/main.js",
-    "test/ctrl/*.js"
+    "spec/*/*.js"
   ],
   "resource" : [],
   "logo" : { },
-  "link" : [],
+  "link" : [{
+    "type":"text/css",
+    "rel":"stylesheet",
+    "media":"screen,projection",
+    "href":"/angular-pluf/bower_components/jasmine-core/lib/jasmine-core/jasmine.css"
+  }],
   "meta" : [],
-  "dependencies": {
-    "angular": "~1.5.0"
-  }
+  "dependencies": {}
 }

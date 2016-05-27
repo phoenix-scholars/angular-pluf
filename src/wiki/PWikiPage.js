@@ -2,10 +2,9 @@
 /* jslint xxx: true */
 /* jshint -W100 */
 (function(){
-
-	angualr
-	.module('wiki')
-	.factory('PWikiPage', ['PObject', PWikiPage]);
+	angular
+		.module('pluf.wiki')
+		.factory('PWikiPage', ['PObject', PWikiPage]);
 
 	/**
 	 * @ngdoc factory

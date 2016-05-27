@@ -4,7 +4,7 @@
 (function(){
 
 	angular
-	.module('wiki')
+	.module('pluf.wiki')
 	.factory('PWikiBook', [
 		'PObject', 'PException', 'PWikiPageItem', 'PaginatorPage', '$http', '$q', '$timeout',
 		PWikiBook

@@ -4,7 +4,7 @@
 (function(){
 
 	angular
-	.module('wiki')
+	.module('pluf.wiki')
 	.factory('PWikiPageItem', ['PObject', PWikiPageItem]);
 
 	/**

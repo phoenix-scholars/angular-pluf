@@ -66,13 +66,9 @@
 				headers : {
 					'Content-Type' : 'application/x-www-form-urlencoded'
 				}
-			}).then(function() {
-				return scope.session();
-			}, function(data) {
-				throw new PException(data);
 			}).then(function(data) {
-				// scope._su = new PUser(data.data);
-				return data;
+				scope._su = new PUser(data.data);
+				return scope._su;
 			}, function(data) {
 				throw new PException(data);
 			});
@@ -84,11 +80,11 @@
 		 */
 		this.session = function() {
 			var scope = this;
-			if (!this._su.isAnonymous()) {
-				var deferred = $q.defer();
-				deferred.resolve(this._su);
-				return deferred.promise;
-			}
+			// if (!this._su.isAnonymous()) {
+			// 	var deferred = $q.defer();
+			// 	deferred.resolve(this._su);
+			// 	return deferred.promise;
+			// }
 			return $http.get('/api/user/account').then(function(data) {
 				scope._su = new PUser(data.data);
 				return scope._su;
@@ -97,12 +93,16 @@
 			});
 		};
 		/**
-		 * خروج از سیستم
+		 * این فراخوانی عمل خروج کاربری جاری از سیستم را انجام می‌دهد. با این کار تمام داده‌های کاربر
+		 * جاری از سیستم حذف شده و سیستم به حالت اولیه برخواهد گشت.
+		 *
+		 * @memberof $usr
+		 * @returns {promise(PUser)} کاربر جاری
 		 */
 		this.logout = function() {
 			if (this.isAnonymous()) {
 				var deferred = $q.defer();
-				deferred.resolve(this);
+				deferred.resolve(this._su);
 				return deferred.promise;
 			}
 			var scope = this;
