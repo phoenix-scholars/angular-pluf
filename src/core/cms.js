@@ -5,8 +5,7 @@
 	angular
 		.module('pluf')
 		.service('$cms',[
-			'$http', '$httpParamSerializerJQLike', '$q', '$timeout',
-			'PContent',	'PNamedContent', 'PaginatorPage', 'PException',
+			'$http', '$httpParamSerializerJQLike', '$q', '$timeout', 'PContent',	'PNamedContent', 'PaginatorPage', 'PException',
 			cms
 		]);
 
@@ -17,13 +16,39 @@
 	 * @description
 	 *
 	 * مهم‌ترین سرویسی است که در این بسته ارائه شده و کار با محتوی و اطلاعات آن را آسان می‌کند.
-	 * این سرویس برای جستجو و یا گرفتن اطلاعات هر محتوایی از سیستم کاربرد دارد.
+	 * این سرویس برای جستجو و یا گرفتن اطلاعات هر محتوایی از سیستم کاربرد دارد. متحوی کاربرد زیادی
+	 * توی صفحه‌های وب داره مثلا با استفاده از محتوی می‌تونید صفحه اول سایت رو طراحی کنید و یا یک
+	 * کلیپ آموزشی روی سایت بزارید.
+	 *
+	 * برای هر محتوی می‌تونید یک نام در نظر بگیرد که در این صورت بهش می‌گیم محتوی نام دارد. این
+	 * نوع محتوی برای استفاده در سایت‌ها خیلی مناسب هست. برای نمونه در یک صفحه می‌تونید مطالب
+	 * رو به صورت زیر بگیرد و نمایش بدید:
+	 *
+	 * <pre><code>
+	 * 	$cms.namedContent('about-us').then(function(nc){
+	 * 		return nc.value();
+	 * 	}).then(function(cv){
+	 * 		$scope.content = cv;
+	 * 	});
+	 * </code></pre>
+	 *
+	 * البته ما اینجا فرض کردیم که محتوی موجود از نوع جیسون هست برای همین به صورت یک موجودیت
+	 * جاواسکریپتی باهاش برخورد کردیم.
 	 */
 	function cms($http, $httpParamSerializerJQLike, $q, $timeout,	PContent, PNamedContent, PaginatorPage, PException) {
+		/*
+		 * مخزن محتوی نامدار
+		 */
 		this._nc = {};
+		/*
+		 * گرفتن یک محتوی
+		 */
 		this._getnc = function(id){
 			return this._nc[id];
 		};
+		/*
+		 * بازیابی یک محتوی نامدار
+		 */
 		this._retnc = function(id, d) {
 			var i = this._nc[id];
 			if (i) {
@@ -34,10 +59,19 @@
 			}
 			return i;
 		};
+		/*
+		 * مخزن محتوی
+		 */
 		this._c ={};
+		/*
+		 * گرفتن یک محتوی
+		 */
 		this._getc = function(id){
 			return this._c[id];
 		};
+		/*
+		 * بازیابی یک محتوی
+		 */
 		this._retc = function(id, c){
 			var i = this._c[id];
 			if (i) {
@@ -53,7 +87,8 @@
 		 * این فراخوانی یک ساختار داده‌ای جدید ایجاد می‌کند.
 		 *
 		 * @memberof $cms
-		 * @param contet contet ساختار داده‌ای محتوی برای ایجاد
+		 * @param {PContent} contet ساختار داده‌ای محتوی برای ایجاد
+		 * @return {promise(PContent)}
 		 */
 		this.newContent = function(c){
 			var scope = this;
@@ -68,6 +103,14 @@
 				return scope._retc(res.data.id, res.data);
 			});
 		};
+
+		/**
+		 * یک محتوی با شناسه خاص را تعیین می‌کند.
+		 *
+		 * @memberof $cms
+		 * @param  {Integer} id [description]
+		 * @return {promise(PContent)}   [description]
+		 */
 		this.content = function(i){
 			var t = this._getc(i);
 			if(t){
@@ -83,6 +126,14 @@
 				return t._retc(i, res.data);
 			});
 		};
+
+		/**
+		 * فهرست تمام محتوی موجود را تعیین می‌کند
+		 *
+		 * @memberof $cms
+		 * @param  {PaginatorParameter} p [description]
+		 * @return {promise(PaginatorPage(PContent))}   [description]
+		 */
 		this.contents = function(p){
 			var scope = this;
 			return $http({
@@ -101,6 +152,15 @@
 				throw new PException(data);
 			});
 		};
+
+		/**
+		 * یک صفحه نامدار جدید ایجاد می‌کند.
+		 *
+		 * @memberof $cms
+		 * @param  {string} name [description]
+		 * @param  {PContent} content [description]
+		 * @return {promise(PNamedContent)}   [description]
+		 */
 		this.newNamedContent = function(n, c){
 			var scope = this;
 			var nc;
@@ -122,6 +182,14 @@
 				return nc;
 			});
 		};
+
+		/**
+		 * گرفتن یک صفحه نامدار با استفاده از عنوان آن
+		 *
+		 * @memberof $cms
+		 * @param  {string} name [description]
+		 * @return {promise(PNamedContent)}   [description]
+		 */
 		this.namedContent = function(n){
 			var t = this._getnc(n);
 			if(t){
@@ -142,6 +210,13 @@
 				return nc;
 			});
 		};
+		/**
+		 * فهرست تمام محتوهای نامدار رو می‌ده.
+		 *
+		 * @memberof $cms
+		 * @param  {PaginatorParameter} paginatorParameter پارامترهای مورد استفاده در صفحه بندی
+		 * @return {promise(PaginatorPage(PNamedContent))}  دستگیره برای دریافت اطلاعا صفحه
+		 */
 		this.namedContents = function(p){
 			var scope = this;
 			return $http({
@@ -160,8 +235,6 @@
 					)	;
 				}
 				return page;
-			}, function(data) {
-				throw new PException(data);
 			});
 		};
 	}

@@ -185,6 +185,48 @@
      * 	});
      * </code></pre>
      *
+     * برای اینکه از این برچسب‌ها توی لایه نمایش و یا اینکه پردازش‌های دیگه استفاده کنید کافی هست که
+     * به صورت مستقیم از فهرست برچسب‌ها استفاده کنید. برای نمونه کد زیر یک دستور را نمایش داده
+     * و با کلیک کردن کاربر روی آن اجرا می‌کند:
+     *
+     * اولین کاری که باید بکنید تعریف کردن دستور و دستیگره مناسب برای اون هست:
+     * <pre><code>
+     * app.run(function($act){
+     * 	$act.command({
+     * 		id: 'info.command',
+     * 		label: 'Show info',
+     * 		tags: ['x', 'y']
+     * 	}).handler({
+     * 		command: 'info.command',
+     * 		handle: function(message){
+     * 			alert(message);
+     * 		}
+     * 	});
+     * });
+     * </code></pre>
+     *
+     * بعد این دستور رو به یک متغیر توی فضای نمایش میدیم که قابل نمایش باشه:
+     * <pre><code>
+     * 	app.controller('CommandController', function($scope, $act){
+     * 		$scope.execute = function(){
+     * 			$act.execute(arguments);
+     * 		};
+     * 		$act.getCommand('info.command').then(function(cmd){
+     * 			$scope.cmd = cmd;
+     * 		});
+     * 	});
+     * </code></pre>
+     *
+     * حالا کافی هست که توی نمایش این دستور رو نشون بدیم
+     * <pre><code>
+     * 	<div ng-click="execute(cmd.id, 'this is example message')">
+     *  	<h3>{{cmd.label}}</h3>
+     *  	<ul>
+     *  		<li ng-repeate="tag in cmd.tags">{{tag}}</li>
+     *  	</ul>
+     * 	</div>
+     * </code></pre>
+     *
      * @memberof PCommand
      * @param  {string} tag برچسب جدید
      * @return {PCommand}   خود دستور را به عنوان نتیجه برمی‌گرداند.
@@ -193,46 +235,6 @@
       this.tags.push(tag);
     };
     return pCommand;
-  }
-
-})(window.angular);
-
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
-(function(angular){
-  angular
-    .module('pluf')
-    .factory('PHandler',[
-      PHandler
-    ]);
-
-  /**
-   * @memberof pluf
-   * @ngdoc factory
-   * @name PHandler
-   * @description
-   * ساختار داده‌ای برای یک دستگیره را ایجاد می‌کند. دستگیره یک عمل اجرایی است که در مقابل فراخوانی
-   * یک دستور در سیستم اجرا می‌شود.
-   */
-  function PHandler() {
-    var pHandler  = function(data) {
-      this.priority = 0;
-      if (data) {
-        this.setData(data);
-      }
-    };
-    /**
-     * داده‌های اولیه را تعیین می‌کند.
-     * @memberof PHandler
-     * @param  {object} data داده‌ها
-     * @return {PHandler}    دستگیره
-     */
-    pHandler.prototype.setData = function(data) {
-      angular.extend(this, data);
-      return this;
-    };
-    return pHandler;
   }
 
 })(window.angular);
@@ -347,6 +349,237 @@
 
 //End
 })();
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+(function(angular){
+  angular
+    .module('pluf')
+    .factory('PHandler',[
+      PHandler
+    ]);
+
+  /**
+   * @memberof pluf
+   * @ngdoc factory
+   * @name PHandler
+   * @description
+   * ساختار داده‌ای برای یک دستگیره را ایجاد می‌کند. دستگیره یک عمل اجرایی است که در مقابل فراخوانی
+   * یک دستور در سیستم اجرا می‌شود.
+   */
+  function PHandler() {
+    var pHandler  = function(data) {
+      this.priority = 0;
+      if (data) {
+        this.setData(data);
+      }
+    };
+    /**
+     * داده‌های اولیه را تعیین می‌کند.
+     * @memberof PHandler
+     * @param  {object} data داده‌ها
+     * @return {PHandler}    دستگیره
+     */
+    pHandler.prototype.setData = function(data) {
+      angular.extend(this, data);
+      return this;
+    };
+    return pHandler;
+  }
+
+})(window.angular);
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+(function(angular){
+  angular
+    .module('pluf')
+    .factory('PMenu',[
+      'PMenuItem',
+      PMenu
+    ]);
+
+  /**
+   * @memberof pluf
+   * @ngdoc factory
+   * @name PMenu
+   * @description
+   * یک منو در حقیقت یک فهرست از منو ایتم‌ها است که در نمایش‌ها به کار گرفته می‌شود. برنامه‌ها
+   * می‌توانند منوهای مورد نظر خود را ثبت کرده و در در مکان‌های مورد نظر به کار ببرند. برای ایجاد
+   * یک منو می‌توان به دو روش عمل کرد:
+   *
+   * - ایجاید یک نمونه از این موجودیت
+   * - استفاده از سرویس $menu
+   *
+   * منوهای که به صورت مستقیم ایجاد بشن در سیستم مدیریت منوها ثبت نیستند و نمی‌شه مجدد از آنها
+   * استفاده کرد. بهترین روش برای ایجاد یک منو استفاده از سرویس $menu است.
+   *
+   * @attr {PMenuItem} items فهرست تمام منوها و منوایتم‌هایی که توی این منو قرار دارند. این
+   * خصوصیت یکی از مهم‌ترین خصوصیت‌های منو است.
+   *
+   * @attr {string[]} tags فهرستی از برچسب‌ها را تعیین می‌کند که به این منو داده می‌شود. از
+   * این برچسب‌ها برای دسته بندی منوها استفاده می‌شود.
+   *
+   * @attr {integer} priority
+   * اولویت این منو را تعیین می‌کند. در مواردی که نیاز است چندین منو با هم نمایش داده شوند از این
+   * خصوصیت برای مرتب ساز آنها استفاده می‌شود.
+   *
+   * @example
+   * <ul>
+   * 	<li ng-repete="m in menu.items"
+   * 		ng-click="m.active()"
+   * 		ng-show="m.visible()">{{m.label}}</li>
+   * </ul>
+   */
+  function PMenu() {
+    var pMenu  = function(data) {
+      this.priority = 0;
+      this.tags = [];
+      if (data) {
+        this.setData(data);
+      }
+      this.items = [];
+    };
+    /**
+     * داده‌های اولیه دستور را تعیین می‌کند.
+     *
+     * @memberof PMenu
+     * @param  {object} data ساختار داده اولیه برای ایجاد دستور
+     * @return {PMenu}  خود دستور به عنوان نتیجه برگردانده می‌ود.
+     */
+    pMenu.prototype.setData = function(data) {
+     angular.extend(this, data);
+     return this;
+    };
+
+    /**
+     * یک دستگیره جدید را به فهرست دستگیره‌های موجود در این دستور اضافه می‌کند.
+     *
+     * @memberof PMenu
+     * @param  {PHandler} handler دستگیره جدید برای این دستور
+     * @return {PMenu}   خود دستور به عنوان نتیجه برگردانده می‌شود.
+     */
+    pMenu.prototype.item = function(h){
+      this.items.push(h);
+      return this;
+    };
+    /**
+     * یک برچسب جدید به منو اضافه می‌کند. مهم‌ترین کاربرد این برچسب‌ها فهرست کردن و نمایش دسته
+     * بندی شده منوها است.
+     *
+     * @memberof PMenu
+     * @param  {string} tag برچسب جدید
+     * @return {PMenu}   خود دستور را به عنوان نتیجه برمی‌گرداند.
+     */
+    pMenu.prototype.tag = function(tag){
+      this.tags.push(tag);
+    };
+    return pMenu;
+  }
+
+})(window.angular);
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+(function(angular){
+  angular
+    .module('pluf')
+    .factory('PMenuItem',[
+       '$window', '$act',
+      PMenuItem
+    ]);
+
+  /**
+   * @memberof pluf
+   * @ngdoc factory
+   * @name PMenuItem
+   * @description
+   * ساختار داده‌ای دستور را تعیین می‌کند. این ساختار داده‌ای به صورت داخلی استفاده می‌شود و برای نگهداری
+   * دستورهایی است که کاربران به سیستم اضافه می‌کنند. مهم‌ترین پارامتر موجود در این ساختار داده‌ای
+   * فهرستی از دستگیره‌ها است که در ازای اجرا این دستور اجرا خواهند شد.
+   */
+  function PMenuItem($window, $act) {
+    var pMenuItem  = function(data) {
+      this.priority = 0;
+      this.tags = [];
+      if (data) {
+        this.setData(data);
+      }
+    };
+    /**
+     * داده‌های اولیه دستور را تعیین می‌کند.
+     *
+     * @memberof PMenuItem
+     * @param  {object} data ساختار داده اولیه برای ایجاد دستور
+     * @return {pCommand}  خود دستور به عنوان نتیجه برگردانده می‌ود.
+     */
+    pMenuItem.prototype.setData = function(data) {
+     angular.extend(this, data);
+     if ('command' in data) {
+       var scope = this;
+       $act.getCommand(data.command).then(function(command) {
+         scope.active = function() {
+           if (menu.params instanceof Array) {
+             var args = [];
+             args.push(menu.command);
+             for (var i = 0; i < menu.params.length; i++) {
+               args.push(menu.params[i]);
+             }
+             return $act.execute.apply($act, args);
+           } else {
+             return $act.execute(menu.command);
+           }
+         };
+         if (!('enable' in scope)) {
+           scope.enable = command.enable;
+         }
+         if (!('label' in scope) && ('label' in command)) {
+           scope.label = command.label;
+         }
+         if (!('priority' in scope)) {
+           scope.priority = command.priority;
+         }
+         if (!('description' in scope)) {
+           scope.priority = command.description;
+         }
+         if (!('visible' in scope)) {
+           scope.visible = command.visible;
+         }
+         // XXX: maso, 1394: خصوصیت‌های دیگر اضافه شود.
+       });
+     } else if ('action' in menu) {
+       menu.active = function() {
+         return menu.action();
+       };
+       // XXX: maso, 1394: خصوصیت‌های دیگر اضافه شود.
+     } else if ('link' in menu) {
+       menu.active = function() {
+         $window.location = menu.link;
+       };
+       // XXX: maso, 1394: خصوصیت‌های دیگر اضافه شود.
+     }
+
+     return this;
+    };
+
+    /**
+     * یک برچسب جدید به فهرست برچسب‌های این ایتم اضافه می‌کند. این برچسب‌ها برای دسته بندی
+     * کردن عمل‌ها در لایه نمایش کاربرد دارد.
+     *
+     * @memberof PMenuItem
+     * @param  {string} tag برچسب جدید
+     * @return {PCommand}   خود دستور را به عنوان نتیجه برمی‌گرداند.
+     */
+    pMenuItem.prototype.tag = function(tag){
+      this.tags.push(tag);
+    };
+    return pMenuItem;
+  }
+
+})(window.angular);
 
 /* jslint todo: true */
 /* jslint xxx: true */
@@ -483,6 +716,124 @@
 			};
 			return pObject;
 		}
+})();
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+(function(){
+	angular
+		.module('pluf')
+		.factory('PaginatorPage', [
+			'PObject',
+			PaginatorPage
+		]);
+
+	/**
+	 * @name PaginatorPage
+	 * @ngdoc factory
+	 * @memberof pluf
+	 * @description
+	 * ساختار داده‌ای را تعیین می‌کند که در صفحه بندی داده‌ها به کار گرفته می‌شود. تمام داده‌های که
+	 * از سرور ارسال می‌شود به صورت صفحه بندی است و تعداد آنها محدود است. این داده‌ها با
+	 * این ساختار داده‌ای در اختیار کاربران قرار می‌گیرد.
+	 */
+	function PaginatorPage(PObject) {
+		var paginatorPage = function() {
+			PObject.apply(this, arguments);
+		};
+		paginatorPage.prototype = new PObject();
+		return paginatorPage;
+	}
+
+// پایان
+})();
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+(function(){
+	angular
+		.module('pluf')
+		.factory('PaginatorParameter',[
+			PaginatorParameter
+		]);
+	/**
+	 * @memberof pluf
+	 * @ngdoc factory
+	 * @name PaginatorParameter
+	 * @description
+	 * بسیاری از داده‌هایی که در سیستم موجود است به صورت صفحه بندی شده در اختیار کاربران قرار
+	 * می‌گیرد. در این بخش ابزارهایی برای کار با صفحه بندی ارائه شده است.
+	 *
+	 *
+	 * از جمله خصوصیاتی که می‌توان در این ساختار قرار داد عبارتند از:
+	 *
+	 * @attr {string} _px_q متن مورد جستجو در فیلدهای مختلف
+	 * @attr {Integer} _px_p  شماره صفحه مورد نظر از فهرست صفحه‌بندی شده
+	 * @attr {Integer}_px_ps  تعداد آیتم‌های موجود در هر صفحه
+	 * @attr {string} _px_fk نام خصوصیتی که برای فیلتر کردن مورد استفاده قرار می‌گیرد
+	 * @attr {string} _px_fv مقداری مورد نظر برای خصوصیتی که بر اساس آن فیلتر انجام می‌شود.
+	 * @attr {string} _px_sk نام خصوصیتی که فهرست باید بر اساس آن مرتب شود.
+	 * @attr {string} _px_so ترتیب مرتب‌سازی، اینکه مرتب‌سازی به صورت صعودی باشد یا نزولی
+	 *
+	 */
+	function PaginatorParameter() {
+		var pagParam = function(paginatorParam) {
+			if (paginatorParam) {
+				this.setData(paginatorParam);
+			} else {
+				this.setData({});
+			}
+		};
+		pagParam.prototype = {
+			param : {},
+			setData : function(paginatorParam) {
+				// angular.extend(this.param, paginatorParam);
+				this.param = paginatorParam;
+			},
+			setSize : function($size) {
+				this.param._px_c = $size;
+				return this;
+			},
+			setQuery : function($query) {
+				this.param._px_q = $query;
+				return this;
+			},
+			/**
+			 * تعیین صفحه مورد نظر
+			 *
+			 * این فراخوانی صفحه‌ای را تعیین می‌کند که مورد نظر کاربر است. برای نمونه اگر صفحه دوم از
+			 * یک کاوش مد نظر باشد باید مقدار یک به عنوان ورودی این تابع استفاده شود.
+			 *
+			 * اندیس تمام صفحه‌ها از صفر شروع می‌شود. بنابر این صفحه اول اندیس صفر و صفحه دوم
+			 * اندیس یک دارد.
+			 *
+			 * @param  int $page شماره صفحه
+			 * @return PaginatorParameter    خود شئی به عنوان خروجی برگردانده می‌شود.
+			 */
+			setPage : function($page) {
+				this.param._px_p = $page;
+				return this;
+			},
+			setOrder : function($key, $order) {
+				this.param._px_sk = $key;
+				this.param._px_so = $order;
+				return this;
+			},
+			setFilter : function($key, $value) {
+				this.param._px_fk = $key;
+				this.param._px_fv = $value;
+				return this;
+			},
+			getParameter : function() {
+				return this.param;
+			}
+		};
+		return pagParam;
+	}
+
+// پایان
 })();
 
 /* jslint todo: true */
@@ -1024,124 +1375,6 @@
 (function(){
 	angular
 		.module('pluf')
-		.factory('PaginatorPage', [
-			'PObject',
-			PaginatorPage
-		]);
-
-	/**
-	 * @name PaginatorPage
-	 * @ngdoc factory
-	 * @memberof pluf
-	 * @description
-	 * ساختار داده‌ای را تعیین می‌کند که در صفحه بندی داده‌ها به کار گرفته می‌شود. تمام داده‌های که
-	 * از سرور ارسال می‌شود به صورت صفحه بندی است و تعداد آنها محدود است. این داده‌ها با
-	 * این ساختار داده‌ای در اختیار کاربران قرار می‌گیرد.
-	 */
-	function PaginatorPage(PObject) {
-		var paginatorPage = function() {
-			PObject.apply(this, arguments);
-		};
-		paginatorPage.prototype = new PObject();
-		return paginatorPage;
-	}
-
-// پایان
-})();
-
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
-(function(){
-	angular
-		.module('pluf')
-		.factory('PaginatorParameter',[
-			PaginatorParameter
-		]);
-	/**
-	 * @memberof pluf
-	 * @ngdoc factory
-	 * @name PaginatorParameter
-	 * @description
-	 * بسیاری از داده‌هایی که در سیستم موجود است به صورت صفحه بندی شده در اختیار کاربران قرار
-	 * می‌گیرد. در این بخش ابزارهایی برای کار با صفحه بندی ارائه شده است.
-	 *
-	 *
-	 * از جمله خصوصیاتی که می‌توان در این ساختار قرار داد عبارتند از:
-	 *
-	 * @attr {string} _px_q متن مورد جستجو در فیلدهای مختلف
-	 * @attr {Integer} _px_p  شماره صفحه مورد نظر از فهرست صفحه‌بندی شده
-	 * @attr {Integer}_px_ps  تعداد آیتم‌های موجود در هر صفحه
-	 * @attr {string} _px_fk نام خصوصیتی که برای فیلتر کردن مورد استفاده قرار می‌گیرد
-	 * @attr {string} _px_fv مقداری مورد نظر برای خصوصیتی که بر اساس آن فیلتر انجام می‌شود.
-	 * @attr {string} _px_sk نام خصوصیتی که فهرست باید بر اساس آن مرتب شود.
-	 * @attr {string} _px_so ترتیب مرتب‌سازی، اینکه مرتب‌سازی به صورت صعودی باشد یا نزولی
-	 *
-	 */
-	function PaginatorParameter() {
-		var pagParam = function(paginatorParam) {
-			if (paginatorParam) {
-				this.setData(paginatorParam);
-			} else {
-				this.setData({});
-			}
-		};
-		pagParam.prototype = {
-			param : {},
-			setData : function(paginatorParam) {
-				// angular.extend(this.param, paginatorParam);
-				this.param = paginatorParam;
-			},
-			setSize : function($size) {
-				this.param._px_c = $size;
-				return this;
-			},
-			setQuery : function($query) {
-				this.param._px_q = $query;
-				return this;
-			},
-			/**
-			 * تعیین صفحه مورد نظر
-			 *
-			 * این فراخوانی صفحه‌ای را تعیین می‌کند که مورد نظر کاربر است. برای نمونه اگر صفحه دوم از
-			 * یک کاوش مد نظر باشد باید مقدار یک به عنوان ورودی این تابع استفاده شود.
-			 *
-			 * اندیس تمام صفحه‌ها از صفر شروع می‌شود. بنابر این صفحه اول اندیس صفر و صفحه دوم
-			 * اندیس یک دارد.
-			 *
-			 * @param  int $page شماره صفحه
-			 * @return PaginatorParameter    خود شئی به عنوان خروجی برگردانده می‌شود.
-			 */
-			setPage : function($page) {
-				this.param._px_p = $page;
-				return this;
-			},
-			setOrder : function($key, $order) {
-				this.param._px_sk = $key;
-				this.param._px_so = $order;
-				return this;
-			},
-			setFilter : function($key, $value) {
-				this.param._px_fk = $key;
-				this.param._px_fv = $value;
-				return this;
-			},
-			getParameter : function() {
-				return this.param;
-			}
-		};
-		return pagParam;
-	}
-
-// پایان
-})();
-
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
-(function(){
-	angular
-		.module('pluf')
 		.service('$act',[
 			'$q', '$timeout', 'PCommand', 'PHandler',
 			act
@@ -1317,8 +1550,7 @@
 	angular
 		.module('pluf')
 		.service('$cms',[
-			'$http', '$httpParamSerializerJQLike', '$q', '$timeout',
-			'PContent',	'PNamedContent', 'PaginatorPage', 'PException',
+			'$http', '$httpParamSerializerJQLike', '$q', '$timeout', 'PContent',	'PNamedContent', 'PaginatorPage', 'PException',
 			cms
 		]);
 
@@ -1329,13 +1561,39 @@
 	 * @description
 	 *
 	 * مهم‌ترین سرویسی است که در این بسته ارائه شده و کار با محتوی و اطلاعات آن را آسان می‌کند.
-	 * این سرویس برای جستجو و یا گرفتن اطلاعات هر محتوایی از سیستم کاربرد دارد.
+	 * این سرویس برای جستجو و یا گرفتن اطلاعات هر محتوایی از سیستم کاربرد دارد. متحوی کاربرد زیادی
+	 * توی صفحه‌های وب داره مثلا با استفاده از محتوی می‌تونید صفحه اول سایت رو طراحی کنید و یا یک
+	 * کلیپ آموزشی روی سایت بزارید.
+	 *
+	 * برای هر محتوی می‌تونید یک نام در نظر بگیرد که در این صورت بهش می‌گیم محتوی نام دارد. این
+	 * نوع محتوی برای استفاده در سایت‌ها خیلی مناسب هست. برای نمونه در یک صفحه می‌تونید مطالب
+	 * رو به صورت زیر بگیرد و نمایش بدید:
+	 *
+	 * <pre><code>
+	 * 	$cms.namedContent('about-us').then(function(nc){
+	 * 		return nc.value();
+	 * 	}).then(function(cv){
+	 * 		$scope.content = cv;
+	 * 	});
+	 * </code></pre>
+	 *
+	 * البته ما اینجا فرض کردیم که محتوی موجود از نوع جیسون هست برای همین به صورت یک موجودیت
+	 * جاواسکریپتی باهاش برخورد کردیم.
 	 */
 	function cms($http, $httpParamSerializerJQLike, $q, $timeout,	PContent, PNamedContent, PaginatorPage, PException) {
+		/*
+		 * مخزن محتوی نامدار
+		 */
 		this._nc = {};
+		/*
+		 * گرفتن یک محتوی
+		 */
 		this._getnc = function(id){
 			return this._nc[id];
 		};
+		/*
+		 * بازیابی یک محتوی نامدار
+		 */
 		this._retnc = function(id, d) {
 			var i = this._nc[id];
 			if (i) {
@@ -1346,10 +1604,19 @@
 			}
 			return i;
 		};
+		/*
+		 * مخزن محتوی
+		 */
 		this._c ={};
+		/*
+		 * گرفتن یک محتوی
+		 */
 		this._getc = function(id){
 			return this._c[id];
 		};
+		/*
+		 * بازیابی یک محتوی
+		 */
 		this._retc = function(id, c){
 			var i = this._c[id];
 			if (i) {
@@ -1365,7 +1632,8 @@
 		 * این فراخوانی یک ساختار داده‌ای جدید ایجاد می‌کند.
 		 *
 		 * @memberof $cms
-		 * @param contet contet ساختار داده‌ای محتوی برای ایجاد
+		 * @param {PContent} contet ساختار داده‌ای محتوی برای ایجاد
+		 * @return {promise(PContent)}
 		 */
 		this.newContent = function(c){
 			var scope = this;
@@ -1380,6 +1648,14 @@
 				return scope._retc(res.data.id, res.data);
 			});
 		};
+
+		/**
+		 * یک محتوی با شناسه خاص را تعیین می‌کند.
+		 *
+		 * @memberof $cms
+		 * @param  {Integer} id [description]
+		 * @return {promise(PContent)}   [description]
+		 */
 		this.content = function(i){
 			var t = this._getc(i);
 			if(t){
@@ -1395,6 +1671,14 @@
 				return t._retc(i, res.data);
 			});
 		};
+
+		/**
+		 * فهرست تمام محتوی موجود را تعیین می‌کند
+		 *
+		 * @memberof $cms
+		 * @param  {PaginatorParameter} p [description]
+		 * @return {promise(PaginatorPage(PContent))}   [description]
+		 */
 		this.contents = function(p){
 			var scope = this;
 			return $http({
@@ -1413,6 +1697,15 @@
 				throw new PException(data);
 			});
 		};
+
+		/**
+		 * یک صفحه نامدار جدید ایجاد می‌کند.
+		 *
+		 * @memberof $cms
+		 * @param  {string} name [description]
+		 * @param  {PContent} content [description]
+		 * @return {promise(PNamedContent)}   [description]
+		 */
 		this.newNamedContent = function(n, c){
 			var scope = this;
 			var nc;
@@ -1434,6 +1727,14 @@
 				return nc;
 			});
 		};
+
+		/**
+		 * گرفتن یک صفحه نامدار با استفاده از عنوان آن
+		 *
+		 * @memberof $cms
+		 * @param  {string} name [description]
+		 * @return {promise(PNamedContent)}   [description]
+		 */
 		this.namedContent = function(n){
 			var t = this._getnc(n);
 			if(t){
@@ -1454,6 +1755,13 @@
 				return nc;
 			});
 		};
+		/**
+		 * فهرست تمام محتوهای نامدار رو می‌ده.
+		 *
+		 * @memberof $cms
+		 * @param  {PaginatorParameter} paginatorParameter پارامترهای مورد استفاده در صفحه بندی
+		 * @return {promise(PaginatorPage(PNamedContent))}  دستگیره برای دریافت اطلاعا صفحه
+		 */
 		this.namedContents = function(p){
 			var scope = this;
 			return $http({
@@ -1472,8 +1780,6 @@
 					)	;
 				}
 				return page;
-			}, function(data) {
-				throw new PException(data);
 			});
 		};
 	}
@@ -1486,103 +1792,114 @@
 (function(){
 	angular
 		.module('pluf')
-		.service('$menu',['$q', '$timeout', '$act', '$window', menu]);
+		.service('$menu',['$q', '$timeout', 'PMenu', 'PMenuItem', menu]);
 
 	/**
 	 * @memberof pluf
 	 * @ngdoc service
 	 * @name $menu
 	 * @description
-	 * مدیریت منوها را ایجاد می‌کند
+	 * معمولا توی برنامه‌های گرافیکی نیاز دارید دسته‌ای از عمل‌های و دستورها را به صورت یک منو نمایش
+	 * بدید. برای نمونه نوار ابزاری که بالای یک صفحه میاد یک نمونه از منوهایی است که توی نرم افزارها
+	 * استفاده می‌شه. یا اینکه منوهای کشویی که از سمت راست و یا چپ صفحه نمایش داده می‌شن هم
+	 * از این نمونه‌ها هستن.
+	 *
+	 * بدترین راه حل این هست که هرجا لازم داشتیم یک فهرست از عمل‌ها رو ایجاد کنیم و توی نمایش قرار
+	 * بدیم اما این کار مشکل‌هایی  اساسی داره که عبارتند از:
+	 *
+	 * - کدهایی با یک کارکرد توی سیستم تکرار می‌شن و مدیریتش مشکل می‌شه
+	 * - لایه نمایش پیچیده می‌شه
+	 * - تست عمل‌های اضافه شده مشکل می‌شه
+	 *
+	 * نمی‌خوام بگم که بهترین راه حل اینکه بیایم تمام عمل‌ها بزاریم توی یه لیست و این لیست رو هرجایی
+	 * استفاده کنیم. ولی حداقل این هست که می‌تونیم کارهای پر کاربرد رو به صورت متمرکز تعریف کنیم و
+	 * از هرجایی استفاده کنیم. توی سیستم مثل اکلیپس از این تکنیک استفاده شده و ما هم اینجا استفاده
+	 * کردیم.
+	 *
+	 * روال کلی این هست که دسته‌ای از دستورها و عمل‌های دلخواه رو با یک کلید به عنوان منو ذخیره
+	 * می‌کنید و هرجایی که لازم داشتید این منو رو نمایش میدید. یکی از مهم‌ترین کارهایی که می‌تونید
+	 * استفاده کنید دستورهایی مثل ورود و خروج کاربر هست.
+	 *
+	 * با این کار هر کنترولی از سیستم می‌تونه یه سری دستور جدید به منو اضافه کن و با بزرگ شدن نرم افزار
+	 * این منو هم به صورت خودکار رشد خواهد کرد. نکته اینکه دستورها رو تو خود کنترولها اضافه نکنید مخصوصا
+	 * زمانی که از مدلهای ng-route استفاده می‌کنید.
+	 *
+	 * @example
+	 * // Create header menu in app
+	 * angular.module('myApp')
+	 * 	.run(function($menu){
+	 * 		$menu.add('header', {
+	 * 			command: 'usr.login'
+	 * 		}).add('header', {
+	 * 			command: 'logout'
+	 * 		});
+	 * 	});
+	 *
+	 * @example
+	 * // Assigne header menu into scope variable
+	 * angular.module('myApp').controller('SidebarController', function($scope, $menu){
+	 * 	$menu.menu('header').then(function(menu){
+	 * 		$scope.menu = menu;
+	 * 	})
+	 * });
+	 *
+	 * @example
+	 * <!-- Show all action in menu -->
+	 * <ul>
+	 * 	<li ng-repeat="m in menu.items"
+	 * 			ng-show="m.visible">{{m.label}}</li>
+	 * </ul>
 	 */
-	function menu($q, $timeout, $act, $window) {
-		this._menus = [];
+	function menu($q, $timeout, PMenu, PMenuItem) {
+		/**
+		 * مخزنی از تمام منوها ایجاد می‌کند. این مخزن می‌تواند به صورت مستقیم در سایر نمایش‌ها و سرویس‌ها
+		 * استفاده شود.
+		 *
+		 * @type {Array}
+		 */
+		this.menus = [];
 
+		/*
+		 * یک منوایتم رو به منوهای موجود اضافه می‌کند. در صورتی که منو معادل وجود نداشته باشد یک نمونه
+		 * جدید برای آن ایجاد خواهد کردم.
+		 */
 		this._addMenu = function(id, menu) {
-			if (!(id in this._menus)) {
-				this._menus[id] = [];
+			if (id in this.menus) {
+				this.menus[id].item(menu);
 			}
-
-			// خصوصیت‌های مشترک
-			if (!('visible' in menu)) {
-				menu.visible = function() {
-					return true;
-				};
-			}
-			if (!('enable' in menu)) {
-				menu.enable = function() {
-					return true;
-				};
-			}
-			this._menus[id].push(menu);
+			this.menus[id] = new PMenu({'id': id});
 		};
 
+		/**
+		 * یک منو را با شناسه تعیین شده بازیابی می‌کند. در صورتی که منو با شناسه در مورد نظر موجود
+		 * نباشد یک نمونه برای آن ایجاد شده و به عنوان نتیجه برگردانده می‌شود.
+		 *
+		 * @memberof $menu
+		 * @param  {string} id شناسه منو مورد نظر
+		 * @return {promise(PMenu)} منوی ایجاد شده
+		 */
 		this.menu = function(id) {
 			var def = $q.defer();
 			var scope = this;
 			$timeout(function() {
-				if (!(id in scope._menus)) {
-					scope._menus[id] = [];
+				if (!(id in scope.menus)) {
+					scope.menus[id] = new PMenu({'id':id});
 				}
-				def.resolve(scope._menus[id]);
+				def.resolve(scope.menus[id]);
 			}, 1);
 			return def.promise;
 		};
 
 		/**
-		 * یک موجودیت جدید را به منو اضافه می‌کند.
+		 * یک گزینه جدید به منو اضافه می‌کند. این روش اضافه کردن منو کلی است و همواره یک منوایتم
+		 * به عنوان گزینه جدید اضافه خواهد شد.
+		 *
+		 * @memberof $menu
+		 * @param {string} شناسه منو مورد نظر
+		 * @param {object} داده‌های مورد نیاز برای ایجاد منوایتم
 		 */
-		this.add = function(id, menu) {
-
-			if ('command' in menu) {
-				var scope = this;
-				$act.getCommand(menu.command).then(function(command) {
-					menu.active = function() {
-						if (menu.params instanceof Array) {
-							var args = [];
-							args.push(menu.command);
-							for (var i = 0; i < menu.params.length; i++) {
-								args.push(menu.params[i]);
-							}
-							return $act.execute.apply($act, args);
-						} else {
-							return $act.execute(menu.command);
-						}
-					};
-					if (!('enable' in menu)) {
-						menu.enable = function() {
-							return command.enable;
-						};
-					}
-					if (!('label' in menu) && ('label' in command)) {
-						menu.label = command.label;
-					}
-					if (!('priority' in menu)) {
-						menu.priority = command.priority;
-					}
-					if (!('description' in menu)) {
-						menu.priority = command.description;
-					}
-					if (!('visible' in menu)) {
-						menu.visible = command.visible;
-					}
-					// XXX: maso, 1394: خصوصیت‌های دیگر اضافه شود.
-					scope._addMenu(id, menu);
-				});
-			} else if ('action' in menu) {
-				menu.active = function() {
-					return menu.action();
-				};
-				// XXX: maso, 1394: خصوصیت‌های دیگر اضافه شود.
-				this._addMenu(id, menu);
-			} else if ('link' in menu) {
-				menu.active = function() {
-					$window.location = menu.link;
-				};
-				// XXX: maso, 1394: خصوصیت‌های دیگر اضافه شود.
-				this._addMenu(id, menu);
-			}
-
+		this.addItem = function(id, menu) {
+			this._addMenu(id, new PMenuItem(menu));
 			return this;
 		};
 	}

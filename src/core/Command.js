@@ -79,6 +79,48 @@
      * 	});
      * </code></pre>
      *
+     * برای اینکه از این برچسب‌ها توی لایه نمایش و یا اینکه پردازش‌های دیگه استفاده کنید کافی هست که
+     * به صورت مستقیم از فهرست برچسب‌ها استفاده کنید. برای نمونه کد زیر یک دستور را نمایش داده
+     * و با کلیک کردن کاربر روی آن اجرا می‌کند:
+     *
+     * اولین کاری که باید بکنید تعریف کردن دستور و دستیگره مناسب برای اون هست:
+     * <pre><code>
+     * app.run(function($act){
+     * 	$act.command({
+     * 		id: 'info.command',
+     * 		label: 'Show info',
+     * 		tags: ['x', 'y']
+     * 	}).handler({
+     * 		command: 'info.command',
+     * 		handle: function(message){
+     * 			alert(message);
+     * 		}
+     * 	});
+     * });
+     * </code></pre>
+     *
+     * بعد این دستور رو به یک متغیر توی فضای نمایش میدیم که قابل نمایش باشه:
+     * <pre><code>
+     * 	app.controller('CommandController', function($scope, $act){
+     * 		$scope.execute = function(){
+     * 			$act.execute(arguments);
+     * 		};
+     * 		$act.getCommand('info.command').then(function(cmd){
+     * 			$scope.cmd = cmd;
+     * 		});
+     * 	});
+     * </code></pre>
+     *
+     * حالا کافی هست که توی نمایش این دستور رو نشون بدیم
+     * <pre><code>
+     * 	<div ng-click="execute(cmd.id, 'this is example message')">
+     *  	<h3>{{cmd.label}}</h3>
+     *  	<ul>
+     *  		<li ng-repeate="tag in cmd.tags">{{tag}}</li>
+     *  	</ul>
+     * 	</div>
+     * </code></pre>
+     *
      * @memberof PCommand
      * @param  {string} tag برچسب جدید
      * @return {PCommand}   خود دستور را به عنوان نتیجه برمی‌گرداند.
