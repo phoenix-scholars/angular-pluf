@@ -24,7 +24,7 @@
 					return $usr.isAnonymous();
 				},
 				category : 'usr',
-			}).commandHandler({
+			}).handler({
 				commandId : 'pluf.user.login',
 				handle : function() {
 					if (arguments.length < 1) {//
@@ -46,7 +46,7 @@
 					return !$usr.isAnonymous();
 				},
 				category : 'usr',
-			}).commandHandler({
+			}).handler({
 				commandId : 'pluf.user.logout',
 				handle : function() {
 					return $usr.logout();
@@ -63,7 +63,7 @@
 				visible : function() {
 					return !$usr.isAnonymous();
 				},
-			}).commandHandler({
+			}).handler({
 				commandId : 'pluf.user.update',
 				handle : function() {
 					if (arguments.length < 1) {//
@@ -85,11 +85,7 @@
 				visible : function() {
 					return !$usr.isAnonymous();
 				},
-			})
-			/*
-			 *
-			 */
-			.commandHandler({
+			}).handler({
 				commandId : 'pluf.user.profile.update',
 				handle : function() {
 					if (arguments.length < 1) {//
@@ -107,6 +103,139 @@
 
 //End
 })();
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+(function(angular){
+  angular
+    .module('pluf')
+    .factory('PCommand',[
+      PCommand
+    ]);
+
+  /**
+   * @memberof pluf
+   * @ngdoc factory
+   * @name PCommand
+   * @description
+   * ساختار داده‌ای دستور را تعیین می‌کند. این ساختار داده‌ای به صورت داخلی استفاده می‌شود و برای نگهداری
+   * دستورهایی است که کاربران به سیستم اضافه می‌کنند. مهم‌ترین پارامتر موجود در این ساختار داده‌ای
+   * فهرستی از دستگیره‌ها است که در ازای اجرا این دستور اجرا خواهند شد.
+   */
+  function PCommand() {
+    var pCommand  = function(data) {
+      this.priority = 0;
+      this.tags = [];
+      if (data) {
+        this.setData(data);
+      }
+      this.handlers = [];
+      if (!('visible' in data)) {
+				this.visible = function() {return true;};
+			}
+			if (!('enable' in data)) {
+				this.enable = function() { return true; };
+			}
+    };
+    /**
+     * داده‌های اولیه دستور را تعیین می‌کند.
+     *
+     * @memberof PCommand
+     * @param  {object} data ساختار داده اولیه برای ایجاد دستور
+     * @return {pCommand}  خود دستور به عنوان نتیجه برگردانده می‌ود.
+     */
+    pCommand.prototype.setData = function(data) {
+     angular.extend(this, data);
+     return this;
+    };
+
+    /**
+     * یک دستگیره جدید را به فهرست دستگیره‌های موجود در این دستور اضافه می‌کند.
+     *
+     * @memberof PCommand
+     * @param  {PHandler} handler دستگیره جدید برای این دستور
+     * @return {PCommand}   خود دستور به عنوان نتیجه برگردانده می‌شود.
+     */
+    pCommand.prototype.handler = function(h){
+      this.handlers.push(h);
+      return this;
+    };
+    /**
+     * یک برچسب جدید به این دستور اضافه می‌کند. هر دستور یک فهرست از برچسب‌ها دارد که یک
+     * حالت و دسته خاص از دستورها را نشان می‌دهد. اضافه کردن برچسب به دستور خیلی ساده انجام
+     * می‌شود:
+     *
+     * <pre><code>
+     * 	var cmd = new PCommand();
+     * 	...
+     * 	cmd
+     * 		.tag('menu')
+     * 		.tag('usr')
+     * 		.tag('login');
+     * </code></pre>
+     *
+     *	فهرست برچسب‌ها را می‌توان در زمان تعریف یک دستور نیز تعیین کرد:
+     *
+     * <pre><code>
+     * 	$act.command({
+     * 		id: 'user.login',
+     * 		lable: 'login',
+     * 		tags:['menu', 'user', 'login']
+     * 	});
+     * </code></pre>
+     *
+     * @memberof PCommand
+     * @param  {string} tag برچسب جدید
+     * @return {PCommand}   خود دستور را به عنوان نتیجه برمی‌گرداند.
+     */
+    pCommand.prototype.tag = function(tag){
+      this.tags.push(tag);
+    };
+    return pCommand;
+  }
+
+})(window.angular);
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+(function(angular){
+  angular
+    .module('pluf')
+    .factory('PHandler',[
+      PHandler
+    ]);
+
+  /**
+   * @memberof pluf
+   * @ngdoc factory
+   * @name PHandler
+   * @description
+   * ساختار داده‌ای برای یک دستگیره را ایجاد می‌کند. دستگیره یک عمل اجرایی است که در مقابل فراخوانی
+   * یک دستور در سیستم اجرا می‌شود.
+   */
+  function PHandler() {
+    var pHandler  = function(data) {
+      this.priority = 0;
+      if (data) {
+        this.setData(data);
+      }
+    };
+    /**
+     * داده‌های اولیه را تعیین می‌کند.
+     * @memberof PHandler
+     * @param  {object} data داده‌ها
+     * @return {PHandler}    دستگیره
+     */
+    pHandler.prototype.setData = function(data) {
+      angular.extend(this, data);
+      return this;
+    };
+    return pHandler;
+  }
+
+})(window.angular);
 
 /* jslint todo: true */
 /* jslint xxx: true */
@@ -1014,7 +1143,7 @@
 	angular
 		.module('pluf')
 		.service('$act',[
-			'$q', '$timeout', 'PException',
+			'$q', '$timeout', 'PCommand', 'PHandler',
 			act
 		]);
 
@@ -1031,118 +1160,151 @@
  *
  * user.login
  *
- * فراخوانی این دستور منجر به اجرا شدن تمام دستگیره‌هایی مرتبط خواهد شد.
+ * فراخوانی این دستور منجر به اجرا شدن تمام دستگیره‌هایی مرتبط خواهد شد. تعریف این دستور و دستیگره‌های
+ * آن در نمونه‌های زیر اورده شده است.
+ *
+ * @example
+ * $act.command({
+ * 	id: 'user.login',
+ * 	label: 'login',
+ * 	icon: 'enter',
+ * 	tags: ['user', 'login']
+ * });
+ * ...
+ * $act.handler({
+ * 	command: 'user.login',
+ * 	handle: function(credential){
+ * 		return $usr.login(credential);
+ * 	}
+ * });
+ *
+ * @example
+ * // اجرای دستور
+ * $act.execute('user.login',{
+ * 	login: 'admin',
+ * 	password: 'admin'
+ * });
  */
-	function act($q, $timeout, PException) {
-		this._categories = [];
-		this._commands = [];
-		/**
-		 * ارایه‌ای از دستگیره‌ها است که هر دستگیره بر اساس کلید دستور خود دسته بندی
-		 * شده است.
+	function act($q, $timeout, PCommand, PHandler) {
+		/*
+		 * فهرستی از تمام دستورهای تعریف شده را نگهداری می ‌کند
 		 */
-		this._handlers = [];
+		this._commands = [];
+
 		/**
-		 * دستور با شناسه تعیین شده را بر می‌گرداند.
+		 * دستور معادل با شناسه ورودی را تعیین می‌کند. در صورتی که دستور معادل وجود نداشته باشد یک
+		 * خطا صادر خواهد شد.
+		 *
+		 * @memberof $act
+		 * @param  {string} id شناسه دستور را تعیین می‌کند.
+		 * @return {promise(PCommand)}    [description]
 		 */
 		this.getCommand = function(id) {
 			var def = $q.defer();
 			var scope = this;
 			$timeout(function() {
-				for (var i = 0; i < scope._commands.length; i++) {
-					if (scope._commands[i].id == id) {
-						def.resolve(scope._commands[i]);
-						return;
-					}
+				if(id in scope._commands){
+					def.resolve(scope._commands[id]);
+					return;
 				}
+				def.reject({status:404, code:10, message:'command not found'});
 			}, 1);
 			return def.promise;
 		};
+
 		/**
-		 * تمام دستورهایی که در یک دسته قرار دارند را به صورت غیر همزمان تعیین
-		 * می‌کند.
+		 * یک دستور جدید به سیستم اضافه می‌کند. در صورتی که دستوری با شناسه دستور قبلا در سیستم
+		 * موجود باشد، دستور جدید با مورد قبل جایگزین خواهد شد.
+		 *
+		 * @param  {Object} command یک ساختار داده‌ای که پارامترهای دستور را تعیین می‌‌کند
+		 * @return {$act} ساختار داده‌ای دستور
 		 */
-		this.category = function(key) {
+		this.command = function(cmdData) {
+			// دستور باید شناسه داشته باشد
+			if(!cmdData.id){
+				//TODO: maso, 1395: پیام مناسبی برای خطا ایجاد شود.
+				throw {status:404, code:11, message:'Command id is empty'};
+			}
+			var cmd;
+			if(cmdData.id in this._commands){
+				// TODO: maso, 1395: یه پیام اخطار که پیام وجود داشته
+				cmd = this._commands[cmdData.id];
+			} else {
+				cmd = new PCommand(cmdData);
+			}
+			this._commands[cmd.id] = cmd;
+			return this;
+		};
+
+		/**
+		 * یک دستگیریه را به فهرست دستگیره‌های یک دستور اضافه می‌کند.
+		 *
+		 * @param {object} ساختار داده‌ای که یک دستیگره را توصیف می‌کند.
+		 * @return {$act} خود سیستم مدیریت دستورها را برمی‌گرداند
+		 */
+		this.handler = function(handData) {
+			var cmd;
+			if(handData.id in this._commands){
+				cmd = this._commands[handData.id];
+			} else {
+				cmd = new PCommand(handData);
+				this._commands[cmd.id] = cmd;
+			}
+			cmd.handler(new PHandler(handData));
+			return this;
+		};
+
+		/**
+		 * یک دستور را به صورت غیر همزمان اجرا می‌کند. اجرای دستور معادل با این است که تمام دستگیره‌های
+		 * ان به ترتیب اجرا شوند. امکان ارسال پارامتر به تمام دستگیره‌ها وجود دارد. برای این کار کافی است
+		 * که پارامترهای اضافه را بعد از پارامتر دستور وارد کنید. برای نمونه فرض کنید که دستور ورود کاربر
+		 * به صورت زیر تعریف شده است:
+		 *
+		 * <pre><command>
+		 * 	$act.command({
+		 * 		id: 'user.login',
+		 * 		label: 'login'
+		 * 	}).handler({
+		 * 		command: 'user.login',
+		 * 		handle: function(credential){
+		 * 			// Do something
+		 * 		}
+		 * 	})
+		 * </command></pre>
+		 *
+		 * در این صورت به سادگی می‌توان این دستور را به صورت زیر فراخوانی کرد:
+		 *
+		 * <pre><command>
+		 * 	$act.execute('user.login',{
+		 * 		login: 'user login',
+		 * 		password: 'user password'
+		 * 	});
+		 * </command></pre>
+		 *
+		 * @memberof $act
+		 * @param  {string} command دستور
+		 * @return {promise}   نتیجه اجرای دستورها
+		 */
+		this.execute = function(command) {
 			var def = $q.defer();
-			var scope = this;
-			$timeout(function() {
-				if (!(key in scope._categories)) {
-					scope._categories[key] = [];
-				}
-				def.resolve(scope._categories[key]);
-			}, 1);
-			return def.promise;
-		};
-
-		/**
-		 * یک دستور جدید را به سیستم اضافه می‌کند
-		 */
-		this.command = function($c) {
-			this._commands.push($c);
-			if (!('visible' in $c)) {
-				$c.visible = function() {
-					return true;
-				};
-			}
-			if (!('enable' in $c)) {
-				$c.enable = function() {
-					return true;
-				};
-			}
-			if (!('priority' in $c)) {
-				$c.priority = 0;
-			}
-			if ($c.category) {
-				if (!($c.category in this._categories)) {
-					this._categories[$c.category] = [];
-				}
-				this._categories[$c.category].push($c);
-			}
-			if ($c.categories) {
-				for (var i = 0; i < $c.categories.length; ++i) {
-					if (!($c.categories[i] in this._categories)) {
-						this._categories[$c.categories[i]] = [];
-					}
-					this._categories[$c.categories[i]].push($c);
-				}
-			}
-			return this;
-		};
-
-		/**
-		 * اضافه کردن دستگیره.
-		 */
-		this.commandHandler = function($ch) {
-			if (!($ch.commandId in this._handlers)) {
-				this._handlers[$ch.commandId] = [];
-			}
-			this._handlers[$ch.commandId].push($ch);
-			return this;
-		};
-
-		/**
-		 * اجرای یک دستور
-		 */
-		this.execute = function($ci) {
-			var scope = this;
-			var args = Array.prototype.slice.call(arguments);
-			args = args.slice(1);
-
-			if (!($ci in scope._handlers)) {
-				var def = $q.defer();
-				def.reject(new PException({
-					message : 'Command not found :' + $ci,
+			if (command in this._commands) {
+				var scope = this;
+				var args = Array.prototype.slice.call(arguments).slice(1);
+				$timeout(function() {
+					var cmd = scope._commands[command];
+					cmd.handlers.forEach(function(handler) {
+						handler.handle.apply(handler, args);
+					});
+					def.resolve();
+				}, 1);
+			} else {
+				def.reject({
+					message : 'Command not found :' + command,
 					statuse : 400,
 					code : 4404
-				}));
-				return def.promise;
+				});
 			}
-
-			var promises = [];
-			for (var i = 0; i in scope._handlers[$ci]; i++) {
-				var handler = scope._handlers[$ci][i];
-				promises.push(handler.handle.apply(handler, args));
-			}
-			return $q.all(promises);
+			return def.promise;
 		};
 	}
 
@@ -1608,7 +1770,7 @@
      * دسترسی در اختیار کاربران قرار خواهد گرفت.
      *
      * @memberof $process
-     * @return {[type]} [description]
+     * @return {promis(PaginatedPage(PProcess))} صفحه‌ای از پردازش‌ها
      */
     this.processes = function(){};
     /**
@@ -1630,7 +1792,7 @@
 	angular
 		.module('pluf')
 		.service('$usr', [
-			'$http', '$httpParamSerializerJQLike', '$q', '$act', 'PUser', 'PException',
+			'$http', '$httpParamSerializerJQLike', '$q', '$act', 'PUser',
 			user
 		]);
 
@@ -1642,39 +1804,80 @@
 	 * یکی از مهم‌ترین سرویس‌هایی است که در این ماژول ارائه می‌شود. این سرویس موظف است که کاربر جاری
 	 * را مدیریت کند. علاوه بر این امکاناتی برای ورود و خروج کاربران نیز فراهم کرده است.
 	 */
-	function user($http, $httpParamSerializerJQLike, $q, $act, PUser, PException) {
+	function user($http, $httpParamSerializerJQLike, $q, $act, PUser) {
+		/*
+     * کاربر جاری را تعیین می‌کند. این متغیر به صورت عمومی در اختیار کاربران قرار می‌گیرد.
+		 */
 		this._su = new PUser();
+		/*
+		 * مخزن کاربران. تمام اطلاعاتی که از کاربران گرفته می‌شه توی این مخزن نگهداری می‌شه
+		 */
 		this._u = {};
+		/*
+		 * اطلاعات یک کاربر با شناسه تعیین شده را بازیابی می‌کند. این مقدار ممکن است تهی باشد.
+		 */
 		this._getUser = function(id) {
-			return this._u[id];
+			if(this._u[id] &&! this._u[id].isAnonymous())
+				return this._u[id];
+			return null;
 		};
-		this._setUser = function(u) {
-			this._u[u.id] = u;
-		};
+		/*
+		 * اطلاعات یک کاربر را بازیابی می‌کند
+		 */
 		this._ret = function(id, data) {
 			var instance = this._getUser(id);
 			if (instance) {
 				instance.setData(data);
 			} else {
 				instance = new PUser(data);
-				this._setUser(instance);
+				this._u[id] = instance;
 			}
 			return instance;
 		};
 
 		/**
-		 * به صورت همزمان تعیین می‌کند که آیا کاربر جاری شناخته شده است یا نه.
+		 * به صورت همزمان تعیین می‌کند که آیا کاربر جاری شناخته شده است یا نه. از این فراخوانی در نمایش
+		 * و یا جایی که باید به صورت همزمان وضعیت کاربر جاری را تعیین کرده استفاده می‌شود.
+		 *
+		 * @memberof $usr
+		 * @return {Boolean} درستی در صورتی که کاربر جاری گمنام باشد
 		 */
 		this.isAnonymous = function() {
 			return this._su.isAnonymous();
 		};
+
+		/**
+		 * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی نیز یک فراخوانی هم زمان
+		 * است و در کارهای نمایشی کاربرد دارد.
+		 *
+		 * @memberof $usr
+		 * @return {Boolean} درستی در صورتی که کاربر جاری مدیر سیستم باشد.
+		 */
 		this.isAdministrator = function() {
 			return this._su.isAdministrator();
 		};
 		/**
-		 * ورود کاربر به سیستم
+		 * عمل ورود کاربر به سیستم را انجام می‌دهد. برای ورود بسته به اینکه از چه سیستمی استفاده می‌شود
+		 * پارامترهای متفاوتی مورد نیاز است که با استفاده از یک ساختار داده‌ای برای این فراخوانی ارسال
+		 * می‌شود. برای نمونه در مدل عادی این فراخوانی نیاز به نام کاربری و گذرواژه دارد که به صورت
+		 * زیر عمل ورود انجام خواهد شد:
+		 *
+		 * <pre><code>
+		 * $usr.login({
+		 * 	login: 'user name',
+		 * 	password: 'password'
+		 * }).then(function(user){
+		 * 	//Success
+		 * }, function(ex){
+		 * 	//Fail
+		 * });
+		 * </code></pre>
+		 *
+		 * @memberof $usr
+		 * @param  {object} cridential پارارمترهای مورد انتظار در احراز اصالت
+		 * @return {promise(PUser)}   اطلاعات کاربر جاری
 		 */
-		this.login = function($login, $password) {
+		this.login = function(c) {
 			if (!this.isAnonymous()) {
 				var deferred = $q.defer();
 				deferred.resolve(this);
@@ -1684,32 +1887,27 @@
 			return $http({
 				method : 'POST',
 				url : '/api/user/login',
-				data : $httpParamSerializerJQLike({
-					'login' : $login,
-					'password' : $password
-				}),
+				data : $httpParamSerializerJQLike(c),
 				headers : {
 					'Content-Type' : 'application/x-www-form-urlencoded'
 				}
-			}).then(function() {
-				return scope.session();
-			}, function(data) {
-				throw new PException(data);
 			}).then(function(data) {
-				// scope._su = new PUser(data.data);
-				return data;
-			}, function(data) {
-				throw new PException(data);
+				scope._su = new PUser(data.data);
+				return scope._su;
 			});
 		};
 		/**
-		 * کاربری که در نشست تعیین شده است را بازیابی می‌کند.
+		 * کاربری که در نشست تعیین شده است را بازیابی می‌کند. این فراخوانی که یک فراخوانی غیر همزان
+		 * است برای تعیین حالت کاربر در سیستم استفاده می‌شود. برای نمونه ممکن است که یک تابع منجر
+		 * به خروج کاربر از سیستم شده باشد، در این حالت این فراخوانی حالت کاربر را بازیابی کرده و سیستم
+		 * را به روز می‌کند.
 		 *
-		 * @returns promise قول اجرای غیر هم زمان
+		 * @memberof $usr
+		 * @returns {promise(PUser)} قول اجرای غیر هم زمان
 		 */
 		this.session = function() {
 			var scope = this;
-			if (!this._su.isAnonymous()) {
+			if (!this.isAnonymous()) {
 				var deferred = $q.defer();
 				deferred.resolve(this._su);
 				return deferred.promise;
@@ -1717,17 +1915,19 @@
 			return $http.get('/api/user/account').then(function(data) {
 				scope._su = new PUser(data.data);
 				return scope._su;
-			}, function(data) {
-				throw new PException(data);
 			});
 		};
 		/**
-		 * خروج از سیستم
+		 * این فراخوانی عمل خروج کاربری جاری از سیستم را انجام می‌دهد. با این کار تمام داده‌های کاربر
+		 * جاری از سیستم حذف شده و سیستم به حالت اولیه برخواهد گشت.
+		 *
+		 * @memberof $usr
+		 * @returns {promise(PUser)} کاربر جاری
 		 */
 		this.logout = function() {
 			if (this.isAnonymous()) {
 				var deferred = $q.defer();
-				deferred.resolve(this);
+				deferred.resolve(this._su);
 				return deferred.promise;
 			}
 			var scope = this;
@@ -1739,14 +1939,21 @@
 					administrator: false
 				});
 				return scope._su;
-			})//
-			.error(function(data) {
-				throw new PException(data);
 			});
 		};
 
 		/**
-		 * ثبت نام یک کاربر جدید
+		 * اطلاعات یک کاربر جدید را دریافت کرده و آن را به عنوان یک کاربر در سیستم ثبت می‌کند. حالت
+		 * نهایی کاربر به نوع پیاده سازی سرور بستگی دارد. بر برخی از سرورها، به محض اینکه کاربر ثبت
+		 * نام کرد حالت فعال رو داره و می‌تونه وارد سیستم بشه اما در برخی از سیستم‌ها نیاز به فرآیند
+		 * فعال سازی دارد.
+		 *
+		 * پارامترهای مورد نیاز برای ایجاد کاربر هم متفاوت هست. در برخی سیستم‌ها ایمیل، نام کاربری و گذرواژه
+		 * مهم است و سایر پارامترهای به صورت دلخواه خواهد بود.
+		 *
+		 * @memberof $usr
+		 * @param  {object} detail خصوصیت‌های کاربر
+		 * @return {promise(PUser)}        حساب کاربری ایجاد شده
 		 */
 		this.signup = function(detail) {
 			var scope = this;
@@ -1760,13 +1967,17 @@
 			}).then(function(data) {
 				var user = new PUser(data.data);
 				return user;
-			}, function(data) {
-				throw new PException(data);
 			});
 		};
 		/**
 		 * فهرست کاربران را به صورت صفحه بندی شده در اختیار قرار می‌دهد. این فهرست
-		 * برای کاربردهای متفاوتی استفاده می‌شود مثل اضافه کردن به کاربران مجاز.
+		 * برای کاربردهای متفاوتی استفاده می‌شود مثل اضافه کردن به کاربران مجاز. دسترسی به فهرست
+		 * کاربران تنها بر اساس سطوح امنیتی تعریف شده در سرور ممکن است و بسته به نوع پیاده سازی
+		 * سرور متفاوت خواهد بود.
+		 *
+		 * @memberof $usr
+		 * @param {PagintorParameter} parameter پارامترهای مورد استفاده در صفحه بندی نتایج
+		 * @return {promise(PaginatorPage)} صفحه‌ای از کاربران سیستم.
 		 */
 		this.users = function(p) {
 			var scope = this;
@@ -1783,25 +1994,24 @@
 				}
 				page.items = items;
 				return page;
-			}, function(data) {
-				throw new PException(data);
 			});
 		};
 
 		/**
-		 * کاربر مورد نظر با شناسه تعیین شده را دریافت کرده و به عنوان نتیجه
-		 * برمی‌گرداند.
+		 * اطلاعات کاربر را با استفاده از شناسه آن بازیابی می‌کند. شناسه کاربر همان نام کاربری است که
+		 * کاربر با استفاده از آن می‌تواند وارد سیستم شود.
+		 *
+		 * @memberof $usr
+		 * @param  {string} login شناسه کاربر مورد نظر
+		 * @return {promise(PUser)}   اطلاعات بازیابی شده کاربر
 		 */
 		this.user = function(login) {
 			var scope = this;
 			return $http({
-				method : 'GET',
-				url : '/api/user/user/' + login,
+				method: 'GET',
+				url: '/api/user/user/' + login,
 			}).then(function(data) {
-				var t = scope._ret(data.data.id, data.data);
-				return t;
-			}, function(data) {
-				throw new PException(data);
+				return scope._ret(data.data.id, data.data);
 			});
 		};
 	}

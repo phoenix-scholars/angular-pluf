@@ -24,7 +24,7 @@
 (function(){
 
 	angular
-	.module('wiki')
+	.module('pluf.wiki')
 	.factory('PWikiBook', [
 		'PObject', 'PException', 'PWikiPageItem', 'PaginatorPage', '$http', '$q', '$timeout',
 		PWikiBook
@@ -223,10 +223,9 @@
 /* jslint xxx: true */
 /* jshint -W100 */
 (function(){
-
-	angualr
-	.module('wiki')
-	.factory('PWikiPage', ['PObject', PWikiPage]);
+	angular
+		.module('pluf.wiki')
+		.factory('PWikiPage', ['PObject', PWikiPage]);
 
 	/**
 	 * @ngdoc factory
@@ -330,7 +329,7 @@
 (function(){
 
 	angular
-	.module('wiki')
+	.module('pluf.wiki')
 	.factory('PWikiPageItem', ['PObject', PWikiPageItem]);
 
 	/**

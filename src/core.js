@@ -24,7 +24,7 @@
 					return $usr.isAnonymous();
 				},
 				category : 'usr',
-			}).commandHandler({
+			}).handler({
 				commandId : 'pluf.user.login',
 				handle : function() {
 					if (arguments.length < 1) {//
@@ -46,7 +46,7 @@
 					return !$usr.isAnonymous();
 				},
 				category : 'usr',
-			}).commandHandler({
+			}).handler({
 				commandId : 'pluf.user.logout',
 				handle : function() {
 					return $usr.logout();
@@ -63,7 +63,7 @@
 				visible : function() {
 					return !$usr.isAnonymous();
 				},
-			}).commandHandler({
+			}).handler({
 				commandId : 'pluf.user.update',
 				handle : function() {
 					if (arguments.length < 1) {//
@@ -85,11 +85,7 @@
 				visible : function() {
 					return !$usr.isAnonymous();
 				},
-			})
-			/*
-			 *
-			 */
-			.commandHandler({
+			}).handler({
 				commandId : 'pluf.user.profile.update',
 				handle : function() {
 					if (arguments.length < 1) {//
