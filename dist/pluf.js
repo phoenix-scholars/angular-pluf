@@ -257,26 +257,43 @@
 	 * ساختار داده‌ای محتوی را ایجاد می‌کند. این ساختار داده‌ای شامل اطلاعات کلی از محتوی است که
 	 * از این میان می‌توان به موارد زیر اشاره کرد:
 	 *
-	 * <ul>
-	 * 	<li>id</li>
-	 * 	<li>name</li>
-	 * 	<li>mimetype</li>
-	 * 	<li>tenant</li>
-	 * </ul>
+	 * @attr {integer} id
+	 * @attr {string} name
+	 * @attr {string} mimetype
+	 * @attr {integer} tenant
 	 */
 	function PContent($http, $httpParamSerializerJQLike, $q, PObject,	PException) {
 		var pContent = function() {
 			PObject.apply(this, arguments);
 		};
 	 	pContent.prototype = new PObject();
-		// TODO:maso, 1395: به روز کردن محتوی
+		/**
+		 * محتوی را به روز می‌کند
+		 *
+		 * @memberof PContent
+		 * @return {promise} محتوی جدید ایجاد شده
+		 */
 		pContent.prototype.update = function(){
+			// TODO:maso, 1395: به روز کردن محتوی
 		};
-		// TODO:maso, 1395: حذف محتوی
+
+		/**
+		 * محتوی را حذف می‌کند
+		 * @memberof PContent
+		 * @return {promise} محتوی حذف شده
+		 */
 		pContent.prototype.remove = function(){
+			// TODO:maso, 1395: حذف محتوی
 		};
-		// TODO: maso, 1395: محتوی صفحه را می‌دهد
+
+		/**
+		 * مقدار محتوی را تعیین می‌کند که معمولا برای گرفتن محتوی ساختار یافته و رشته‌ها مناسب
+		 * است. در سایر موارد استفاده از پیوند محتوی بهتر است.
+		 * @memberof PContent
+		 * @return {promise} مقدار محتوی
+		 */
 		pContent.prototype.value = function(){
+			// TODO: maso, 1395: محتوی صفحه را می‌دهد
 			// if(this._cvalue()){
 			// 	var deferred = $q.defer();
 			// 	deferred.resolve(this._cvalue());
@@ -290,6 +307,12 @@
 				return res.data;
 			});
 		};
+		/**
+		 * مقدار جدیدی را برای این محتوی تعیین می‌کند.
+		 * @memberof PContent
+		 * @param  {object} d مقدار جدید برای محتوی
+		 * @return {promise}   محتوی به روز شده
+		 */
 		pContent.prototype.setValue = function(d){
 			var scope = this;
 			return $http({
@@ -644,7 +667,7 @@
      * @return {boolean} درستی اگر پیام یک خطا باشد
      */
     pMessage.prototype.isError = function(){
-      return this.error == 'error';
+      return this.type == 'error';
     };
 
     return pMessage;
@@ -689,11 +712,23 @@
 				PObject.apply(this, arguments);
 			};
 			pNamedContent.prototype = new PObject();
-			// XXX: maso, 1395: به روز کردن صفحه
+			/**
+			 * محتوی نامدار را به روز می‌کند.
+			 * @memberof PNamedContent
+			 * @return {promise} محتوی جدید
+			 */
 			pNamedContent.prototype.update = function(){
+				// XXX: maso, 1395: به روز کردن صفحه
 			};
-			// XXX: maso, 1395: حذف صفحه
+
+			/**
+			 * محتوی نامدار را از سیستم حذف می‌‌کند.
+			 *
+			 * @memberof PNamedContent
+			 * @return {promise} محتوی حذف شده
+			 */
 			pNamedContent.prototype.remove = function(){
+				// XXX: maso, 1395: حذف صفحه
 			};
 			// // XXX: maso, 1395: تعیین محتوی
 			// pNamedContent.prototype.content = function(){
@@ -701,9 +736,23 @@
 			// 	deferred.resolve(new PContent({id:2}));
 			// 	return deferred.promise;
 			// }
+			/**
+			 * محتوی این صفحه نامدار را تعیین می‌کند. این فراخوانی زمانیکه محتوی به صورت یم مقدار
+			 * رشته‌ای و یا یک ساختار داده‌ای است بسیار مناسب است.
+			 *
+			 * @memberof PNamedContent
+			 * @return {object} محتوی صفحه
+			 */
 			pNamedContent.prototype.value = function(){
 				return this.content.value();
 			};
+
+			/**
+			 * مقدار جدیدی را برای این محتوی نامدار تعیین می‌کند.
+			 * @memberof PNamedContent
+			 * @param  {object} v محتوی جدید
+			 * @return {promise}   محتوی به روز شده
+			 */
 			pNamedContent.prototype.setValue = function(v){
 				return this.content.setValue(v);
 			};
@@ -1724,8 +1773,8 @@
 		 * یک محتوی با شناسه خاص را تعیین می‌کند.
 		 *
 		 * @memberof $cms
-		 * @param  {Integer} id [description]
-		 * @return {promise(PContent)}   [description]
+		 * @param  {Integer} id شناسه محتوی
+		 * @return {promise(PContent)}   محتوی معادل
 		 */
 		this.content = function(i){
 			var t = this._getc(i);
@@ -1747,8 +1796,8 @@
 		 * فهرست تمام محتوی موجود را تعیین می‌کند
 		 *
 		 * @memberof $cms
-		 * @param  {PaginatorParameter} p [description]
-		 * @return {promise(PaginatorPage(PContent))}   [description]
+		 * @param  {PaginatorParameter} param پارامترهای جستجو
+		 * @return {promise(PaginatorPage(PContent))}  نتیجه جستجو
 		 */
 		this.contents = function(p){
 			var scope = this;
@@ -1773,9 +1822,9 @@
 		 * یک صفحه نامدار جدید ایجاد می‌کند.
 		 *
 		 * @memberof $cms
-		 * @param  {string} name [description]
-		 * @param  {PContent} content [description]
-		 * @return {promise(PNamedContent)}   [description]
+		 * @param  {string} name عنوان برای صفحه
+		 * @param  {PContent} content محتوی مورد نظر
+		 * @return {promise(PNamedContent)}   محتوی نام دار ایجاد شده
 		 */
 		this.newNamedContent = function(n, c){
 			var scope = this;
@@ -1803,8 +1852,8 @@
 		 * گرفتن یک صفحه نامدار با استفاده از عنوان آن
 		 *
 		 * @memberof $cms
-		 * @param  {string} name [description]
-		 * @return {promise(PNamedContent)}   [description]
+		 * @param  {string} name عنوان محتوی را تعیین می‌کند
+		 * @return {promise(PNamedContent)}  محتوی معادل با نام
 		 */
 		this.namedContent = function(n){
 			var t = this._getnc(n);
@@ -1984,7 +2033,7 @@
 	angular
 		.module('pluf')
 		.service('$notify',[
-			'$rootScope', '$timeout', '$q',
+			'$rootScope', '$timeout', '$q', 'PMessage',
 			notify
 		]);
 
@@ -2038,16 +2087,18 @@
 	 * 	openDialot(message);
 	 * })
 	 */
-	function notify($rootScope, $timeout, $q) {
+	function notify($rootScope, $timeout, $q, PMessage) {
 		/*
 		 * فهرست شنودگرهای
 		 */
 		this._listeners = [];
 		this._fire = function(list, m) {
 			var deferred = $q.defer();
+			var ms= [];
+			ms.push(new PMessage(m));
 			$timeout(function() {
 				for (var i = 0; i < list.length; i++) {
-					list[i].apply(list[i], new PMessage(m));
+					list[i].apply(list[i], ms);
 				}
 				deferred.resolve();
 			}, 10);
@@ -2072,7 +2123,7 @@
 		 */
 		this.info = function(message) {
 			message.type= 'info';
-			return this._fire(this._info, message);
+			return this._fire(this._listeners, message);
 		};
 
 		/**
@@ -2083,7 +2134,7 @@
 		 */
 		this.warning = function(message) {
 			message.type= 'warning';
-			return this._fire(this._info, message);
+			return this._fire(this._listeners, message);
 		};
 
 		/**
@@ -2094,7 +2145,7 @@
 		 */
 		this.debug = function(message) {
 			message.type= 'debug';
-			return this._fire(this._info, message);
+			return this._fire(this._listeners, message);
 		};
 
 		/**
@@ -2105,7 +2156,7 @@
 		 */
 		this.error = function(message) {
 			message.type= 'error';
-			return this._fire(this._info, message);
+			return this._fire(this._listeners, message);
 		};
 	}
 

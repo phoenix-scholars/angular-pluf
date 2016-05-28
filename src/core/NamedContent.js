@@ -35,11 +35,23 @@
 				PObject.apply(this, arguments);
 			};
 			pNamedContent.prototype = new PObject();
-			// XXX: maso, 1395: به روز کردن صفحه
+			/**
+			 * محتوی نامدار را به روز می‌کند.
+			 * @memberof PNamedContent
+			 * @return {promise} محتوی جدید
+			 */
 			pNamedContent.prototype.update = function(){
+				// XXX: maso, 1395: به روز کردن صفحه
 			};
-			// XXX: maso, 1395: حذف صفحه
+
+			/**
+			 * محتوی نامدار را از سیستم حذف می‌‌کند.
+			 *
+			 * @memberof PNamedContent
+			 * @return {promise} محتوی حذف شده
+			 */
 			pNamedContent.prototype.remove = function(){
+				// XXX: maso, 1395: حذف صفحه
 			};
 			// // XXX: maso, 1395: تعیین محتوی
 			// pNamedContent.prototype.content = function(){
@@ -47,9 +59,23 @@
 			// 	deferred.resolve(new PContent({id:2}));
 			// 	return deferred.promise;
 			// }
+			/**
+			 * محتوی این صفحه نامدار را تعیین می‌کند. این فراخوانی زمانیکه محتوی به صورت یم مقدار
+			 * رشته‌ای و یا یک ساختار داده‌ای است بسیار مناسب است.
+			 *
+			 * @memberof PNamedContent
+			 * @return {object} محتوی صفحه
+			 */
 			pNamedContent.prototype.value = function(){
 				return this.content.value();
 			};
+
+			/**
+			 * مقدار جدیدی را برای این محتوی نامدار تعیین می‌کند.
+			 * @memberof PNamedContent
+			 * @param  {object} v محتوی جدید
+			 * @return {promise}   محتوی به روز شده
+			 */
 			pNamedContent.prototype.setValue = function(v){
 				return this.content.setValue(v);
 			};

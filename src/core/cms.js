@@ -108,8 +108,8 @@
 		 * یک محتوی با شناسه خاص را تعیین می‌کند.
 		 *
 		 * @memberof $cms
-		 * @param  {Integer} id [description]
-		 * @return {promise(PContent)}   [description]
+		 * @param  {Integer} id شناسه محتوی
+		 * @return {promise(PContent)}   محتوی معادل
 		 */
 		this.content = function(i){
 			var t = this._getc(i);
@@ -131,8 +131,8 @@
 		 * فهرست تمام محتوی موجود را تعیین می‌کند
 		 *
 		 * @memberof $cms
-		 * @param  {PaginatorParameter} p [description]
-		 * @return {promise(PaginatorPage(PContent))}   [description]
+		 * @param  {PaginatorParameter} param پارامترهای جستجو
+		 * @return {promise(PaginatorPage(PContent))}  نتیجه جستجو
 		 */
 		this.contents = function(p){
 			var scope = this;
@@ -157,9 +157,9 @@
 		 * یک صفحه نامدار جدید ایجاد می‌کند.
 		 *
 		 * @memberof $cms
-		 * @param  {string} name [description]
-		 * @param  {PContent} content [description]
-		 * @return {promise(PNamedContent)}   [description]
+		 * @param  {string} name عنوان برای صفحه
+		 * @param  {PContent} content محتوی مورد نظر
+		 * @return {promise(PNamedContent)}   محتوی نام دار ایجاد شده
 		 */
 		this.newNamedContent = function(n, c){
 			var scope = this;
@@ -187,8 +187,8 @@
 		 * گرفتن یک صفحه نامدار با استفاده از عنوان آن
 		 *
 		 * @memberof $cms
-		 * @param  {string} name [description]
-		 * @return {promise(PNamedContent)}   [description]
+		 * @param  {string} name عنوان محتوی را تعیین می‌کند
+		 * @return {promise(PNamedContent)}  محتوی معادل با نام
 		 */
 		this.namedContent = function(n){
 			var t = this._getnc(n);
