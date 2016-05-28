@@ -1,6 +1,6 @@
 /.project
 /.settings/
 /.tern-project
-/docs/
+/doc/jsdoc/
 /node_modules/
 /bower_components/

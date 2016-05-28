@@ -38,4 +38,23 @@ describe('Core module test: $menu', function() {
     $timeout.flush();
     $rootScope.$apply();
   });
+
+  it('Add action in menu and run', function (done){
+    $menu.addItem('test:menu2', {
+      label: 'Action menu',
+      action: function(){
+        done();
+      }
+    }).menu('test:menu2').then(function(menu){
+      expect(menu).not.toBeNull();
+      expect(menu.id).toBe('test:menu2');
+      expect(menu.tags.length).toBe(0);
+      expect(menu.items.length).toBe(1);
+      menu.items.forEach(function(item){
+        item.active();
+      });
+    });
+    $timeout.flush();
+    $rootScope.$apply();
+  });
 });

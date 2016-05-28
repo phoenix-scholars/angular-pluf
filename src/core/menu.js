@@ -76,10 +76,10 @@
 		 * جدید برای آن ایجاد خواهد کردم.
 		 */
 		this._addMenu = function(id, menu) {
-			if (id in this.menus) {
-				this.menus[id].item(menu);
+			if (!(id in this.menus)) {
+				this.menus[id] = new PMenu({'id': id});
 			}
-			this.menus[id] = new PMenu({'id': id});
+			this.menus[id].item(menu);
 		};
 
 		/**
