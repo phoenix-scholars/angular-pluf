@@ -16,26 +16,43 @@
 	 * ساختار داده‌ای محتوی را ایجاد می‌کند. این ساختار داده‌ای شامل اطلاعات کلی از محتوی است که
 	 * از این میان می‌توان به موارد زیر اشاره کرد:
 	 *
-	 * <ul>
-	 * 	<li>id</li>
-	 * 	<li>name</li>
-	 * 	<li>mimetype</li>
-	 * 	<li>tenant</li>
-	 * </ul>
+	 * @attr {integer} id
+	 * @attr {string} name
+	 * @attr {string} mimetype
+	 * @attr {integer} tenant
 	 */
 	function PContent($http, $httpParamSerializerJQLike, $q, PObject,	PException) {
 		var pContent = function() {
 			PObject.apply(this, arguments);
 		};
 	 	pContent.prototype = new PObject();
-		// TODO:maso, 1395: به روز کردن محتوی
+		/**
+		 * محتوی را به روز می‌کند
+		 *
+		 * @memberof PContent
+		 * @return {promise} محتوی جدید ایجاد شده
+		 */
 		pContent.prototype.update = function(){
+			// TODO:maso, 1395: به روز کردن محتوی
 		};
-		// TODO:maso, 1395: حذف محتوی
+
+		/**
+		 * محتوی را حذف می‌کند
+		 * @memberof PContent
+		 * @return {promise} محتوی حذف شده
+		 */
 		pContent.prototype.remove = function(){
+			// TODO:maso, 1395: حذف محتوی
 		};
-		// TODO: maso, 1395: محتوی صفحه را می‌دهد
+
+		/**
+		 * مقدار محتوی را تعیین می‌کند که معمولا برای گرفتن محتوی ساختار یافته و رشته‌ها مناسب
+		 * است. در سایر موارد استفاده از پیوند محتوی بهتر است.
+		 * @memberof PContent
+		 * @return {promise} مقدار محتوی
+		 */
 		pContent.prototype.value = function(){
+			// TODO: maso, 1395: محتوی صفحه را می‌دهد
 			// if(this._cvalue()){
 			// 	var deferred = $q.defer();
 			// 	deferred.resolve(this._cvalue());
@@ -49,6 +66,12 @@
 				return res.data;
 			});
 		};
+		/**
+		 * مقدار جدیدی را برای این محتوی تعیین می‌کند.
+		 * @memberof PContent
+		 * @param  {object} d مقدار جدید برای محتوی
+		 * @return {promise}   محتوی به روز شده
+		 */
 		pContent.prototype.setValue = function(d){
 			var scope = this;
 			return $http({
