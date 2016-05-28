@@ -556,19 +556,98 @@
     pMenuItem.prototype.active = function() {
       if('command' in this){
         var args = [menu.command];
-        if (menu.params instanceof Array) {
-          args = args.concat(menu.params);
+        if (this.params instanceof Array) {
+          args = args.concat(this.params);
         }
         return $act.execute.apply($act, args);
       } else if ('action' in this) {
-        return menu.action();
+        return this.action();
       } else if ('link' in this) {
-        $window.location = menu.link;
+        $window.location = this.link;
         return;
       }
       throw {status: 404, code:523, message:'Menu item is not supported'};
     };
     return pMenuItem;
+  }
+
+})(window.angular);
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+(function(angular){
+  angular
+    .module('pluf')
+    .factory('PMessage',[
+      PMessage
+    ]);
+
+  /**
+   * @memberof pluf
+   * @ngdoc factory
+   * @name PMessge
+   * @description
+   * یکی از سرویس‌هایی که در این بسته ارائه شده است، سیستم انتشار پیام است. این سیستم پیام‌های
+   * کاربران دریافت و آنها را در قالب این کلاس منتشر می‌کند. این کلاس یک سری ابزارهای کاربردی
+   * برای کار با این نوع پیام‌ها در اختیار سایر سیستم‌ها قرار می‌دهد.
+   *
+   */
+  function PMessage() {
+    var pMessage  = function(data) {
+      if (data) {
+        this.setData(data);
+      }
+    };
+    /**
+     * ساختار اولیه داده را در این کلاس ایجاد می‌کند.
+     *
+     * @memberof PMessage
+     * @param  {object} data ساختار داده اولیه برای ایجاد دستور
+     * @return {PMessage}  خود دستور به عنوان نتیجه برگردانده می‌ود.
+     */
+    pMessage.prototype.setData = function(data) {
+     angular.extend(this, data);
+     return this;
+    };
+
+    /**
+     * تعیین می‌کند که آیا نوع پیام معمولی است
+     * @memberof PMessage
+     * @return {boolean} درستی در صورت که نوع پیام معمولی باشد.
+     */
+    pMessage.prototype.isInfo = function(){
+      return this.type == 'info';
+    };
+
+    /**
+     * تعیین می‌کند که نوع پیام رفع خطا است
+     * @memberof PMessage
+     * @return {boolean} درستی در صورتی که نوع پیام رفع خطا باشد
+     */
+    pMessage.prototype.isDebug = function(){
+      return this.type == 'debug';
+    };
+
+    /**
+     * تعیین می‌کند که ایا پیام از نوع اخطار است.
+     * @memberof PMessage
+     * @return {boolean} درستی در صورتی که نوع اخطار باشد
+     */
+    pMessage.prototype.isWarning = function(){
+      return this.type == 'warning';
+    };
+
+    /**
+     * تعیین می‌کند که آیا پیام از نوع خطا است
+     * @memberof PMessage
+     * @return {boolean} درستی اگر پیام یک خطا باشد
+     */
+    pMessage.prototype.isError = function(){
+      return this.error == 'error';
+    };
+
+    return pMessage;
   }
 
 })(window.angular);
@@ -1856,10 +1935,10 @@
 		 * جدید برای آن ایجاد خواهد کردم.
 		 */
 		this._addMenu = function(id, menu) {
-			if (id in this.menus) {
-				this.menus[id].item(menu);
+			if (!(id in this.menus)) {
+				this.menus[id] = new PMenu({'id': id});
 			}
-			this.menus[id] = new PMenu({'id': id});
+			this.menus[id].item(menu);
 		};
 
 		/**
@@ -1908,95 +1987,125 @@
 			'$rootScope', '$timeout', '$q',
 			notify
 		]);
+
 	/**
 	 * @memberof pluf
 	 * @ngdoc service
 	 * @name $notify
 	 * @description
-	 * یک سیستم ساده است برای اعلام پیام در سیستم. با استفاده از این کلاس می‌توان
-	 * پیام‌های متفاوتی که در سیستم وجود دارد را به صورت همگانی اعلام کرد.
+	 * تمام سیستم‌های گرافیکی نیاز به اعلام هشدار و یا پیام‌هایی به کاربران هستند. یکی از راه‌های مناسب
+	 * برای انجام این کار استفاده از سیستم هشدار است. این سرویس توسط بخش‌های متفاوت گرافیکی
+	 * شنود می‌شود و با صدور یک پیام، آن را به کاربران نشان می‌دهد.
+	 *
+	 * ساختار داده‌ای در نظر گرفته شده برای پیام‌ها کاملا باز است و کاربران می‌توانند هر ساختار داده‌ای را
+	 * به عنوان پیام ارسال کنند. به صورت پیش فرض ساختاری مانند ساختار زیر به عنوان یک پیام در نظر
+	 * گرفته می‌شود:
+	 *
+	 * <pre><code>
+	 * {
+	 * 	title: 'message title',
+	 * 	message: 'message body',
+	 * 	action: function(){
+	 * 		// Message action
+	 * 	}
+	 * }
+	 * </code></pre>
+	 *
+	 * این که در سیستم‌های نرم‌افزاری این پیام دقیقا چطور نمایش داده می‌شود کاملا وابسطه به واسط گرافیکی
+	 * است و طراح گرافیکی در این زمینه کاملا آزاد است. در ادامه دسته‌ای از نمونه‌ها برای استفاده از این
+	 * سرویس آورده شده است.
+	 *
+	 * @example
+	 * //add info
+	 * $notify.info({
+	 * 	title: 'my title',
+	 * 	message: 'my message'
+	 * })
+	 *
+	 * @example
+	 * //add error
+	 * $notify.error({
+	 * 	title: 'network error',
+	 * 	message: 'network is not reachable. click to retry',
+	 * 	action: function(){
+	 * 		// Trye to reconnect
+	 * 	}
+	 * })
+	 *
+	 * @example
+	 * $notify.onMessage(function(message){
+	 * 	// message is instanceof PMessage
+	 * 	openDialot(message);
+	 * })
 	 */
 	function notify($rootScope, $timeout, $q) {
 		/*
 		 * فهرست شنودگرهای
 		 */
-		this._info = [];
-		this._warning = [];
-		this._debug = [];
-		this._error = [];
-		this._fire = function(list, args) {
+		this._listeners = [];
+		this._fire = function(list, m) {
 			var deferred = $q.defer();
 			$timeout(function() {
 				for (var i = 0; i < list.length; i++) {
-					list[i].apply(list[i], args);
+					list[i].apply(list[i], new PMessage(m));
 				}
 				deferred.resolve();
 			}, 10);
 			return deferred.promise;
 		};
-		/*
-		 * یک شنودگر جدید به فهرست شنودگرها اضافه می‌کند.
+		/**
+		 * یک شنودگر جدید را به فهرست تمام شنودگرها اضافه می‌کند. در صورتی که پیامی در سیستم منتشر
+		 * این شنودگر اجرا خواهد شد.
+		 * @memberof $notify
+		 * @param  {function} listener متدی که باید اجرا شود.
+		 * @return {$notify}   خود سرویس
 		 */
-		this.onInfo = function(listener) {
-			this._info.push(listener);
+		this.onMessage = function(l) {
+			this._listeners.push(l);
 			return this;
 		};
 		/**
-		 * تمام واسطه‌های تعیین شده برای پیام را فراخوانی کرده و آنها را پیام ورودی
-		 * آگاه می‌کند.
+		 * یک پیام را به عنوان یک خبر معمولی در سیستم منتشر می‌کند.
+		 * @memberof $notify
+		 * @param  {PMessage} message یک پیام معمولی را تعیین می‌کند.
+		 * @return {promise()}      دستگیره‌ای برای اجرای تمام شنودگرها
 		 */
-		this.info = function() {
-			return this._fire(this._info, arguments);
+		this.info = function(message) {
+			message.type= 'info';
+			return this._fire(this._info, message);
 		};
-		/*
-		 * یک شنودگر جدید به فهرست شنودگرها اضافه می‌کند.
-		 */
-		this.onWarning = function(listener) {
-			this._warning.push(listener);
-			return this;
-		};
+
 		/**
-		 * تمام پیام‌های اخطاری که در سیستم تولید شده است را به سایر شنودگرها ارسال
-		 * کرده و آنها را از بروز آن آگاه می‌کند.
+		 * یک پیام را به عنوان یک خبر معمولی در سیستم منتشر می‌کند.
+		 * @memberof $notify
+		 * @param  {PMessage} message یک پیام معمولی را تعیین می‌کند.
+		 * @return {promise()}      دستگیره‌ای برای اجرای تمام شنودگرها
 		 */
-		this.warning = function() {
-			return this._fire(this._warning, arguments);
+		this.warning = function(message) {
+			message.type= 'warning';
+			return this._fire(this._info, message);
 		};
-		/*
-		 * یک شنودگر جدید به فهرست شنودگرها اضافه می‌کند.
-		 */
-		this.onDebug = function(listener) {
-			this._debug.push(listener);
-			return this;
-		};
+
 		/**
-		 * تمام پیام‌هایی که برای رفع خطا در سیستم تولید می‌شود را برای تمام
-		 * شنودگرهای اضافه شده ارسال می‌کند.
+		 * یک پیام را به عنوان یک خبر معمولی در سیستم منتشر می‌کند.
+		 * @memberof $notify
+		 * @param  {PMessage} message یک پیام معمولی را تعیین می‌کند.
+		 * @return {promise()}      دستگیره‌ای برای اجرای تمام شنودگرها
 		 */
-		this.debug = function() {
-			return this._fire(this._debug, arguments);
+		this.debug = function(message) {
+			message.type= 'debug';
+			return this._fire(this._info, message);
 		};
-		/*
-		 * یک شنودگر جدید به فهرست شنودگرها اضافه می‌کند.
-		 */
-		this.onError = function(listener) {
-			this._error.push(listener);
-			return this;
-		};
+
 		/**
-		 * تمام پیام‌های خطای تولید شده در سیتسم را برای تمام شوندگرهایی خطا صادر
-		 * کرده و آنها را از آن مطلع می‌کند.
+		 * یک پیام را به عنوان یک خبر معمولی در سیستم منتشر می‌کند.
+		 * @memberof $notify
+		 * @param  {PMessage} message یک پیام معمولی را تعیین می‌کند.
+		 * @return {promise()}      دستگیره‌ای برای اجرای تمام شنودگرها
 		 */
-		this.error = function() {
-			return this._fire(this._error, arguments);
-		};
-		/*
-		 * یک رویداد خاص را در کل فضای نرم افزار انتشار می‌دهد. اولین پارامتر ورودی
-		 * این تابع به عنوان نام و شناسه در نظر گرفت می‌شود و سایر پارامترها به
-		 * عنوان پارامترهای ورودی آن.
-		 */
-		this.broadcast = function() {
-			return $rootScope.$broadcast.apply($rootScope, arguments);
+		this.error = function(message) {
+			message.type= 'error';
+			return this._fire(this._info, message);
 		};
 	}
 
