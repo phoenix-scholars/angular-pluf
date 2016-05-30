@@ -138,7 +138,7 @@
 			var scope = this;
 			return $http({
 				method : 'GET',
-				url : '/api/saascms/contet/find',
+				url : '/api/saascms/content/find',
 				params : p.getParameter()
 			}).then(function(res) {
 				var page = new PaginatorPage(res.data);

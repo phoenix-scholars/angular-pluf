@@ -92,7 +92,7 @@ describe('Core module test: $cms', function() {
   });
 
   it('Find contents', function(done){
-    var pp = PaginatorParameter();
+    var pp = new PaginatorParameter();
     pp._px_p = 2;
     pp._px_ps = 10;
 
@@ -111,20 +111,47 @@ describe('Core module test: $cms', function() {
       done();
     });
 
+    var myItems = [
+            {id:1, title:'title1', description:'description1'},
+            {id:2, title:'title2', description:'description2'},
+            {id:3, title:'title3', description:'description3'}
+          ];
     var fakePaginatedResult = {
-      items:[
-              {id:1, title:'title1', description:'description1'},
-              {id:2, title:'title2', description:'description2'},
-              {id:3, title:'title3', description:'description3'}
-            ],
-      counts:items.lenght,
+      items:myItems,
+      counts:myItems.length,
       current_page:pp._px_p,
       item_per_page:pp._px_ps,
       page_number:3
     };
     $httpBackend
-      .expect('POST', '/api/saascms/content/find')
+      .expect('GET', '/api/saascms/content/find')
       .respond(200, fakePaginatedResult);
+    expect($httpBackend.flush).not.toThrow();
+    $rootScope.$apply();
+  });
+
+  it('New named content', function(done){
+    var sampleContent = {
+      id:5,
+      title: 'content name',
+      description: 'content description'
+    };
+    $cms.newNamedContent('content name', sampleContent).then(function(nc){
+      expect(nc.hasOwnProperty('id')).toBe(true);
+      expect(nc).not.toBeNull();
+      expect(nc.id).not.toBeUndefined();
+      expect(nc.content).not.toBeUndefined();
+      expect(nc.content.id).toBe(5);
+      expect(nc.name).toBe('content name');
+      done();
+    });
+
+    $httpBackend
+      .expect('POST', '/api/saascms/page/new')
+      .respond(200, { id:1, name:'content name', content:5 });
+    $httpBackend
+      .expect('GET', '/api/saascms/content/5')
+      .respond(200, { id:5, title:'content name', description:'content description' });
     expect($httpBackend.flush).not.toThrow();
     $rootScope.$apply();
   });
