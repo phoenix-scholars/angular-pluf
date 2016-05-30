@@ -5,6 +5,7 @@ describe('Core module test: $cms', function() {
   var $rootScope;
   var $cms;
   var $timeout
+  var PaginatorParameter;
   // excuted before each "it" is run.
   beforeEach(function (){
     // load the module.
@@ -13,11 +14,12 @@ describe('Core module test: $cms', function() {
     // The _underscores_ are a convenience thing
     // so you can have your variable name be the
     // same as your injected service.
-    inject(function(_$cms_, _$rootScope_, _$httpBackend_, _$timeout_) {
+    inject(function(_$cms_, _$rootScope_, _$httpBackend_, _$timeout_, _PaginatorParameter_) {
       $cms = _$cms_;
       $rootScope = _$rootScope_;
       $httpBackend = _$httpBackend_;
       $timeout = _$timeout_;
+      PaginatorParameter = _PaginatorParameter_;
     });
     originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
@@ -93,7 +95,7 @@ describe('Core module test: $cms', function() {
     var pp = PaginatorParameter();
     pp._px_p = 2;
     pp._px_ps = 10;
-    
+
     $cms.contents(pp).then(function(list){
       expect(list).not.toBeNull();
       expect(list.items).not.toBeUndefined();
