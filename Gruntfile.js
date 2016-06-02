@@ -9,6 +9,10 @@ module.exports = function (grunt) {
         report: 'min',
         mangle: false,
       },
+      all: {
+        src: 'dist/pluf.all.js',
+        dest: 'dist/pluf.all.min.js'
+      },
       core: {
         src: 'dist/pluf.js',
         dest: 'dist/pluf.min.js',
@@ -27,6 +31,13 @@ module.exports = function (grunt) {
       },
     },
     concat: {
+      all: {
+        src: [
+          'src/*.js',
+          'src/*/*.js'
+        ],
+        dest: 'dist/pluf.all.js'
+      },
       core: {
         src: [
           'src/core.js',

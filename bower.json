@@ -31,5 +31,8 @@
     "angular-mocks": "~1.5.0",
     "bootstrap": "boot#^3.3.6",
     "jasmine-core": "jasmine#^2.4.1"
+  },
+  "dependencies": {
+    "angular": "~1.5.0"
   }
 }
