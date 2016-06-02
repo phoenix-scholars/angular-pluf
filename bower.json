@@ -13,7 +13,7 @@
     "AngularJS"
   ],
   "license": "MIT",
-  "main": "dist/pluf.all.min.js",
+  "main": "dist/pluf.all.js",
   "ignore": [
     "**/.*",
     "node_modules",
