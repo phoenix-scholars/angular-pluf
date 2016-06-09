@@ -40,9 +40,9 @@
 	 * // Create header menu in app
 	 * angular.module('myApp')
 	 * 	.run(function($menu){
-	 * 		$menu.add('header', {
+	 * 		$menu.addItem('header', {
 	 * 			command: 'usr.login'
-	 * 		}).add('header', {
+	 * 		}).addItem('header', {
 	 * 			command: 'logout'
 	 * 		});
 	 * 	});
