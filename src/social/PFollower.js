@@ -10,15 +10,20 @@
 	]);
 
 	/**
+	 * @ngdoc factory
+	 * @name PFollower
+	 * @memberof pluf.social
+	 * @description
+	 * 
 	 * ابزارهای مورد نیاز برای یک برچسب را ایجاد می‌کند.
 	 */
 	function PFollower(PObject, PException) {
 
-		pFollower.prototype = new PObject();
-
 		var pFollower = function() {
 			PObject.apply(this, arguments);
 		};
+
+		pFollower.prototype = new PObject();
 
 		return pFollower;
 	}
