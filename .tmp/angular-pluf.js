@@ -2703,7 +2703,9 @@ angular.module('pluf.saas')
 	 * @memberof PTenant
 	 * @return {promise<PTenant>} ملک حذف شده
 	 */
-	pTenant.prototype.delete = function(){};
+	pTenant.prototype.delete = function(){
+		//TODO:
+	};
 
 	/**
 	 * اطلاعات ملک را به روز می‌کند
