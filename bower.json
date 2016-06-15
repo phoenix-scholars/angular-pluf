@@ -1,5 +1,5 @@
 {
-  "version": "0.3.2",
+  "version": "0.4.0",
   "name": "angular-pluf",
   "description": "AngularJS client for Pluf framework",
   "homepage": "https://github.com/phoenix-scholars/angular-pluf",
@@ -13,7 +13,7 @@
     "AngularJS"
   ],
   "license": "MIT",
-  "main": "dist/pluf.all.js",
+  "main": "dist/angular-pluf.js",
   "ignore": [
     "**/.*",
     "node_modules",
@@ -21,18 +21,10 @@
     "test",
     "tests"
   ],
-  "devDependencies": {
-    "grunt": "~0.4.5",
-    "grunt-contrib-jshint": "~0.10.0",
-    "grunt-contrib-nodeunit": "~0.4.1",
-    "grunt-contrib-uglify": "~0.5.0",
-    "jsdoc": "~3.0.0",
-    "angular": "~1.5.5",
-    "angular-mocks": "~1.5.0",
-    "bootstrap": "boot#^3.3.6",
-    "jasmine-core": "jasmine#^2.4.1"
-  },
   "dependencies": {
-    "angular": "~1.5.0"
+    "angular": "^1.5.0"
+  },
+  "devDependencies": {
+    "angular-mocks": "^1.5.0"
   }
 }

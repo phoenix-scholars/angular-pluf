@@ -1,6 +1,14 @@
+
+# Eclipse IDE
 /.project
 /.settings/
 /.tern-project
+
+# Products
 /doc/jsdoc/
+
+# NodeJS
 /node_modules/
+
+# bower
 /bower_components/
