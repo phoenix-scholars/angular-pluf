@@ -5,7 +5,7 @@
 
 angular.module('pluf.saas', ['pluf'])
 
-.run(function($window, $act, $tenant) {
+.run(function($window, $act, $tenant, PException) {
 	/**
 	 * اضافه کردن دستورها و دستگیره‌ها
 	 */

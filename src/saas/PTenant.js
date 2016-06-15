@@ -83,16 +83,17 @@ angular.module('pluf.saas')
 	pTenant.prototype.members = function() {
 		if (this.isAnonymous() || this.memberLoaded()) {
 			var deferred = $q.defer();
-			if (this.isAnonymous())
+			if (this.isAnonymous()) {
 				deferred.reject('authentication requried');
-			else
+			}	else {
 				deferred.resolve(this._member);
+			}
 			return deferred.promise;
 		}
-		var scope = tenantService;
+		var scope = this;
 		return $http({
 			method: 'GET',
-			url: '/api/saas/app/' + $application.id + '/member/list'
+			url: '/api/saas/app/' + this.id + '/member/list'
 		}).then(function(res) {
 			scope.$member.setData(res.data);
 			return scope.$member;

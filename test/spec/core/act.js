@@ -1,3 +1,7 @@
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+'use strict';
 describe('Core module test: $act', function() {
   var originalTimeout;
   var $rootScope;

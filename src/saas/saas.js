@@ -71,8 +71,8 @@ angular.module('pluf.saas')
 	 * @return {promise<PaginatorPage<PTenant>>} ملک‌های صفحه بندی شد
 	 */
 	this.mine = function(paginatorParameter) {
-		if (!param) {
-			param = new PaginatorParameter();
+		if (!paginatorParameter) {
+			paginatorParameter = new PaginatorParameter();
 		}
 		var scope = this;
 		return $http({

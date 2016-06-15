@@ -1,7 +1,12 @@
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+'use strict';
 describe('Core module test: user authentication', function() {
   var originalTimeout;
   var $rootScope;
   var $usr;
+  var $httpBackend;
   // excuted before each "it" is run.
   beforeEach(function (){
     // load the module.
@@ -40,7 +45,7 @@ describe('Core module test: user authentication', function() {
       expect(user.login).toBeUndefined();
       expect(user.id).toBeUndefined();
       done();
-    }, function(ex) {
+    }, function() {
       expect(false).toBe(true);
       done();
     });
@@ -93,7 +98,7 @@ describe('Core module test: user authentication', function() {
       expect($usr.isAnonymous()).toBe(false);
       expect(user.isAnonymous()).toBe(false);
       done();
-    }, function(ex){
+    }, function(){
       expect(false).toBe(true);
       done();
     });

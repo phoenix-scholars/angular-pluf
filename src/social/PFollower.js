@@ -1,31 +1,24 @@
 /* jslint todo: true */
 /* jslint xxx: true */
 /* jshint -W100 */
-(function(){
+'use strict';
 
-	angular
-	.module('pluf.social')
-	.factory('PFollower', [
-		'PObject', 'PException', PFollower
-	]);
+angular.module('pluf.social')
+/**
+ * @ngdoc factory
+ * @name PFollower
+ * @memberof pluf.social
+ * @description
+ *
+ * ابزارهای مورد نیاز برای یک برچسب را ایجاد می‌کند.
+ */
+	.factory('PFollower',	function(PObject) {
 
-	/**
-	 * @ngdoc factory
-	 * @name PFollower
-	 * @memberof pluf.social
-	 * @description
-	 * 
-	 * ابزارهای مورد نیاز برای یک برچسب را ایجاد می‌کند.
-	 */
-	function PFollower(PObject, PException) {
+	var pFollower = function() {
+		PObject.apply(this, arguments);
+	};
 
-		var pFollower = function() {
-			PObject.apply(this, arguments);
-		};
+	pFollower.prototype = new PObject();
 
-		pFollower.prototype = new PObject();
-
-		return pFollower;
-	}
-
-})();
+	return pFollower;
+});

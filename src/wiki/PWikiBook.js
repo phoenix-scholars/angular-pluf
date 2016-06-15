@@ -101,7 +101,7 @@ angular.module('pluf.wiki')
 		if(page.isAnonymous()){
 			var dif = $q.defer();
 			$timeout(function(){
-				var ex = new PException({message:"Page id is null!"});
+				var ex = new PException({message:'Page id is null!'});
 				dif.reject(ex);
 			}, 1);
 			return dif.promise;
@@ -126,7 +126,7 @@ angular.module('pluf.wiki')
 		if(page.isAnonymous()){
 			var dif = $q.defer();
 			$timeout(function(){
-				var ex = new PException({message:"Page id is null!"});
+				var ex = new PException({message:'Page id is null!'});
 				dif.reject(ex);
 			}, 1);
 			return dif.promise;

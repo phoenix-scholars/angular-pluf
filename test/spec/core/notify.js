@@ -1,3 +1,7 @@
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+'use strict';
 describe('Core module test: $notify', function() {
   var originalTimeout;
   var $rootScope;
@@ -45,11 +49,11 @@ describe('Core module test: $notify', function() {
       expect(message.isDebug()).toBe(false);
       expect(message.isError()).toBe(false);
       done();
-    })
+    });
     $notify.info({
       title: 'title',
       message: 'message'
-    })
+    });
     $timeout.flush();
     $rootScope.$apply();
   });
@@ -63,11 +67,11 @@ describe('Core module test: $notify', function() {
       expect(message.isDebug()).toBe(false);
       expect(message.isError()).toBe(false);
       done();
-    })
+    });
     $notify.warning({
       title: 'title',
       message: 'message'
-    })
+    });
     $timeout.flush();
     $rootScope.$apply();
   });
@@ -82,11 +86,11 @@ describe('Core module test: $notify', function() {
       expect(message.isDebug()).toBe(true);
       expect(message.isError()).toBe(false);
       done();
-    })
+    });
     $notify.debug({
       title: 'title',
       message: 'message'
-    })
+    });
     $timeout.flush();
     $rootScope.$apply();
   });
@@ -100,11 +104,11 @@ describe('Core module test: $notify', function() {
       expect(message.isDebug()).toBe(false);
       expect(message.isError()).toBe(true);
       done();
-    })
+    });
     $notify.error({
       title: 'title',
       message: 'message'
-    })
+    });
     $timeout.flush();
     $rootScope.$apply();
   });
@@ -120,14 +124,14 @@ describe('Core module test: $notify', function() {
       expect(message.isError()).toBe(false);
       message.action();
       // done();
-    })
+    });
     $notify.info({
       title: 'title',
       message: 'message',
       action: function() {
         done();
       }
-    })
+    });
     $timeout.flush();
     $rootScope.$apply();
   });
