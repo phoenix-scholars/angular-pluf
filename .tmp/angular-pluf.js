@@ -1293,8 +1293,8 @@ angular.module('pluf')
 			headers : {
 				'Content-Type' : 'application/x-www-form-urlencoded'
 			}
-		}).then(function(data) {
-			scope.setData(data);
+		}).then(function(res) {
+			scope.setData(res.data);
 			return scope;
 		});
 	};
