@@ -45,7 +45,7 @@ angular.module('pluf')
 		var scope = this;
 		return $http({
 			method : 'POST',
-			url : '/api/user/' + this.id,
+			url : '/api/user/' + this.id + '/account',
 			data : $httpParamSerializerJQLike(scope),
 			headers : {
 				'Content-Type' : 'application/x-www-form-urlencoded'

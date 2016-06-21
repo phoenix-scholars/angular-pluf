@@ -1264,9 +1264,8 @@ angular.module('pluf')
  * طبعت متغیر این مدل داده‌ای منجر به این شده که این مدل یک مدل کلی به صورت کلید مقدار باشد
  * که شما می‌توانید مقادر مورد نظر خود را در آن اضافه و کم کنید.
  */
-.factory('PProfile', ["$http", "$httpParamSerializerJQLike", "$q", "PObject", "PException", function( $http, $httpParamSerializerJQLike, $q, PObject,
-	 PException) {
-	/**
+.factory('PProfile', ["$http", "$httpParamSerializerJQLike", "$q", "PObject", function( $http, $httpParamSerializerJQLike, $q, PObject) {
+	/*
 	 * یک نمونه جدید از این موجودیت ایجاد می کند.
 	 */
 	var pProfile = function() {
@@ -1275,29 +1274,28 @@ angular.module('pluf')
 	pProfile.prototype = new PObject();
 
 	/**
-	 * به روز رسانی پروفایل کاربری
+	 * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور انتقال می‌دهد.
+	 *
+	 * @memberof PProfile
+	 * @return {promise<PProfile>} دستگیره پرفایل کاربری
 	 */
-	pProfile.prototype.update = function(key, value) {
+	pProfile.prototype.update = function() {
 		if (this.user.isAnonymous()) {
 			var deferred = $q.defer();
 			deferred.reject();
 			return deferred.promise;
 		}
 		var scope = this;
-		var param = {};
-		param[key] = value;
 		return $http({
 			method : 'POST',
 			url : '/api/user/profile',
-			data : $httpParamSerializerJQLike(param),
+			data : $httpParamSerializerJQLike(scope),
 			headers : {
 				'Content-Type' : 'application/x-www-form-urlencoded'
 			}
 		}).then(function(data) {
 			scope.setData(data);
 			return scope;
-		}, function(data) {
-			throw new PException(data);
 		});
 	};
 	return pProfile;
@@ -1314,45 +1312,58 @@ angular.module('pluf')
  * @ngdoc factory
  * @name PUser
  * @description
- * مدل کلی کاربر را در سیستم تعیین می‌کند.
+ * مدل کلی کاربر را در سیستم تعیین می‌کند. از این مدل برای مدیریت کردن اطلاعات کاربری استفاده
+ * می‌شود.
+ *
+ * برای نمونه فرض کنید که می‌خواهیم نام یک کاربر را تغییر دهیم، برای این کار کد زیر باید استفاده
+ * شود:
+ *
+ * <pre><code>
+ * 	var user;
+ * 	...
+ * 	user.first_name = 'new first name';
+ * 	user.update().then(function(){
+ * 		// user account is updated
+ * 	});
+ * </code></pre>
+ *
+ * نکته: در صورتی که خصوصیت گذرواژه کاربری را تغییر دهید، این تغییر در سرور اعمال خواهد
+ * شد.
  */
-.factory('PUser', ["$http", "$q", "$httpParamSerializerJQLike", "PObject", "PProfile", "PException", function($http, $q, $httpParamSerializerJQLike, PObject, PProfile, PException) {
+.factory('PUser', ["$http", "$q", "$httpParamSerializerJQLike", "PObject", "PProfile", function($http, $q, $httpParamSerializerJQLike, PObject, PProfile) {
 	var pUser = function() {
 		PObject.apply(this, arguments);
 	};
 	pUser.prototype = new PObject();
 
 	/**
-	 * به روز کردن اطلاعات کاربر
+	 * تغییراتی که در ساختارهای داده‌ای اعمال شده است را در سرور نیز اعمال می‌کند.
+	 * تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای اعمال شده در این ساختار داده‌ای تنها
+	 * در برنامه کاربر خواهد بود و با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد.
+	 *
+	 * @memberof PUser
+	 * @return {promise<PUseer>} ساختار داده‌ای اصلاح شده
 	 */
-	pUser.prototype.update = function(key, value) {
-		// var deferred = $q.defer();
+	pUser.prototype.update = function() {
 		var scope = this;
-		var param = {};
-		if (typeof key !== 'undefined' && typeof value !== 'undefined') {
-			param[key] = value;
-		} else {
-			param = this;
-		}
 		return $http({
 			method : 'POST',
-			url : '/api/user/' + this.id,
-			data : $httpParamSerializerJQLike(param),
+			url : '/api/user/' + this.id + '/account',
+			data : $httpParamSerializerJQLike(scope),
 			headers : {
 				'Content-Type' : 'application/x-www-form-urlencoded'
 			}
 		}).then(function(data) {
 			scope.setData(data.data);
 			return scope;
-		}, function(data) {
-			throw new PException(data);
 		});
 	};
 
 	/**
 	 * پروفایل کاربر را تعیین می‌کند.
 	 *
-	 * @returns promise قول اجرای غیر هم زمان
+	 * @memberof PUser
+	 * @returns {promise<PProfile>} قول اجرای غیر هم زمان
 	 */
 	pUser.prototype.profile = function() {
 		var deferred;
@@ -1374,11 +1385,16 @@ angular.module('pluf')
 			scope._prof = new PProfile(res.data);
 			scope._prof.user = scope;
 			return scope._prof;
-		}, function(res) {
-			throw new PException(res.data);
 		});
 	};
 
+	/**
+	 * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی به صورت هم زمان انجام
+	 * می‌شود.
+	 *
+	 * @memberof PUser
+	 * @return {boolean} حالت مدیر بودن کاربر
+	 */
 	pUser.prototype.isAdministrator = function() {
 		return (this.id && this.id > 0 && this.administrator);
 	};
