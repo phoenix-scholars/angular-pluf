@@ -14,7 +14,7 @@ angular.module('pluf.saas', ['pluf'])
 		id: 'pluf.saas.lunch',
 		category: 'saas',
 	})
-	.commandHandler({
+	.handler({
 		commandId: 'pluf.saas.lunch',
 		handle: function() {
 			if (arguments.length < 1) {
@@ -33,7 +33,7 @@ angular.module('pluf.saas', ['pluf'])
 		id: 'pluf.saas.app.lunch',
 		category: 'saas',
 	})
-	.commandHandler({
+	.handler({
 		commandId: 'pluf.saas.app.lunch',
 		handle: function() {
 			if (arguments.length < 1) {//
