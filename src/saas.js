@@ -5,7 +5,7 @@
 
 angular.module('pluf.saas', ['pluf'])
 
-.run(function($window, $act, $tenant, PException) {
+.run(function($window, $act, $saas, PException) {
 	/**
 	 * اضافه کردن دستورها و دستگیره‌ها
 	 */
@@ -21,7 +21,7 @@ angular.module('pluf.saas', ['pluf'])
 				throw new PException('no app found');
 			}
 			var a = arguments[0];
-			return $tenant.get(a).then(function(tenant) {
+			return $saas.get(a).then(function(tenant) {
 				return tenant.defaultApplication();
 			}).then(function(app) {
 				return app.run();
@@ -40,7 +40,7 @@ angular.module('pluf.saas', ['pluf'])
 				throw new PException('no app found');
 			}
 			var a = arguments[0];
-			return $tenant.session().then(function(tenant) {
+			return $saas.session().then(function(tenant) {
 				return tenant.app(a);
 			}).then(function(app) {
 				return app.run();

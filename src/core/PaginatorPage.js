@@ -18,5 +18,14 @@ angular.module('pluf')
 		PObject.apply(this, arguments);
 	};
 	paginatorPage.prototype = new PObject();
+	/**
+	 * تعیین می‌کند که آیا تعداد بیشتری صفحه وجود دارد یا اینکه به انتهای این صفحه‌ها رسیدیم
+	 *
+	 * @memberof PaginatorPage
+	 * @return {boolean} وجود صفحه بیشتر
+	 */
+	paginatorPage.prototype.hasMorePage = function() {
+		return response.current_page < response.page_number;
+	};
 	return paginatorPage;
 });
