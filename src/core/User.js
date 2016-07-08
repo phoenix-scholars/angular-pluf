@@ -92,7 +92,6 @@ angular.module('pluf')
 		return $http({
 			method : 'DELETE',
 			url : '/api/user/' + this.id + '/account',
-			data : $httpParamSerializerJQLike(scope),
 			headers : {
 				'Content-Type' : 'application/x-www-form-urlencoded'
 			}
