@@ -65,7 +65,7 @@ angular.module('pluf')
 		nextPage: function(){
 			this.param._px_p +=1;
 			return this;
-		}
+		},
 
 		setOrder : function($key, $order) {
 			this.param._px_sk = $key;
