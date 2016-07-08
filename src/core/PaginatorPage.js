@@ -25,7 +25,7 @@ angular.module('pluf')
 	 * @return {boolean} وجود صفحه بیشتر
 	 */
 	paginatorPage.prototype.hasMorePage = function() {
-		return response.current_page < response.page_number;
+		return this.response && (this.response.current_page < this.response.page_number);
 	};
 	return paginatorPage;
 });
