@@ -7,7 +7,7 @@ angular.module('pluf.wiki')
 /**
  * @ngdoc factory
  * @name PWikiPage
- * @memberof wiki
+ * @memberof pluf.wiki
  *
  * @description
  * ساختار داده‌ای یک صفحه به همراه اطلاعات کامل صفحه.
