@@ -46,15 +46,14 @@ angular.module('pluf.wiki')
 	 *
 	 * @memberof PWikiPage
 	 *
-	 * @param {PWikiPage} p ساختاری حاوی اطلاعاتی از صفحه که باید به‌روزرسانی شود
 	 * @returns {promise(PWikiPage)} صفحه به‌روزرسانی شده
 	 */
-	wikiPage.prototype.update = function(p) {
+	wikiPage.prototype.update = function() {
 		var scope = this;
 		return $http({
 			method: 'POST',
-			url: '/api/wiki/page/' + p.id,
-			data: $httpParamSerializerJQLike(p),
+			url: '/api/wiki/page/' + this.id,
+			data: $httpParamSerializerJQLike(scope),
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded'
 			}
