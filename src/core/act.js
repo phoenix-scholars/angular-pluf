@@ -144,6 +144,7 @@ angular.module('pluf')
 	 */
 	this.execute = function(command) {
 		var def = $q.defer();
+		// اجرای یک دستور
 		if (command in this._commands) {
 			var scope = this;
 			var args = Array.prototype.slice.call(arguments).slice(1);
@@ -154,13 +155,40 @@ angular.module('pluf')
 				});
 				def.resolve();
 			}, 1);
-		} else {
-			def.reject({
-				message : 'Command not found :' + command,
-				statuse : 400,
-				code : 4404
-			});
+			return def.promise;
 		}
+		
+		/*
+		 * اجرا یک عمل
+		 * 
+		 * یک عمل ساختار داده‌ای است که در آن خصوصیت‌هایی برای تعیین مدل اجرا 
+		 * تعیین شده است. مثلا یک مدل عمل به صورت زیر قابل تعریف است:
+		 * 
+		 * <pre>
+		 * 	<code>
+		 * 		var action1={
+		 * 			lable: 'label',
+		 * 			text: 'this is an example action',
+		 * 			type: 'command',
+		 * 			value: 'user.logout'
+		 *		};
+		 * 	</code>
+		 * </pre>
+		 * 
+		 * <ul>
+		 * 	<li>command</li>
+		 * 	<li>link</li>
+		 * 	<li>state</li>
+		 * </ul>
+		 */
+		// XXX: maso, 1395: اجرای این مدل عمل‌ها باید اضافه شود
+		
+		// خطای یافت نشدن دستور
+		def.reject({
+			message : 'Command not found :' + command,
+			statuse : 400,
+			code : 4404
+		});
 		return def.promise;
 	};
 });
