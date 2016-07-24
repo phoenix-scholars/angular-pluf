@@ -13,3 +13,6 @@
 
 # bower
 /bower_components/
+
+# KDE
+.directory
