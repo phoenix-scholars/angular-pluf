@@ -218,6 +218,13 @@ angular.module('pluf')
 		});
 	};
 
+	/**
+	 * اطلاعات کاربر جاری را به روزرسانی می‌کند.
+	 *
+	 * @memberof $usr
+	 * 
+	 * @return {promise(PUser)} اطلاعات به‌روزرسانی شده‌ی کاربر جاری
+	 */
 	this.updateCurrentUser = function() {
 		if (!this.isAnonymous()) {
 			var deferred = $q.defer();
@@ -258,6 +265,14 @@ angular.module('pluf')
 		});
 	};
 	
+	/**
+	 * اطلاعات کاربر با شناسه تعیین شده را به‌روزرسانی می‌کند
+	 * 
+	 * @memberof $usr
+	 * 
+	 * @param {string} id شناسه کاربر مورد نظر
+	 * @return {promis(PUser)} اطلاعات به‌روزرسانی شده‌ی کاربر
+	 */
 	this.updateUser = function(id, userData) {
 		return $http({
 			method : 'POST',
@@ -274,6 +289,14 @@ angular.module('pluf')
 		});
 	};
 	
+	/**
+	 * کاربر با شناسه تعیین شده را حذف می‌کند
+	 * 
+	 * @memberof $usr
+	 * 
+	 * @param {string} id شناسه کاربر مورد نظر
+	 * @return {promis(PUser)} اطلاعات کاربر حذف شده به عنوان خروجی برگردانده می‌شود
+	 */
 	this.removeUser = function(id) {
 		return $http({
 			method : 'DELETE',
@@ -290,7 +313,7 @@ angular.module('pluf')
 	};
 	
 	/**
-	 * اطلاعات کاربر را با استفاده از شناسه آن بازیابی می‌کند. شناسه کاربر همان نام کاربری است که
+	 * اطلاعات کاربر را با استفاده نام کاربری آن بازیابی می‌کند.
 	 * کاربر با استفاده از آن می‌تواند وارد سیستم شود.
 	 *
 	 * @memberof $usr
