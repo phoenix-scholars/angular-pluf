@@ -1267,9 +1267,10 @@ angular.module('pluf')
 
 
 /**
- * @memberof pluf
  * @ngdoc factory
  * @name PProfile
+ * @memberof pluf
+ * 
  * @description
  * هر کاربر در هر سیستم یک پروفایل مخصوص به خود دارد که شامل یه سری اطلاعات کلی می‌شود.
  * این اطلاعات برای هر نرم افزار می‌تواند متفاوت باشد برای نمونه شما در سیستم فروش یک پروفایل
@@ -1277,22 +1278,42 @@ angular.module('pluf')
  * است.
  *
  * طبعت متغیر این مدل داده‌ای منجر به این شده که این مدل یک مدل کلی به صورت کلید مقدار باشد
- * که شما می‌توانید مقادر مورد نظر خود را در آن اضافه و کم کنید.
+ * که شما می‌توانید مقادیر مورد نظر خود را در آن اضافه و کم کنید.
+ * 
+ * @attr {Integer} id شناسه
+ * @attr {Integer} user شناسه حساب کاربری مربوط به این پروفایل
+ * @attr {Boolean} validate وضعیت اعتبار پروفایل
+ * @attr {String} country کشور
+ * @attr {String} city شهر
+ * @attr {String} address آدرس
+ * @attr {String} postal_code کد پستی
+ * @attr {String} phone_number شماره تلفن
+ * @attr {String} mobile_number شماره موبایل
+ * @attr {String} national_id کد ملی
+ * @attr {String} shaba شماره شبای بانکی
+ * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد پروفایل
+ * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
 .factory('PProfile', function( $http, $httpParamSerializerJQLike, $q, PObject) {
 	/*
 	 * یک نمونه جدید از این موجودیت ایجاد می کند.
 	 */
-	var pProfile = function() {
-		PObject.apply(this, arguments);
+	var pProfile = function(data) {
+		if(data){
+			this.setData(data);
+		}
 	};
+	
 	pProfile.prototype = new PObject();
 
 	/**
 	 * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور انتقال می‌دهد.
+	 * تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای اعمال شده در این ساختار داده‌ای تنها
+	 * در برنامه کاربر خواهد بود و با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
 	 *
 	 * @memberof PProfile
-	 * @return {promise<PProfile>} دستگیره پرفایل کاربری
+	 * 
+	 * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
 	 */
 	pProfile.prototype.update = function() {
 		if (this.user.isAnonymous()) {
@@ -1303,7 +1324,7 @@ angular.module('pluf')
 		var scope = this;
 		return $http({
 			method : 'POST',
-			url : '/api/user/profile',
+			url : '/api/user/'+ this.user.id + '/profile',
 			data : $httpParamSerializerJQLike(scope),
 			headers : {
 				'Content-Type' : 'application/x-www-form-urlencoded'
@@ -1313,6 +1334,29 @@ angular.module('pluf')
 			return scope;
 		});
 	};
+	
+	/**
+	 * پروفایل کاربری را حذف می کند
+	 * 
+	 * @memberof PProfile
+	 * 
+	 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف شده
+	 */
+	pProfile.prototype.remove = function(){
+		var scope = this;
+		return $http({
+			method : 'DELETE',
+			url : '/api/user/' + this.user + '/profile',
+			data : $httpParamSerializerJQLike(scope),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
+		}).then(function(data){
+			scope.setData(data.data);
+			return scope;
+		});
+	};
+	
 	return pProfile;
 });
 
@@ -1328,10 +1372,23 @@ angular.module('pluf')
  * @memberof pluf
  * 
  * @description
- * ساختار داده‌ای یک کاربر 
  * ساختار داده‌ای یک کاربر را در سیستم تعیین می‌کند. از این مدل برای مدیریت کردن اطلاعات کاربری استفاده
  * می‌شود.
  *
+ * @attr {Integer} id شناسه
+ * @attr {String} login نام کاربری به منظور لاگین کردن
+ * @attr {String} password کلمه عبور کاربر برای لاگین کردن
+ * @attr {String} first_name نام کاربر
+ * @attr {String} last_name نام خانوادگی کاربر
+ * @attr {String} email آدرس ایمیل کاربر
+ * @attr {String} language زبان پیش‌فرض کاربر
+ * @attr {String} timezone منطقه زمانی کاربر
+ * @attr {Datetime} date_joined تاریخ و زمان ایجاد حساب
+ * @attr {Datetime} last_login تاریخ و زمان آخرین لاگین
+ * @attr {Boolean} administrator تعیین می‌کند که آیا این کاربر دسترسی ادمین دارد یا نه
+ * @attr {Boolean} staff تعیین می‌کند که این کاربر دسترسی staff دارد یا نه 
+ *
+ * از این موجودیت برای مدیریت (ایجاد، ویرایش و حذف) حساب کاربری استفاده می‌شود.
  * برای نمونه فرض کنید که می‌خواهیم نام یک کاربر را تغییر دهیم، برای این کار کد زیر باید استفاده
  * شود:
  *
@@ -1348,18 +1405,25 @@ angular.module('pluf')
  * شد.
  */
 .factory('PUser', function($http, $q, $httpParamSerializerJQLike, PObject, PProfile) {
-	var pUser = function() {
-		PObject.apply(this, arguments);
+	
+	var pUser = function(data) {
+		if(data){
+			this.setData(data);
+		}
 	};
+	
 	pUser.prototype = new PObject();
 
 	/**
+	 * اطلاعات حساب کاربری را به‌روزرسانی می‌کند
+	 * 
 	 * تغییراتی که در ساختارهای داده‌ای اعمال شده است را در سرور نیز اعمال می‌کند.
 	 * تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای اعمال شده در این ساختار داده‌ای تنها
 	 * در برنامه کاربر خواهد بود و با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد.
 	 *
 	 * @memberof PUser
-	 * @return {promise<PUseer>} ساختار داده‌ای اصلاح شده
+	 * 
+	 * @return {promise(PUser)} ساختار داده‌ای به‌روز شده‌ی حساب کاربری
 	 */
 	pUser.prototype.update = function() {
 		var scope = this;
@@ -1375,12 +1439,34 @@ angular.module('pluf')
 			return scope;
 		});
 	};
+	
+	/**
+	 * حساب کاربری را حذف می‌کند
+	 * 
+	 * @memberof PUser
+	 * 
+	 * @return {promise(PUser)} ساختار داده‌ای حساب کاربری حذف شده
+	 */
+	pUser.prototype.remove = function() {
+		var scope = this;
+		return $http({
+			method : 'DELETE',
+			url : '/api/user/' + this.id + '/account',
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
+		}).then(function(data) {
+			scope.setData(data.data);
+			return scope;
+		});
+	};
 
 	/**
 	 * پروفایل کاربر را تعیین می‌کند.
 	 *
 	 * @memberof PUser
-	 * @returns {promise<PProfile>} قول اجرای غیر هم زمان
+	 * 
+	 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری مربوط به این حساب کاربری
 	 */
 	pUser.prototype.profile = function() {
 		var deferred;
@@ -1410,11 +1496,26 @@ angular.module('pluf')
 	 * می‌شود.
 	 *
 	 * @memberof PUser
+	 * 
 	 * @return {boolean} حالت مدیر بودن کاربر
 	 */
 	pUser.prototype.isAdministrator = function() {
 		return (this.id && this.id > 0 && this.administrator);
 	};
+	
+	/**
+	 * تعیین می‌کند که آیا کاربر جاری staff است یا نه. 
+	 * این فراخوانی به صورت هم زمان انجام می‌شود.
+	 *
+	 * @memberof PUser
+	 * 
+	 * @return {boolean} حالت staff بودن کاربر
+	 */
+	pUser.prototype.isStaff = function() {
+		return (this.id && this.id > 0 && this.staff);
+	};
+	
+	
 	return pUser;
 });
 
@@ -1564,6 +1665,7 @@ angular.module('pluf')
 	 */
 	this.execute = function(command) {
 		var def = $q.defer();
+		// اجرای یک دستور
 		if (command in this._commands) {
 			var scope = this;
 			var args = Array.prototype.slice.call(arguments).slice(1);
@@ -1574,13 +1676,40 @@ angular.module('pluf')
 				});
 				def.resolve();
 			}, 1);
-		} else {
-			def.reject({
-				message : 'Command not found :' + command,
-				statuse : 400,
-				code : 4404
-			});
+			return def.promise;
 		}
+		
+		/*
+		 * اجرا یک عمل
+		 * 
+		 * یک عمل ساختار داده‌ای است که در آن خصوصیت‌هایی برای تعیین مدل اجرا 
+		 * تعیین شده است. مثلا یک مدل عمل به صورت زیر قابل تعریف است:
+		 * 
+		 * <pre>
+		 * 	<code>
+		 * 		var action1={
+		 * 			lable: 'label',
+		 * 			text: 'this is an example action',
+		 * 			type: 'command',
+		 * 			value: 'user.logout'
+		 *		};
+		 * 	</code>
+		 * </pre>
+		 * 
+		 * <ul>
+		 * 	<li>command</li>
+		 * 	<li>link</li>
+		 * 	<li>state</li>
+		 * </ul>
+		 */
+		// XXX: maso, 1395: اجرای این مدل عمل‌ها باید اضافه شود
+		
+		// خطای یافت نشدن دستور
+		def.reject({
+			message : 'Command not found :' + command,
+			statuse : 400,
+			code : 4404
+		});
 		return def.promise;
 	};
 });
@@ -1594,8 +1723,8 @@ angular .module('pluf')
  * @memberof pluf
  * @ngdoc service
  * @name $cms
+ * 
  * @description
- *
  * مهم‌ترین سرویسی است که در این بسته ارائه شده و کار با محتوی و اطلاعات آن را آسان می‌کند.
  * این سرویس برای جستجو و یا گرفتن اطلاعات هر محتوایی از سیستم کاربرد دارد. متحوی کاربرد زیادی
  * توی صفحه‌های وب داره مثلا با استفاده از محتوی می‌تونید صفحه اول سایت رو طراحی کنید و یا یک
@@ -2160,223 +2289,346 @@ angular.module('pluf')
  * @memberof pluf
  * @ngdoc service
  * @name $usr
- * @description
- * یکی از مهم‌ترین سرویس‌هایی است که در این ماژول ارائه می‌شود. این سرویس موظف است که کاربر جاری
- * را مدیریت کند. علاوه بر این امکاناتی برای ورود و خروج کاربران نیز فراهم کرده است.
+ * 
+ * @description یکی از مهم‌ترین سرویس‌هایی است که در این ماژول ارائه می‌شود. این
+ *              سرویس موظف است که کاربر جاری را مدیریت کند. علاوه بر این
+ *              امکاناتی برای ورود و خروج کاربران نیز فراهم کرده است.
  */
-.service('$usr', function($http, $httpParamSerializerJQLike, $q, $act, PUser,
-PaginatorPage) {
-	/*
-   * کاربر جاری را تعیین می‌کند. این متغیر به صورت عمومی در اختیار کاربران قرار می‌گیرد.
-	 */
-	this._su = new PUser();
-	/*
-	 * مخزن کاربران. تمام اطلاعاتی که از کاربران گرفته می‌شه توی این مخزن نگهداری می‌شه
-	 */
-	this._u = {};
-	/*
-	 * اطلاعات یک کاربر با شناسه تعیین شده را بازیابی می‌کند. این مقدار ممکن است تهی باشد.
-	 */
-	this._getUser = function(id) {
-		if (this._u[id] &&! this._u[id].isAnonymous()) {
-			return this._u[id];
-		}
-		return null;
-	};
-	/*
-	 * اطلاعات یک کاربر را بازیابی می‌کند
-	 */
-	this._ret = function(id, data) {
-		var instance = this._getUser(id);
-		if (instance) {
-			instance.setData(data);
-		} else {
-			instance = new PUser(data);
-			this._u[id] = instance;
-		}
-		return instance;
-	};
+.service(
+		'$usr',
+		function($http, $httpParamSerializerJQLike, $q, $act, PUser,
+				PaginatorPage, PException) {
+			/*
+			 * کاربر جاری را تعیین می‌کند. این متغیر به صورت عمومی در اختیار
+			 * کاربران قرار می‌گیرد.
+			 */
+			this._su = new PUser();
+			/*
+			 * مخزن کاربران. تمام اطلاعاتی که از کاربران گرفته می‌شه توی این
+			 * مخزن نگهداری می‌شه
+			 */
+			this._u = {};
+			/*
+			 * اطلاعات یک کاربر با شناسه تعیین شده را بازیابی می‌کند. این مقدار
+			 * ممکن است تهی باشد.
+			 */
+			this._getUser = function(id) {
+				if (this._u[id] && !this._u[id].isAnonymous()) {
+					return this._u[id];
+				}
+				return null;
+			};
+			/*
+			 * اطلاعات یک کاربر را بازیابی می‌کند
+			 */
+			this._ret = function(id, data) {
+				var instance = this._getUser(id);
+				if (instance) {
+					instance.setData(data);
+				} else {
+					instance = new PUser(data);
+					this._u[id] = instance;
+				}
+				return instance;
+			};
 
-	/**
-	 * به صورت همزمان تعیین می‌کند که آیا کاربر جاری شناخته شده است یا نه. از این فراخوانی در نمایش
-	 * و یا جایی که باید به صورت همزمان وضعیت کاربر جاری را تعیین کرده استفاده می‌شود.
-	 *
-	 * @memberof $usr
-	 * @return {Boolean} درستی در صورتی که کاربر جاری گمنام باشد
-	 */
-	this.isAnonymous = function() {
-		return this._su.isAnonymous();
-	};
+			/**
+			 * به صورت همزمان تعیین می‌کند که آیا کاربر جاری شناخته شده است یا
+			 * نه. از این فراخوانی در نمایش و یا جایی که باید به صورت همزمان
+			 * وضعیت کاربر جاری را تعیین کرده استفاده می‌شود.
+			 * 
+			 * @memberof $usr
+			 * @return {Boolean} درستی در صورتی که کاربر جاری گمنام باشد
+			 */
+			this.isAnonymous = function() {
+				return this._su.isAnonymous();
+			};
 
-	/**
-	 * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی نیز یک فراخوانی هم زمان
-	 * است و در کارهای نمایشی کاربرد دارد.
-	 *
-	 * @memberof $usr
-	 * @return {Boolean} درستی در صورتی که کاربر جاری مدیر سیستم باشد.
-	 */
-	this.isAdministrator = function() {
-		return this._su.isAdministrator();
-	};
-	/**
-	 * عمل ورود کاربر به سیستم را انجام می‌دهد. برای ورود بسته به اینکه از چه سیستمی استفاده می‌شود
-	 * پارامترهای متفاوتی مورد نیاز است که با استفاده از یک ساختار داده‌ای برای این فراخوانی ارسال
-	 * می‌شود. برای نمونه در مدل عادی این فراخوانی نیاز به نام کاربری و گذرواژه دارد که به صورت
-	 * زیر عمل ورود انجام خواهد شد:
-	 *
-	 * <pre><code>
-	 * $usr.login({
-	 * 	login: 'user name',
-	 * 	password: 'password'
-	 * }).then(function(user){
-	 * 	//Success
-	 * }, function(ex){
-	 * 	//Fail
-	 * });
-	 * </code></pre>
-	 *
-	 * @memberof $usr
-	 * @param  {object} cridential پارارمترهای مورد انتظار در احراز اصالت
-	 * @return {promise(PUser)}   اطلاعات کاربر جاری
-	 */
-	this.login = function(c) {
-		if (!this.isAnonymous()) {
-			var deferred = $q.defer();
-			deferred.resolve(this);
-			return deferred.promise;
-		}
-		var scope = this;
-		return $http({
-			method : 'POST',
-			url : '/api/user/login',
-			data : $httpParamSerializerJQLike(c),
-			headers : {
-				'Content-Type' : 'application/x-www-form-urlencoded'
-			}
-		}).then(function(data) {
-			scope._su = new PUser(data.data);
-			return scope._su;
-		});
-	};
-	/**
-	 * کاربری که در نشست تعیین شده است را بازیابی می‌کند. این فراخوانی که یک فراخوانی غیر همزان
-	 * است برای تعیین حالت کاربر در سیستم استفاده می‌شود. برای نمونه ممکن است که یک تابع منجر
-	 * به خروج کاربر از سیستم شده باشد، در این حالت این فراخوانی حالت کاربر را بازیابی کرده و سیستم
-	 * را به روز می‌کند.
-	 *
-	 * @memberof $usr
-	 * @returns {promise(PUser)} قول اجرای غیر هم زمان
-	 */
-	this.session = function() {
-		var scope = this;
-		if (!this.isAnonymous()) {
-			var deferred = $q.defer();
-			deferred.resolve(this._su);
-			return deferred.promise;
-		}
-		return $http.get('/api/user/account').then(function(data) {
-			scope._su = new PUser(data.data);
-			return scope._su;
-		});
-	};
-	/**
-	 * این فراخوانی عمل خروج کاربری جاری از سیستم را انجام می‌دهد. با این کار تمام داده‌های کاربر
-	 * جاری از سیستم حذف شده و سیستم به حالت اولیه برخواهد گشت.
-	 *
-	 * @memberof $usr
-	 * @returns {promise(PUser)} کاربر جاری
-	 */
-	this.logout = function() {
-		if (this.isAnonymous()) {
-			var deferred = $q.defer();
-			deferred.resolve(this._su);
-			return deferred.promise;
-		}
-		var scope = this;
-		return $http.get('/api/user/logout')//
-		.success(function() {
-			scope._su.setData({
-				id : 0,
-				login : null,
-				administrator: false
-			});
-			return scope._su;
-		});
-	};
+			/**
+			 * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی
+			 * نیز یک فراخوانی هم زمان است و در کارهای نمایشی کاربرد دارد.
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @return {Boolean} درستی در صورتی که کاربر جاری مدیر سیستم باشد.
+			 */
+			this.isAdministrator = function() {
+				return this._su.isAdministrator();
+			};
 
-	/**
-	 * اطلاعات یک کاربر جدید را دریافت کرده و آن را به عنوان یک کاربر در سیستم ثبت می‌کند. حالت
-	 * نهایی کاربر به نوع پیاده سازی سرور بستگی دارد. بر برخی از سرورها، به محض اینکه کاربر ثبت
-	 * نام کرد حالت فعال رو داره و می‌تونه وارد سیستم بشه اما در برخی از سیستم‌ها نیاز به فرآیند
-	 * فعال سازی دارد.
-	 *
-	 * پارامترهای مورد نیاز برای ایجاد کاربر هم متفاوت هست. در برخی سیستم‌ها ایمیل، نام کاربری و گذرواژه
-	 * مهم است و سایر پارامترهای به صورت دلخواه خواهد بود.
-	 *
-	 * @memberof $usr
-	 * @param  {object} detail خصوصیت‌های کاربر
-	 * @return {promise(PUser)}        حساب کاربری ایجاد شده
-	 */
-	this.signup = function(detail) {
-		// var scope = this;
-		return $http({
-			method : 'POST',
-			url : '/api/user/signup',
-			data : $httpParamSerializerJQLike(detail),
-			headers : {
-				'Content-Type' : 'application/x-www-form-urlencoded'
-			}
-		}).then(function(data) {
-			var user = new PUser(data.data);
-			return user;
-		});
-	};
-	/**
-	 * فهرست کاربران را به صورت صفحه بندی شده در اختیار قرار می‌دهد. این فهرست
-	 * برای کاربردهای متفاوتی استفاده می‌شود مثل اضافه کردن به کاربران مجاز. دسترسی به فهرست
-	 * کاربران تنها بر اساس سطوح امنیتی تعریف شده در سرور ممکن است و بسته به نوع پیاده سازی
-	 * سرور متفاوت خواهد بود.
-	 *
-	 * @memberof $usr
-	 * @param {PagintorParameter} parameter پارامترهای مورد استفاده در صفحه بندی نتایج
-	 * @return {promise(PaginatorPage)} صفحه‌ای از کاربران سیستم.
-	 */
-	this.users = function(p) {
-		var scope = this;
-		return $http({
-			method : 'GET',
-			url : '/api/user/find',
-			params : p.getParameter()
-		}).then(function(res) {
-			var page = new PaginatorPage(res.data);
-			var items = [];
-			for (var i = 0; i < page.counts; i++) {
-				var t = scope._ret(page.items[i].id, page.items[i]);
-				items.push(t);
-			}
-			page.items = items;
-			return page;
-		});
-	};
+			/**
+			 * عمل ورود کاربر به سیستم را انجام می‌دهد. برای ورود بسته به اینکه
+			 * از چه سیستمی استفاده می‌شود پارامترهای متفاوتی مورد نیاز است که
+			 * با استفاده از یک ساختار داده‌ای برای این فراخوانی ارسال می‌شود.
+			 * برای نمونه در مدل عادی این فراخوانی نیاز به نام کاربری و گذرواژه
+			 * دارد که به صورت زیر عمل ورود انجام خواهد شد:
+			 * 
+			 * <pre><code>
+			 * $usr.login({
+			 * 	login : 'user name',
+			 * 	password : 'password'
+			 * }).then(function(user) {
+			 * 	//Success
+			 * 	}, function(ex) {
+			 * 		//Fail
+			 * 	});
+			 * </code></pre>
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @param {object}
+			 *            credential پارارمترهای مورد انتظار در احراز اصالت
+			 * @return {promise(PUser)} اطلاعات کاربر جاری
+			 */
+			this.login = function(c) {
+				if (!this.isAnonymous()) {
+					var deferred = $q.defer();
+					deferred.resolve(this);
+					return deferred.promise;
+				}
+				var scope = this;
+				return $http({
+					method : 'POST',
+					url : '/api/user/login',
+					data : $httpParamSerializerJQLike(c),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(data) {
+					scope._su = new PUser(data.data);
+					return scope._su;
+				});
+			};
 
-	/**
-	 * اطلاعات کاربر را با استفاده از شناسه آن بازیابی می‌کند. شناسه کاربر همان نام کاربری است که
-	 * کاربر با استفاده از آن می‌تواند وارد سیستم شود.
-	 *
-	 * @memberof $usr
-	 * @param  {string} login شناسه کاربر مورد نظر
-	 * @return {promise(PUser)}   اطلاعات بازیابی شده کاربر
-	 */
-	this.user = function(login) {
-		var scope = this;
-		return $http({
-			method: 'GET',
-			url: '/api/user/user/' + login,
-		}).then(function(data) {
-			return scope._ret(data.data.id, data.data);
+			/**
+			 * کاربری که در نشست تعیین شده است را بازیابی می‌کند. این فراخوانی
+			 * که یک فراخوانی غیر همزان است برای تعیین حالت کاربر در سیستم
+			 * استفاده می‌شود. برای نمونه ممکن است که یک تابع منجر به خروج کاربر
+			 * از سیستم شده باشد، در این حالت این فراخوانی حالت کاربر را بازیابی
+			 * کرده و سیستم را به روز می‌کند.
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @returns {promise(PUser)} اطلاعات کاربر جاری
+			 */
+			this.session = function() {
+				var scope = this;
+				if (!this.isAnonymous()) {
+					var deferred = $q.defer();
+					deferred.resolve(this._su);
+					return deferred.promise;
+				}
+				return $http.get('/api/user/account').then(function(data) {
+					scope._su = new PUser(data.data);
+					return scope._su;
+				});
+			};
+
+			/**
+			 * این فراخوانی عمل خروج کاربری جاری از سیستم را انجام می‌دهد. با
+			 * این کار تمام داده‌های کاربر جاری از سیستم حذف شده و سیستم به حالت
+			 * اولیه برخواهد گشت.
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @returns {promise(PUser)} کاربر جاری که اکنون لاگ‌اوت شده است
+			 */
+			this.logout = function() {
+				if (this.isAnonymous()) {
+					var deferred = $q.defer();
+					deferred.resolve(this._su);
+					return deferred.promise;
+				}
+				var scope = this;
+				return $http({
+					method : 'POST',
+					url : '/api/user/logout',
+				}).then(function(data) {
+					scope._su = new PUser(data.data);
+					return scope._su;
+				});
+			};
+
+			/**
+			 * اطلاعات یک کاربر جدید را دریافت کرده و آن را به عنوان یک کاربر در
+			 * سیستم ثبت می‌کند. حالت نهایی کاربر به نوع پیاده سازی سرور بستگی
+			 * دارد. بر برخی از سرورها، به محض اینکه کاربر ثبت نام کرد حالت فعال
+			 * رو داره و می‌تونه وارد سیستم بشه اما در برخی از سیستم‌ها نیاز به
+			 * فرآیند فعال سازی دارد.
+			 * 
+			 * پارامترهای مورد نیاز برای ایجاد کاربر هم متفاوت هست. در برخی
+			 * سیستم‌ها ایمیل، نام کاربری و گذرواژه مهم است و سایر پارامترهای به
+			 * صورت دلخواه خواهد بود.
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @param {object}
+			 *            detail خصوصیت‌های کاربر
+			 * @return {promise(PUser)} حساب کاربری ایجاد شده
+			 */
+			this.signup = function(detail) {
+				// var scope = this;
+				return $http({
+					method : 'POST',
+					url : '/api/user/signup',
+					data : $httpParamSerializerJQLike(detail),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(data) {
+					var user = new PUser(data.data);
+					return user;
+				});
+			};
+
+			/**
+			 * فهرست کاربران را به صورت صفحه بندی شده در اختیار قرار می‌دهد. این
+			 * فهرست برای کاربردهای متفاوتی استفاده می‌شود مثل اضافه کردن به
+			 * کاربران مجاز. دسترسی به فهرست کاربران تنها بر اساس سطوح امنیتی
+			 * تعریف شده در سرور ممکن است و بسته به نوع پیاده سازی سرور متفاوت
+			 * خواهد بود.
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @param {PagintorParameter}
+			 *            parameter پارامترهای مورد استفاده در صفحه بندی نتایج
+			 * @return {promise(PaginatorPage)} صفحه‌ای از کاربران سیستم.
+			 */
+			this.users = function(p) {
+				var scope = this;
+				return $http({
+					method : 'GET',
+					url : '/api/user/find',
+					params : p.getParameter()
+				}).then(function(res) {
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var t = scope._ret(page.items[i].id, page.items[i]);
+						items.push(t);
+					}
+					page.items = items;
+					return page;
+				});
+			};
+
+			/**
+			 * اطلاعات کاربر جاری را به روزرسانی می‌کند.
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @return {promise(PUser)} اطلاعات به‌روزرسانی شده‌ی کاربر جاری
+			 */
+			this.updateCurrentUser = function() {
+				if (!this.isAnonymous()) {
+					var deferred = $q.defer();
+					deferred.resolve(this);
+					return deferred.promise;
+				}
+				var scope = this;
+				return $http({
+					method : 'POST',
+					url : '/api/user/' + scope._su.id + '/account',
+					data : $httpParamSerializerJQLike(scope._su),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(data) {
+					var user = new PUser(data.data);
+					return user;
+				}, function(data) {
+					throw new PException(data);
+				});
+			};
+
+			/**
+			 * اطلاعات کاربر را با استفاده از شناسه آن بازیابی می‌کند.
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @param {string}
+			 *            id شناسه کاربر مورد نظر
+			 * @return {promise(PUser)} اطلاعات بازیابی شده کاربر
+			 */
+			this.getUser = function(id) {
+				var scope = this;
+				return $http({
+					method : 'GET',
+					url : '/api/user/' + id + '/account',
+				}).then(function(data) {
+					return scope._ret(data.data.id, data.data);
+				});
+			};
+
+			/**
+			 * اطلاعات کاربر با شناسه تعیین شده را به‌روزرسانی می‌کند
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @param {string}
+			 *            id شناسه کاربر مورد نظر
+			 * @return {promis(PUser)} اطلاعات به‌روزرسانی شده‌ی کاربر
+			 */
+			this.updateUser = function(id, userData) {
+				return $http({
+					method : 'POST',
+					url : '/api/user/' + id + '/account',
+					data : $httpParamSerializerJQLike(userData),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(data) {
+					var user = new PUser(data.data);
+					return user;
+				}, function(data) {
+					throw new PException(data);
+				});
+			};
+
+			/**
+			 * کاربر با شناسه تعیین شده را حذف می‌کند
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @param {string}
+			 *            id شناسه کاربر مورد نظر
+			 * @return {promis(PUser)} اطلاعات کاربر حذف شده به عنوان خروجی
+			 *         برگردانده می‌شود
+			 */
+			this.removeUser = function(id) {
+				return $http({
+					method : 'DELETE',
+					url : '/api/user/' + id + '/account',
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(data) {
+					var user = new PUser(data.data);
+					return user;
+				}, function(data) {
+					throw new PException(data);
+				});
+			};
+
+			/**
+			 * اطلاعات کاربر را با استفاده نام کاربری آن بازیابی می‌کند. کاربر
+			 * با استفاده از آن می‌تواند وارد سیستم شود.
+			 * 
+			 * @memberof $usr
+			 * @param {string}
+			 *            login شناسه کاربر مورد نظر
+			 * @return {promise(PUser)} اطلاعات بازیابی شده کاربر
+			 */
+			this.user = function(login) {
+				var scope = this;
+				return $http({
+					method : 'GET',
+					url : '/api/user/user/' + login,
+				}).then(function(data) {
+					return scope._ret(data.data.id, data.data);
+				});
+			};
 		});
-	};
-});
 
 /* jslint todo: true */
 /* jslint xxx: true */
@@ -2873,6 +3125,11 @@ angular.module('pluf.saas')
 		});
 	};
 
+	/*
+	 * TODO: Hadi, 1395-04-18: 
+	 * به نظر می‌رسه با توجه به قوانینی که در مورد ملک‌ها و spa ها داریم
+	 * این متد نباید اینجا باشه و باید حذف بشه
+	 */
 	/**
 	 * یک نرم افزار را تعیین می‌کند.
 	 *
@@ -3527,15 +3784,14 @@ angular.module('pluf.wiki')
 	 *
 	 * @memberof PWikiPage
 	 *
-	 * @param {PWikiPage} p ساختاری حاوی اطلاعاتی از صفحه که باید به‌روزرسانی شود
 	 * @returns {promise(PWikiPage)} صفحه به‌روزرسانی شده
 	 */
-	wikiPage.prototype.update = function(p) {
+	wikiPage.prototype.update = function() {
 		var scope = this;
 		return $http({
 			method: 'POST',
-			url: '/api/wiki/page/' + p.id,
-			data: $httpParamSerializerJQLike(p),
+			url: '/api/wiki/page/' + this.id,
+			data: $httpParamSerializerJQLike(scope),
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded'
 			}

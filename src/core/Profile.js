@@ -64,7 +64,7 @@ angular.module('pluf')
 		var scope = this;
 		return $http({
 			method : 'POST',
-			url : '/api/user/'+ this.user + '/profile',
+			url : '/api/user/'+ this.user.id + '/profile',
 			data : $httpParamSerializerJQLike(scope),
 			headers : {
 				'Content-Type' : 'application/x-www-form-urlencoded'
@@ -95,7 +95,7 @@ angular.module('pluf')
 			scope.setData(data.data);
 			return scope;
 		});
-	}
+	};
 	
 	return pProfile;
 });

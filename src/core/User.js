@@ -75,8 +75,6 @@ angular.module('pluf')
 		}).then(function(data) {
 			scope.setData(data.data);
 			return scope;
-		}, function(data) {
-			throw new PException(data);
 		});
 	};
 	

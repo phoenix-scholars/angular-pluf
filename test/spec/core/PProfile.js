@@ -18,7 +18,7 @@ describe('Core module test: PProfile', function() {
       $httpBackend = _$httpBackend_;
     });
     originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
   });
 
   afterEach(function() {
@@ -48,7 +48,7 @@ describe('Core module test: PProfile', function() {
     });
 
     $httpBackend
-      .expect('POST', '/api/user/profile')
+      .expect('POST', '/api/user/1/profile')
       .respond(200, {
         id: 1,
         xxx:'xxx',
