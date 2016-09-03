@@ -38,7 +38,12 @@ describe('Core module test: user authentication', function() {
   it('Check session function', function () {
     expect(angular.isFunction($usr.session)).toBe(true);
   });
-
+  it('Check users function', function () {
+    expect(angular.isFunction($usr.users)).toBe(true);
+  });
+  it('Check signup function', function () {
+    expect(angular.isFunction($usr.signup)).toBe(true);
+  });
   it('Logout with', function (done){
     $usr.logout().then(function(user){
       expect(user).not.toBeNull();
@@ -102,11 +107,35 @@ describe('Core module test: user authentication', function() {
       expect(false).toBe(true);
       done();
     });
-
     $httpBackend
       .expect('GET', '/api/user/account')
       .respond(200, { id: '1', login:'admin', administrator:true });
     expect($httpBackend.flush).not.toThrow();
     $rootScope.$apply();
   });
+
+  // it('Check users.', function(done){
+  //   $usr.users().then(function(users){
+  //     expect(users).not.toBeNull();
+  //     done();
+  //   });
+  //   $httpBackend
+  //     .expect('GET', '/api/user/find')
+  //     .respond(200, {});
+  //     expect($httpBackend.flush).not.toThrow();
+  //     $rootScope.$apply();
+  // });
+
+  it('Check signup.', function(done){
+    $usr.signup().then(function(user){
+        expect(user).not.toBeNull();
+        done();
+    });
+    $httpBackend
+      .expect('POST', '/api/user/signup')
+      .respond(200, {});
+      expect($httpBackend.flush).not.toThrow();
+      $rootScope.$apply();
+  });
+
 });
