@@ -101,8 +101,8 @@ angular.module('pluf')
 	 */
 	this.handler = function(handData) {
 		var cmd;
-		if(handData.id in this._commands){
-			cmd = this._commands[handData.id];
+		if(handData.command in this._commands){
+			cmd = this._commands[handData.command];
 		} else {
 			cmd = new PCommand(handData);
 			this._commands[cmd.id] = cmd;
