@@ -240,78 +240,129 @@ angular.module('pluf')
  * @memberof pluf
  * @ngdoc factory
  * @name PContent
- * @description
- * ساختار داده‌ای محتوی را ایجاد می‌کند. این ساختار داده‌ای شامل اطلاعات کلی از محتوی است که
- * از این میان می‌توان به موارد زیر اشاره کرد:
- *
+ * @description ساختار داده‌ای محتوی را ایجاد می‌کند. این ساختار داده‌ای شامل
+ *              اطلاعات کلی از محتوی است که از این میان می‌توان به موارد زیر
+ *              اشاره کرد:
+ * 
  * @attr {integer} id
  * @attr {string} name
  * @attr {string} mimetype
  * @attr {integer} tenant
  */
 .factory('PContent', function($http, $httpParamSerializerJQLike, $q, PObject) {
+
+	function _initContent(scope) {
+		scope.link = '/api/saascms/content/' + scope.id + '/download';
+	}
+
 	var pContent = function() {
 		PObject.apply(this, arguments);
+		_initContent(this);
 	};
- 	pContent.prototype = new PObject();
+	pContent.prototype = new PObject();
+
 	/**
 	 * محتوی را به روز می‌کند
-	 *
+	 * 
 	 * @memberof PContent
 	 * @return {promise} محتوی جدید ایجاد شده
 	 */
-	pContent.prototype.update = function(){
-		// TODO:maso, 1395: به روز کردن محتوی
+	pContent.prototype.update = function() {
+		var scope = this;
+		return $http({
+			method : 'POST',
+			url : '/api/saascms/content/' + this.id,
+			data : $httpParamSerializerJQLike(scope),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
+		}).then(function(data) {
+			scope.setData(data.data);
+			_initContent(scope);
+			return scope;
+		});
 	};
 
 	/**
 	 * محتوی را حذف می‌کند
+	 * 
 	 * @memberof PContent
 	 * @return {promise} محتوی حذف شده
 	 */
-	pContent.prototype.remove = function(){
-		// TODO:maso, 1395: حذف محتوی
+	pContent.prototype.remove = function() {
+		var scope = this;
+		return $http({
+			method : 'DELETE',
+			url : '/api/saascms/content/' + this.id
+		}).then(function() {
+			delete scope.id;
+			return scope;
+		});
 	};
 
 	/**
-	 * مقدار محتوی را تعیین می‌کند که معمولا برای گرفتن محتوی ساختار یافته و رشته‌ها مناسب
-	 * است. در سایر موارد استفاده از پیوند محتوی بهتر است.
+	 * مقدار محتوی را تعیین می‌کند که معمولا برای گرفتن محتوی ساختار یافته و
+	 * رشته‌ها مناسب است. در سایر موارد استفاده از پیوند محتوی بهتر است.
+	 * 
 	 * @memberof PContent
 	 * @return {promise} مقدار محتوی
 	 */
-	pContent.prototype.value = function(){
+	pContent.prototype.value = function() {
 		// TODO: maso, 1395: محتوی صفحه را می‌دهد
 		// if(this._cvalue()){
-		// 	var deferred = $q.defer();
-		// 	deferred.resolve(this._cvalue());
-		// 	return deferred.promise;
+		// var deferred = $q.defer();
+		// deferred.resolve(this._cvalue());
+		// return deferred.promise;
 		// }
 		return $http({
-			method: 'GET',
-			url: '/api/saascms/content/'+this.id+'/download'
-		}).then(function(res){
+			method : 'GET',
+			url : this.link
+		}).then(function(res) {
 			// scope._setCvalue(res.data);
 			return res.data;
 		});
 	};
+
 	/**
 	 * مقدار جدیدی را برای این محتوی تعیین می‌کند.
+	 * 
 	 * @memberof PContent
-	 * @param  {object} d مقدار جدید برای محتوی
-	 * @return {promise}   محتوی به روز شده
+	 * @param {object}
+	 *            data مقدار جدید برای محتوی
+	 * @return {promise} محتوی به روز شده
 	 */
-	pContent.prototype.setValue = function(d){
+	pContent.prototype.setValue = function(newValue) {
 		var scope = this;
 		return $http({
-			method:'POST',
-			url: '/api/saascms/content/'+this.id+'/download',
-			data: d,
-		}).then(function(){
+			method : 'POST',
+			url : this.link,
+			data : newValue,
+		}).then(function() {
 			return scope;
 		});
 	};
- 	return pContent;
- });
+
+	/**
+	 * یک فایل را به عنوان مقدار بار می‌کند
+	 * 
+	 * ورودی باید فایل جاوسکریپت باشه.
+	 * 
+	 * @param file
+	 * @returns
+	 */
+	pContent.prototype.upload = function(file) {
+		var fd = new FormData();
+		fd.append('file', file);
+		return $http.post(this.link, fd, {
+			transformRequest : angular.identity,
+			headers : {
+				'Content-Type' : undefined
+			}
+		});
+	};
+
+	return pContent;
+});
 
 /* jslint todo: true */
 /* jslint xxx: true */
@@ -794,10 +845,10 @@ angular.module('pluf')
  * @name PaginatorPage
  * @ngdoc factory
  * @memberof pluf
- * @description
- * ساختار داده‌ای را تعیین می‌کند که در صفحه بندی داده‌ها به کار گرفته می‌شود. تمام داده‌های که
- * از سرور ارسال می‌شود به صورت صفحه بندی است و تعداد آنها محدود است. این داده‌ها با
- * این ساختار داده‌ای در اختیار کاربران قرار می‌گیرد.
+ * @description ساختار داده‌ای را تعیین می‌کند که در صفحه بندی داده‌ها به کار
+ *              گرفته می‌شود. تمام داده‌های که از سرور ارسال می‌شود به صورت صفحه
+ *              بندی است و تعداد آنها محدود است. این داده‌ها با این ساختار
+ *              داده‌ای در اختیار کاربران قرار می‌گیرد.
  */
 .factory('PaginatorPage', function(PObject) {
 	var paginatorPage = function() {
@@ -805,13 +856,29 @@ angular.module('pluf')
 	};
 	paginatorPage.prototype = new PObject();
 	/**
-	 * تعیین می‌کند که آیا تعداد بیشتری صفحه وجود دارد یا اینکه به انتهای این صفحه‌ها رسیدیم
-	 *
+	 * تعیین می‌کند که آیا تعداد بیشتری صفحه وجود دارد یا اینکه به انتهای این
+	 * صفحه‌ها رسیدیم
+	 * 
 	 * @memberof PaginatorPage
 	 * @return {boolean} وجود صفحه بیشتر
 	 */
-	paginatorPage.prototype.hasMorePage = function() {
-		return this.response && (this.response.current_page < this.response.page_number);
+	paginatorPage.prototype.hasMore = function() {
+		return (this.current_page < this.page_number);
+	};
+	/**
+	 * تعیین اینکه صفحه اول هستیم
+	 * 
+	 * @memberof PaginatorPage
+	 * @return {boolean} صفحه اول بودن
+	 */
+	paginatorPage.prototype.isFirst = function() {
+		return this.current_page === 1;
+	};
+	paginatorPage.prototype.next = function() {
+		return this.current_page + 1;
+	};
+	paginatorPage.prototype.previous = function() {
+		return this.current_page - 1;
 	};
 	return paginatorPage;
 });
@@ -1530,18 +1597,20 @@ angular.module('pluf')
  * @ngdoc service
  * @name $act
  * @description
- *
- * در این مدل دو مفهوم کلی تعریف می‌شود که عبارتند از دستور و دستگیره. دستور یک عبارت رشته‌ای
- * است که یک عمل مجازی را تعیین می‌کند و دستگیره عملی است که در مقابل هر دستور اجرا
- * می‌شود. برای نمونه فرض کنید که یک دستور ورود به سیستم وجود دارد که نام آن به صورت زیر
- * تعیین شده است:
- *
+ * 
+ * در این مدل دو مفهوم کلی تعریف می‌شود که عبارتند از دستور و دستگیره. دستور یک
+ * عبارت رشته‌ای است که یک عمل مجازی را تعیین می‌کند و دستگیره عملی است که در
+ * مقابل هر دستور اجرا می‌شود. برای نمونه فرض کنید که یک دستور ورود به سیستم
+ * وجود دارد که نام آن به صورت زیر تعیین شده است:
+ * 
  * user.login
- *
- * فراخوانی این دستور منجر به اجرا شدن تمام دستگیره‌هایی مرتبط خواهد شد. تعریف این دستور و دستیگره‌های
- * آن در نمونه‌های زیر اورده شده است.
- *
+ * 
+ * فراخوانی این دستور منجر به اجرا شدن تمام دستگیره‌هایی مرتبط خواهد شد. تعریف
+ * این دستور و دستیگره‌های آن در نمونه‌های زیر اورده شده است.
+ * 
  * @example
+ * 
+ * <pre><code>
  * $act.command({
  * 	id: 'user.login',
  * 	label: 'login',
@@ -1555,77 +1624,95 @@ angular.module('pluf')
  * 		return $usr.login(credential);
  * 	}
  * });
- *
+ * </code></pre>
+ * 
  * @example
+ * 
+ * <pre><code>
  * // اجرای دستور
- * $act.execute('user.login',{
- * 	login: 'admin',
- * 	password: 'admin'
+ * $act.execute('user.login', {
+ * 	login : 'admin',
+ * 	password : 'admin'
  * });
+ * </code></pre>
  */
-.service('$act',function($q, $timeout, PCommand, PHandler) {
+.service('$act', function($q, $timeout, PCommand, PHandler) {
 	/*
 	 * فهرستی از تمام دستورهای تعریف شده را نگهداری می ‌کند
 	 */
 	this._commands = [];
 
 	/**
-	 * دستور معادل با شناسه ورودی را تعیین می‌کند. در صورتی که دستور معادل وجود نداشته باشد یک
-	 * خطا صادر خواهد شد.
-	 *
+	 * دستور معادل با شناسه ورودی را تعیین می‌کند. در صورتی که دستور معادل وجود
+	 * نداشته باشد یک خطا صادر خواهد شد.
+	 * 
 	 * @memberof $act
-	 * @param  {string} id شناسه دستور را تعیین می‌کند.
-	 * @return {promise(PCommand)}    [description]
+	 * @param {string}
+	 *            id شناسه دستور را تعیین می‌کند.
+	 * @return {promise(PCommand)} [description]
 	 */
 	this.getCommand = function(id) {
 		var def = $q.defer();
 		var scope = this;
 		$timeout(function() {
-			if(id in scope._commands){
+			if (id in scope._commands) {
 				def.resolve(scope._commands[id]);
 				return;
 			}
-			def.reject({status:404, code:10, message:'command not found'});
+			def.reject({
+				status : 404,
+				code : 10,
+				message : 'command not found'
+			});
 		}, 1);
 		return def.promise;
 	};
 
 	/**
-	 * یک دستور جدید به سیستم اضافه می‌کند. در صورتی که دستوری با شناسه دستور قبلا در سیستم
-	 * موجود باشد، دستور جدید با مورد قبل جایگزین خواهد شد.
-	 *
-	 * @param  {Object} command یک ساختار داده‌ای که پارامترهای دستور را تعیین می‌‌کند
+	 * یک دستور جدید به سیستم اضافه می‌کند. در صورتی که دستوری با شناسه دستور
+	 * قبلا در سیستم موجود باشد، دستور جدید با مورد قبل جایگزین خواهد شد.
+	 * 
+	 * @param {Object}
+	 *            command یک ساختار داده‌ای که پارامترهای دستور را تعیین می‌‌کند
 	 * @return {$act} ساختار داده‌ای دستور
 	 */
 	this.command = function(cmdData) {
 		// دستور باید شناسه داشته باشد
-		if(!cmdData.id){
-			//TODO: maso, 1395: پیام مناسبی برای خطا ایجاد شود.
-			throw {status:404, code:11, message:'Command id is empty'};
+		if (!cmdData.id) {
+			// TODO: maso, 1395: پیام مناسبی برای خطا ایجاد شود.
+			throw {
+				status : 404,
+				code : 11,
+				message : 'Command id is empty'
+			};
 		}
 		var cmd;
-		if(cmdData.id in this._commands){
+		if (cmdData.id in this._commands) {
 			// TODO: maso, 1395: یه پیام اخطار که پیام وجود داشته
 			cmd = this._commands[cmdData.id];
+			cmd.setData(cmdData);
 		} else {
 			cmd = new PCommand(cmdData);
+			this._commands[cmd.id] = cmd;
 		}
-		this._commands[cmd.id] = cmd;
 		return this;
 	};
 
 	/**
 	 * یک دستگیریه را به فهرست دستگیره‌های یک دستور اضافه می‌کند.
-	 *
-	 * @param {object} ساختار داده‌ای که یک دستیگره را توصیف می‌کند.
+	 * 
+	 * @param {object}
+	 *            ساختار داده‌ای که یک دستیگره را توصیف می‌کند.
 	 * @return {$act} خود سیستم مدیریت دستورها را برمی‌گرداند
 	 */
 	this.handler = function(handData) {
 		var cmd;
-		if(handData.id in this._commands){
-			cmd = this._commands[handData.id];
+		if (handData.command in this._commands) {
+			cmd = this._commands[handData.command];
 		} else {
-			cmd = new PCommand(handData);
+			cmd = new PCommand({
+				id : handData.command
+			});
 			this._commands[cmd.id] = cmd;
 		}
 		cmd.handler(new PHandler(handData));
@@ -1633,12 +1720,14 @@ angular.module('pluf')
 	};
 
 	/**
-	 * یک دستور را به صورت غیر همزمان اجرا می‌کند. اجرای دستور معادل با این است که تمام دستگیره‌های
-	 * ان به ترتیب اجرا شوند. امکان ارسال پارامتر به تمام دستگیره‌ها وجود دارد. برای این کار کافی است
-	 * که پارامترهای اضافه را بعد از پارامتر دستور وارد کنید. برای نمونه فرض کنید که دستور ورود کاربر
-	 * به صورت زیر تعریف شده است:
-	 *
-	 * <pre><command>
+	 * یک دستور را به صورت غیر همزمان اجرا می‌کند. اجرای دستور معادل با این است
+	 * که تمام دستگیره‌های ان به ترتیب اجرا شوند. امکان ارسال پارامتر به تمام
+	 * دستگیره‌ها وجود دارد. برای این کار کافی است که پارامترهای اضافه را بعد از
+	 * پارامتر دستور وارد کنید. برای نمونه فرض کنید که دستور ورود کاربر به صورت
+	 * زیر تعریف شده است:
+	 * 
+	 * <pre>
+	 * &lt;command&gt;
 	 * 	$act.command({
 	 * 		id: 'user.login',
 	 * 		label: 'login'
@@ -1648,20 +1737,24 @@ angular.module('pluf')
 	 * 			// Do something
 	 * 		}
 	 * 	})
-	 * </command></pre>
-	 *
+	 * &lt;/command&gt;
+	 * </pre>
+	 * 
 	 * در این صورت به سادگی می‌توان این دستور را به صورت زیر فراخوانی کرد:
-	 *
-	 * <pre><command>
+	 * 
+	 * <pre>
+	 * &lt;command&gt;
 	 * 	$act.execute('user.login',{
 	 * 		login: 'user login',
 	 * 		password: 'user password'
 	 * 	});
-	 * </command></pre>
-	 *
+	 * &lt;/command&gt;
+	 * </pre>
+	 * 
 	 * @memberof $act
-	 * @param  {string} command دستور
-	 * @return {promise}   نتیجه اجرای دستورها
+	 * @param {string}
+	 *            command دستور
+	 * @return {promise} نتیجه اجرای دستورها
 	 */
 	this.execute = function(command) {
 		var def = $q.defer();
@@ -1678,32 +1771,19 @@ angular.module('pluf')
 			}, 1);
 			return def.promise;
 		}
-		
+
 		/*
 		 * اجرا یک عمل
 		 * 
-		 * یک عمل ساختار داده‌ای است که در آن خصوصیت‌هایی برای تعیین مدل اجرا 
+		 * یک عمل ساختار داده‌ای است که در آن خصوصیت‌هایی برای تعیین مدل اجرا
 		 * تعیین شده است. مثلا یک مدل عمل به صورت زیر قابل تعریف است:
 		 * 
-		 * <pre>
-		 * 	<code>
-		 * 		var action1={
-		 * 			lable: 'label',
-		 * 			text: 'this is an example action',
-		 * 			type: 'command',
-		 * 			value: 'user.logout'
-		 *		};
-		 * 	</code>
-		 * </pre>
+		 * <pre> <code> var action1={ lable: 'label', text: 'this is an example
+		 * action', type: 'command', value: 'user.logout' }; </code> </pre>
 		 * 
-		 * <ul>
-		 * 	<li>command</li>
-		 * 	<li>link</li>
-		 * 	<li>state</li>
-		 * </ul>
+		 * <ul> <li>command</li> <li>link</li> <li>state</li> </ul>
 		 */
 		// XXX: maso, 1395: اجرای این مدل عمل‌ها باید اضافه شود
-		
 		// خطای یافت نشدن دستور
 		def.reject({
 			message : 'Command not found :' + command,
