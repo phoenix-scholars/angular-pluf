@@ -4,7 +4,7 @@
 'use strict';
 
 
-angular.module('pluf.wiki')
+angular.module('pluf')
 /**
 * @ngdoc service
 * @name $help

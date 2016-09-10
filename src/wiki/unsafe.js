@@ -2,7 +2,7 @@
 /* jslint xxx: true */
 /* jshint -W100 */
 'use strict';
-angular.module('pluf.wiki')
+angular.module('pluf')
 /**
  * فیلتر نمایش صفحه‌ها را ایجاد می‌کند.
  */
