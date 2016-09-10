@@ -13,7 +13,7 @@ describe('Core module test: PProfile', function() {
 	});
 
 	// check to see if it has the expected function
-	it('Check Banke API', function() {
+	it('Check PBank API', function() {
 		var bank = new PBank();
 		expect(angular.isFunction(bank.update)).toBe(true);
 		expect(angular.isFunction(bank.remove)).toBe(true);

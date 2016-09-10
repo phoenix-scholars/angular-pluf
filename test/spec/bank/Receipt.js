@@ -13,7 +13,7 @@ describe('Bank module test: PReceipt', function() {
 	});
 
 	// check to see if it has the expected function
-	it('Check Receipt API', function() {
+	it('Check PReceipt API', function() {
 		var receipt = new PReceipt();
 		expect(angular.isFunction(receipt.update)).toBe(true);
 		expect(angular.isFunction(receipt.remove)).toBe(true);

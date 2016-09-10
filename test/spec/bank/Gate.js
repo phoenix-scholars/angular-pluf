@@ -13,7 +13,7 @@ describe('Bank module test: PGate', function() {
 	});
 
 	// check to see if it has the expected function
-	it('Check Banke API', function() {
+	it('Check PGate API', function() {
 		var gate = new PGate();
 		expect(angular.isFunction(gate.update)).toBe(true);
 		expect(angular.isFunction(gate.remove)).toBe(true);

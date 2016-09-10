@@ -13,10 +13,16 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PReceipt', function() {
-	var pReceipt = function() {
+.factory('PReceipt', function(PObject) {
 
+	/*
+	 * Creates new instance
+	 */
+	var pReceipt = function() {
+		PObject.apply(this, arguments);
 	};
+	// Extends it from PObject
+	pReceipt.prototype = new PObject();
 
 	pReceipt.prototype.update = function() {
 

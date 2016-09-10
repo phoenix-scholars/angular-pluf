@@ -13,10 +13,16 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PGate', function() {
-	var pGate = function() {
+.factory('PGate', function(PObject) {
 
+	/*
+	 * Creates new instance
+	 */
+	var pGate = function() {
+		PObject.apply(this, arguments);
 	};
+	// Extends it from PObject
+	pGate.prototype = new PObject();
 
 	pGate.prototype.update = function() {
 
