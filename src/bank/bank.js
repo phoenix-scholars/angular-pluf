@@ -59,7 +59,7 @@ angular.module('pluf')
  */
 .service(
 		'$bank',
-		function($http, $q, PaginatorPage, PBank, PGate, PReceipt) {
+		function($http, $q, PaginatorPage, PBank, PGate, PReceipt,$httpParamSerializerJQLike) {
 			var _banks = {};
 			var _gates = {};
 			var _receipts = {};
@@ -72,6 +72,7 @@ angular.module('pluf')
 				return paginatorParam.getParameter();
 			}
 			
+			// TODO: maso, 1395: replace with PObjectCache
 			/*
 			 * گرفتن یک محتوی
 			 */
@@ -130,8 +131,17 @@ angular.module('pluf')
 			 * createdreceipt
 			 * 
 			 */
-			this.createReceipt = function() {
-				// XXX: maso, 1395
+			this.createReceipt = function(receipt) {
+				return $http({
+					method: 'POST',
+					url: '/api/bank/receipt/new',
+					data : $httpParamSerializerJQLike(receipt),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(res){
+					return _retreceipt(res.data.id, res.data);
+				});
 			};
 
 			/**
@@ -142,20 +152,7 @@ angular.module('pluf')
 			 * createdreceipt
 			 * 
 			 */
-			this.receipt = function() {
-				// TODO: maso, 1395
-
-			};
-
-			/**
-			 * Gets receipt detail
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PReceipt>
-			 * createdreceipt
-			 * 
-			 */
-			this.receiptById = function(id) {
+			this.receipt = function(id) {
 				var receipt = _receipt(id);
 				if(receipt){
 					var deferred = $q.defer();
@@ -171,6 +168,18 @@ angular.module('pluf')
 			};
 
 			/**
+			 * Gets receipt detail
+			 * 
+			 * @memberof $bank
+			 * @return Promise<PReceipt>
+			 * createdreceipt
+			 * 
+			 */
+			this.receiptById = function(id) {
+				return this.receipt(id);
+			};
+
+			/**
 			 * Lists all receipts
 			 * 
 			 * @memberof $bank
@@ -178,8 +187,22 @@ angular.module('pluf')
 			 * createdreceipt
 			 * 
 			 */
-			this.receipts = function() {
-
+			this.receipts = function(paginatorParam) {
+				return $http({
+					method : 'GET',
+					url : '/api/bank/receipt/find',
+					params : _paginatorParams(paginatorParam)
+				}).then(
+						function(res) {
+							var data = res.data;
+							var page = new PaginatorPage(data);
+							page.items = [];
+							for (var i = 0; i < data.counts; i++) {
+								page.items.push(_retreceipt(
+										data.items[i].type, data.items[i]));
+							}
+							return page;
+						});
 			};
 
 			/**
@@ -188,8 +211,17 @@ angular.module('pluf')
 			 * @memberof $bank
 			 * @return Promise<PGate> created gate
 			 */
-			this.createGate = function() {
-
+			this.createGate = function(gate) {
+				return $http({
+					method: 'POST',
+					url: '/api/bank/backend/new',
+					data : $httpParamSerializerJQLike(gate),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(res){
+					return _retgate(res.data.id, res.data);
+				});
 			};
 
 			/**
