@@ -2,6 +2,7 @@
 /* jslint xxx: true */
 /* jshint -W100 */
 'use strict';
+
 describe('Core module test: user authentication', function() {
 	var originalTimeout;
 	var $rootScope;

@@ -134,7 +134,6 @@ angular.module('pluf')
 	 * می‌شود.
 	 *
 	 * @memberof PUser
-	 * 
 	 * @return {boolean} حالت مدیر بودن کاربر
 	 */
 	pUser.prototype.isAdministrator = function() {
