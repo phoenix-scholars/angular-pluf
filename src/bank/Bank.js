@@ -32,7 +32,7 @@ angular.module('pluf')
  * 
  */
 .factory('PBank', function(PObject) {
-	
+
 	/*
 	 * Creates new instance
 	 */
@@ -41,19 +41,20 @@ angular.module('pluf')
 	};
 	// Extends it from PObject
 	pBank.prototype = new PObject();
-	
+
 	/**
-	 * Updates bank 
+	 * Updates bank
 	 */
 	pBank.prototype.update = function() {
-
+		// NOTE: Imposible
 	};
-	
+
 	/**
 	 * remove bank
 	 */
 	pBank.prototype.remove = function() {
-
+		// NOTE: Imposible
 	};
+	//
 	return pBank;
 });

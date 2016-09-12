@@ -65,6 +65,10 @@ describe('Bank module test: $bank', function() {
 	/*
 	 * جستجو گرفتن بانک تست شده است.
 	 */
+
+	/***************************************************************************
+	 * Bank
+	 **************************************************************************/
 	it('find bank with params', function(done) {
 		var pag = new PaginatorParameter();
 		$bank.banks(pag).then(function(banks) {
@@ -203,7 +207,7 @@ describe('Bank module test: $bank', function() {
 		expect($httpBackend.flush).not.toThrow();
 		$rootScope.$apply();
 	});
-	
+
 	/***************************************************************************
 	 * Receipt
 	 **************************************************************************/

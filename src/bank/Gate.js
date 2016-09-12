@@ -31,7 +31,7 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PGate', function(PObject) {
+.factory('PGate', function(PObject, $http, $httpParamSerializerJQLike) {
 
 	/*
 	 * Creates new instance
@@ -43,11 +43,30 @@ angular.module('pluf')
 	pGate.prototype = new PObject();
 
 	pGate.prototype.update = function() {
-
+		var scope = this;
+		return $http({
+			method : 'POST',
+			url : '/api/bank/backend/' + this.id,
+			data : $httpParamSerializerJQLike(this),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
+		}).then(function(res) {
+			scope.setData(res.data);
+			return scope;
+		});
 	};
 
 	pGate.prototype.remove = function() {
-
+		var scope = this;
+		return $http({
+			method : 'DELETE',
+			url : '/api/bank/backend/' + this.id,
+		}).then(function(res) {
+			scope.setData(res.data);
+			scope.id = null;
+			return scope;
+		});
 	};
 	return pGate;
 });
