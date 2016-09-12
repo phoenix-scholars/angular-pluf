@@ -1,3 +1,527 @@
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @ngdoc service
+ * @name $act
+ * @description
+ * 
+ * 
+ */
+.factory('PBank', function(PObject) {
+
+	/*
+	 * Creates new instance
+	 */
+	var pBank = function() {
+		PObject.apply(this, arguments);
+	};
+	// Extends it from PObject
+	pBank.prototype = new PObject();
+
+	/**
+	 * Updates bank
+	 */
+	pBank.prototype.update = function() {
+		// NOTE: Imposible
+	};
+
+	/**
+	 * remove bank
+	 */
+	pBank.prototype.remove = function() {
+		// NOTE: Imposible
+	};
+	//
+	return pBank;
+});
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @ngdoc service
+ * @name $act
+ * @description
+ * 
+ * 
+ */
+.factory('PGate', function(PObject, $http, $httpParamSerializerJQLike) {
+
+	/*
+	 * Creates new instance
+	 */
+	var pGate = function() {
+		PObject.apply(this, arguments);
+	};
+	// Extends it from PObject
+	pGate.prototype = new PObject();
+
+	pGate.prototype.update = function() {
+		var scope = this;
+		return $http({
+			method : 'POST',
+			url : '/api/bank/backend/' + this.id,
+			data : $httpParamSerializerJQLike(this),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
+		}).then(function(res) {
+			scope.setData(res.data);
+			return scope;
+		});
+	};
+
+	pGate.prototype.remove = function() {
+		var scope = this;
+		return $http({
+			method : 'DELETE',
+			url : '/api/bank/backend/' + this.id,
+		}).then(function(res) {
+			scope.setData(res.data);
+			scope.id = null;
+			return scope;
+		});
+	};
+	return pGate;
+});
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @ngdoc service
+ * @name $act
+ * @description
+ * 
+ * 
+ */
+.factory('PReceipt', function(PObject, $http, $httpParamSerializerJQLike) {
+
+	/*
+	 * Creates new instance
+	 */
+	var pReceipt = function() {
+		PObject.apply(this, arguments);
+	};
+	// Extends it from PObject
+	pReceipt.prototype = new PObject();
+
+	pReceipt.prototype.update = function() {
+		var scope = this;
+		return $http({
+			method : 'POST',
+			url : '/api/bank/receipt/' + this.id,
+			data : $httpParamSerializerJQLike(this),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
+		}).then(function(res) {
+			scope.setData(res.data);
+			return scope;
+		});
+	};
+
+	pReceipt.prototype.remove = function() {
+		var scope = this;
+		return $http({
+			method : 'DELETE',
+			url : '/api/bank/receipt/' + this.id,
+		}).then(function(res) {
+			scope.setData(res.data);
+			scope.id = null;
+			return scope;
+		});
+	};
+	return pReceipt;
+});
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @ngdoc service
+ * @name $bank
+ * @description
+ * 
+ * سرویس انجام کارهای بانکی.
+ * 
+ * مهم‌ترین کاری که برای این سرویس در نظر گرفته شده است ایجاد یک پرداخت جدید در
+ * سیستم است.
+ * 
+ * <pre><code>
+ * // اجرای دستور
+ * $bank.receipt({...}).then(function(receipt) {
+ * 	// handle new receipt
+ * });
+ * </code></pre>
+ * 
+ * بعد از اینکه پرداخت در سیستم ایجاد شد کاربر می تونه برای پرداخت آن از درگاه
+ * تعیین شده اقدام کنه.
+ * 
+ * Gate way link is placed in receipt.
+ * 
+ * <pre><code>
+ * $bank.receipt({...}).then(function(receipt) {
+ * 	var ulr = receipt.callUrl;
+ * });
+ * </code></pre>
+ * 
+ * Users must go to callUrl to pay.
+ * 
+ * A receipt is accessable with secure_id.
+ * 
+ */
+.service(
+		'$bank',
+		function($http, $q, PaginatorPage, PBank, PGate, PReceipt,$httpParamSerializerJQLike) {
+			var _banks = {};
+			var _gates = {};
+			var _receipts = {};
+
+			// TODO: maso, 1395: add to PObject
+			function _paginatorParams(paginatorParam) {
+				if (angular.isUndefined(paginatorParam) || !angular.isFunction(paginatorParam.getParameter)) {
+					return {};
+				}
+				return paginatorParam.getParameter();
+			}
+			
+			// TODO: maso, 1395: replace with PObjectCache
+			/*
+			 * گرفتن یک محتوی
+			 */
+			function _bank(id) {
+				return _banks[id];
+			}
+			/*
+			 * بازیابی یک محتوی نامدار
+			 */
+			function _retbank(id, data) {
+				var bank = _banks[id];
+				if (bank) {
+					bank.setData(data);
+				} else {
+					bank = new PBank(data);
+					_banks[id] = bank;
+				}
+				return bank;
+			}
+			
+			function _gate(id){
+				return _gates[id];
+			}
+
+			function _retgate(id, data) {
+				var gate = _gates[id];
+				if (gate) {
+					gate.setData(data);
+				} else {
+					gate = new PGate(data);
+					_gates[id] = gate;
+				}
+				return gate;
+			}
+			
+			function _receipt(id){
+				return _receipts[id];
+			}
+			
+			function _retreceipt(id, data) {
+				var receipt = _receipts[id];
+				if (receipt) {
+					receipt.setData(data);
+				} else {
+					receipt = new PReceipt(data);
+					_receipts[id] = receipt;
+				}
+				return receipt;
+			}
+			
+			/**
+			 * Creates new receipt
+			 * 
+			 * @memberof $bank
+			 * @return Promise<PReceipt>
+			 * createdreceipt
+			 * 
+			 */
+			this.createReceipt = function(receipt) {
+				return $http({
+					method: 'POST',
+					url: '/api/bank/receipt/new',
+					data : $httpParamSerializerJQLike(receipt),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(res){
+					return _retreceipt(res.data.id, res.data);
+				});
+			};
+
+			/**
+			 * Gets receipt detail by secure id
+			 * 
+			 * @memberof $bank
+			 * @return Promise<PReceipt>
+			 * createdreceipt
+			 * 
+			 */
+			this.receipt = function(id) {
+				var receipt = _receipt(id);
+				if(receipt){
+					var deferred = $q.defer();
+					deferred.resolve(receipt);
+					return deferred.promise;
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/bank/receipt/'+id,
+				}).then(function(res){
+					return _retreceipt(res.data.id, res.data);
+				});
+			};
+
+			/**
+			 * Gets receipt detail
+			 * 
+			 * @memberof $bank
+			 * @return Promise<PReceipt>
+			 * createdreceipt
+			 * 
+			 */
+			this.receiptById = function(id) {
+				return this.receipt(id);
+			};
+
+			/**
+			 * Lists all receipts
+			 * 
+			 * @memberof $bank
+			 * @return Promise<PaginatorPage<PReceipt>>
+			 * createdreceipt
+			 * 
+			 */
+			this.receipts = function(paginatorParam) {
+				return $http({
+					method : 'GET',
+					url : '/api/bank/receipt/find',
+					params : _paginatorParams(paginatorParam)
+				}).then(
+						function(res) {
+							var data = res.data;
+							var page = new PaginatorPage(data);
+							page.items = [];
+							for (var i = 0; i < data.counts; i++) {
+								page.items.push(_retreceipt(
+										data.items[i].type, data.items[i]));
+							}
+							return page;
+						});
+			};
+
+			/**
+			 * Creates new gate
+			 * 
+			 * @memberof $bank
+			 * @return Promise<PGate> created gate
+			 */
+			this.createGate = function(gate) {
+				return $http({
+					method: 'POST',
+					url: '/api/bank/backend/new',
+					data : $httpParamSerializerJQLike(gate),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(res){
+					return _retgate(res.data.id, res.data);
+				});
+			};
+
+			/**
+			 * Gets a gate
+			 * 
+			 * @memberof $bank
+			 * @return Promise<PGate> a gate
+			 */
+			this.gate = function(id) {
+				var gate = _gate(id);
+				if(gate){
+					var deferred = $q.defer();
+					deferred.resolve(gate);
+					return deferred.promise;
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/bank/backend/'+id,
+				}).then(function(res){
+					return _retgate(res.data.id, res.data);
+				});
+			};
+
+			/**
+			 * Lists all gates
+			 * 
+			 * @memberof $bank
+			 * @param paginatorParam
+			 * @return Promise<PaginatorPage<PGate>> gates list
+			 */
+			this.gates = function(paginatorParam) {
+				return $http({
+					method : 'GET',
+					url : '/api/bank/backend/find',
+					params : _paginatorParams(paginatorParam)
+				}).then(
+						function(res) {
+							var data = res.data;
+							var page = new PaginatorPage(data);
+							page.items = [];
+							for (var i = 0; i < data.counts; i++) {
+								page.items.push(_retgate(
+										data.items[i].type, data.items[i]));
+							}
+							return page;
+						});
+			};
+
+			/**
+			 * Gets bank detail
+			 * 
+			 * @memberof $bank
+			 * @return Promise<PBank>
+			 */
+			this.bank = function(type) {
+				var bank = _bank(type);
+				if(bank){
+					var deferred = $q.defer();
+					deferred.resolve(bank);
+					return deferred.promise;
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/bank/engine/'+type,
+				}).then(function(res){
+					bank = _retbank(res.data.type, res.data);
+					return bank;
+				});
+			};
+			
+			/**
+			 * Gets bank list
+			 * 
+			 * 
+			 * @memberof $bank
+			 * @return Promise<PaginatorPage<PGate>> gates list
+			 */
+			this.banks = function(paginatorParam) {
+				return $http({
+					method : 'GET',
+					url : '/api/bank/engine/find',
+					params : _paginatorParams(paginatorParam)
+				}).then(
+						function(res) {
+							var data = res.data;
+							var page = new PaginatorPage(data);
+							page.items = [];
+							for (var i = 0; i < data.counts; i++) {
+								page.items.push(_retbank(
+										data.items[i].type, data.items[i]));
+							}
+							return page;
+						});
+			};
+
+		});
 /* jslint todo: true */
 /* jslint xxx: true */
 /* jshint -W100 */
@@ -2713,146 +3237,12 @@ angular.module('pluf')
 /* jslint todo: true */
 /* jslint xxx: true */
 /* jshint -W100 */
+'use strict';
 //
-// 'use strict';
-// /**
-//  * امکانات اولیه برای مکان‌یابی را در اختیار کاربران قرار می‌دهد.
-//  */
-// angular.module('pluf.jahanjoo', ['pluf'])
-// /**
-//  * ابزارهای مورد نیاز برای یک برچسب را ایجاد می‌کند.
-//  */
-// .factory('PTag', function(PObject, PException) {
-//   var pTag = function() {
-//     pTag.apply(this, arguments);
-//   };
-//   pTag.prototype = new PObject();
-//   return pTag;
-// })
-// /**
-//  * ابزارهای موردنیاز برای تعیین یک رای را ایجاد می‌کند.
-//  */
-// .factory('PVote', function(PObject, PException) {
-//   var pVote = function() {
-//     PObject.apply(this, arguments);
-//   };
-//   pVote.prototype = new PObject();
-//   return pVote;
-// })
-// /**
-//  * ساختار داده‌ای یک مکان را ایجاد می‌کند. علاوه بر این ابزارهای اولیه مورد نیاز
-//  * برای دستکاری مکان را نیز در اختیار می‌گذارد
-//  */
-// .factory('PLocation', function($http, PObject, PException) {
-//   /**
-//    * یک نمونه جدید از این کلاس ایجاد می‌کند.
-//    */
-//   var pLocation = function() {
-//     PObject.apply(this, arguments);
-//   };
-//   pLocation.prototype = new PObject();
-//
-//   /**
-//    * این مکان را از سیستم حذف می‌کند.
-//    */
-//   pLocation.prototype.remove = function() {
-//     var scope = this;
-//     return $http({
-//       method: 'DELETE',
-//       url: '/api/jayab/location/' + this.id,
-//     }).then(function(res) {
-//       scope.id = 0;
-//       return scope;
-//     }, function(res) {
-//       throw new PException('fail to delete the location.', res.data);
-//     });
-//   }
-//   // returns module
-//   return pLocation;
-// })
-// /**
-//  * فراخوانی‌ها اولیه سیستم، مانند جستجو و فهرست کردن را فراهم می‌کند.
-//  */
-// .service(
-//         '$jlocation',
-//         function($rootScope, $http, $q, $window, $usr, PLocation,
-//                 PaginatorPage, PException) {
-//           this._pool = [];
-//           /**
-//            * یک نمونه جدید از این کلاس ایجاد کرده و اون رو توی مخزن می‌زاره
-//            */
-//           this.ret = function(d) {
-//             if (d.id in this._pool) {
-//               var t = this._pool[d.id];
-//               t.setData(d);
-//               return t;
-//             }
-//             var t = new PLocation(d);
-//             this._pool[t.id] = t;
-//             return t;
-//           }
-//           /**
-//            * گرفتن اطلاعات یک مکان
-//            */
-//           this.location = function(i) {
-//             if (i in this._pool) {
-//               var d = $q.defer();
-//               d.resolve(this._pool[i]);
-//               return d.promise;
-//             }
-//             var scope = this;
-//             return $http({
-//               method: 'GET',
-//               url: '/api/jayab/location/' + i,
-//             }).then(function(res) {
-//               return scope.ret(res.data);
-//             }, function(res) {
-//               throw new PException('fail to get locations.', res.data);
-//             });
-//           }
-//           /**
-//            * فهرستی از تمام مکان‌های اضافه شده در سیستم.
-//            */
-//           this.locations = function(p) {
-//             var scope = this;
-//             return $http({
-//               method: 'GET',
-//               url: '/api/jayab/location/list',
-//               params: p.getParameter(),
-//             }).then(function(res) {
-//               var page = new PaginatorPage(res.data);
-//               var items = [];
-//               for (var i = 0; i < page.counts; i++) {
-//                 var t = scope.ret(page.items[i]);
-//                 items.push(t);
-//               }
-//               page.items = items;
-//               return page;
-//             }, function(res) {
-//               throw new PException('fail to get locations.', res.data);
-//             });
-//           }
-//           /**
-//            * یک مکان جدید را در سیستم تعریف می‌کند این مکان باید به صورت زیر
-//            * ایجاد بشه: { name: title, description: description, latitude: lat,
-//            * longitude: long, }
-//            */
-//           this.add = function(p) {
-//             var scope = this;
-//             return $http({
-//               method: 'POST',
-//               url: '/api/jayab/location/create',
-//               params: p,
-//               headers: {
-//                 'Content-Type': 'application/x-www-form-urlencoded'
-//               }
-//             }).then(function(res) {
-//               return scope.ret(res.data);
-//             }, function(res) {
-//               throw new PException('fail to add location.', res.data);
-//             });
-//           }
-//         });
+///**
+// * امکانات اولیه برای مکان‌یابی را در اختیار کاربران قرار می‌دهد.
+// */
+//angular.module('pluf.jahanjoo', [ 'pluf' ])
 
 /* jslint todo: true */
 /* jslint xxx: true */
@@ -3617,31 +4007,14 @@ angular.module('pluf.social')
 /* jshint -W100 */
 'use strict';
 
-/**
- * @ngdoc module
- * @name pluf.help
- *
- * @description
- * ماژول pluf.help مجموعه‌ای از امکانات را برای پیاده‌سازی یک ویکی فراهم می‌کند.
- * عناصر اصلی این ماژول Page و Book است و عملیاتی مدیریت آن‌ها مانند ایجاد، ویرایش، حذف و دریافت
- * آنها در این ماژول قرار داده شده است.
- */
-angular.module('pluf.wiki', ['pluf']);
-
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
-'use strict';
-
-angular.module('pluf.wiki')
+angular.module('pluf')
 /**
  * @ngdoc factory
  * @name PWikiBook
  * @memberof wiki
- *
- * @description
- * ساختار داده‌ای یک کتاب به همراه اطلاعات کامل صفحه.
- *
+ * 
+ * @description ساختار داده‌ای یک کتاب به همراه اطلاعات کامل صفحه.
+ * 
  * @attr {Integer} id شناسه کتاب
  * @attr {String} title عنوان کتاب
  * @attr {String} state وضعیت کتاب
@@ -3650,178 +4023,194 @@ angular.module('pluf.wiki')
  * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد کتاب
  * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
-	.factory('PWikiBook', function(PObject, PException, PWikiPageItem, PaginatorPage, $http, $httpParamSerializerJQLike, $q, $timeout) {
+.factory(
+		'PWikiBook',
+		function(PObject, PException, PWikiPageItem, PaginatorPage, $http,
+				$httpParamSerializerJQLike, $q, $timeout) {
 
-	var pWikiBook = function() {
-		PObject.apply(this, arguments);
-	};
+			var pWikiBook = function() {
+				PObject.apply(this, arguments);
+			};
 
-	pWikiBook.prototype = new PObject();
+			pWikiBook.prototype = new PObject();
 
-	/**
-	 * صفحه با شناسه داده شده را از فهرست صفحات کتاب بازیابی می‌کند.
-	 *
-	 * @private
-	 * @memberof PWikiBook
-	 * @param id شناسه صفحه
-	 * @param data داده‌های صفحه
-	 * @returns {PWikiPageItem}
-	 */
-	pWikiBook.prototype._retItem = function(id, data) {
-		var item = null;
-		for ( var i in this.items) {
-			if (this.items[i].id === id) {
-				item = this.items[i];
-				break;
-			}
-		}
-		if (!item) {
-			item = new PWikiPageItem(data);
-			this.items.push(item);
-		}
-		item.setData(data);
-		return item;
-	};
+			/**
+			 * صفحه با شناسه داده شده را از فهرست صفحات کتاب بازیابی می‌کند.
+			 * 
+			 * @private
+			 * @memberof PWikiBook
+			 * @param id
+			 *            شناسه صفحه
+			 * @param data
+			 *            داده‌های صفحه
+			 * @returns {PWikiPageItem}
+			 */
+			pWikiBook.prototype._retItem = function(id, data) {
+				var item = null;
+				for ( var i in this.items) {
+					if (this.items[i].id === id) {
+						item = this.items[i];
+						break;
+					}
+				}
+				if (!item) {
+					item = new PWikiPageItem(data);
+					this.items.push(item);
+				}
+				item.setData(data);
+				return item;
+			};
 
-	/**
-	 * اولین صفحه کتاب را برمی‌گرداند
-	 *
-	 * @memberof PWikiBook
-	 * @returns {promise(PWikiPageItem)} یک PageItem مربوط به صفحه اول کتاب
-	 */
-	pWikiBook.prototype.firstPage = function() {
-		var def = $q.defer();
-		var scope = this;
-		$timeout(function() {
-			def.resolve(scope.items[0]);
-		}, 1);
-		return def.promise;
-	};
+			/**
+			 * اولین صفحه کتاب را برمی‌گرداند
+			 * 
+			 * @memberof PWikiBook
+			 * @returns {promise(PWikiPageItem)} یک PageItem مربوط به صفحه اول
+			 *          کتاب
+			 */
+			pWikiBook.prototype.firstPage = function() {
+				var def = $q.defer();
+				var scope = this;
+				$timeout(function() {
+					def.resolve(scope.items[0]);
+				}, 1);
+				return def.promise;
+			};
 
-	/**
-	 * فهرستی از صفحات کتاب را برمی‌گرداند
-	 *
-	 * @memberof PWikiBook
-	 * @returns {promise(PaginatedPage<PWikiPageItem>)}
-	 *  فهرستی صفحه بندی شده از PageItem های مربوط به صفحات کتاب
-	 */
-	pWikiBook.prototype.pages = function() {
-		var scope = this;
-		return $http({
-			method: 'GET',
-			url: '/api/wiki/book/' + scope.id + '/pages',
-		}).then(function(res) {
-			scope.items = [];
-			for (var i = 0; i < res.data.length; i++) {
-				scope._retItem(res.data[i].id, res.data[i]);
-			}
-			return scope.items;
-		}, function(data) {
-			throw new PException(data);
+			/**
+			 * فهرستی از صفحات کتاب را برمی‌گرداند
+			 * 
+			 * @memberof PWikiBook
+			 * @returns {promise(PaginatedPage<PWikiPageItem>)} فهرستی صفحه
+			 *          بندی شده از PageItem های مربوط به صفحات کتاب
+			 */
+			pWikiBook.prototype.pages = function() {
+				var scope = this;
+				return $http({
+					method : 'GET',
+					url : '/api/wiki/book/' + scope.id + '/pages',
+				}).then(function(res) {
+					scope.items = [];
+					for (var i = 0; i < res.data.length; i++) {
+						scope._retItem(res.data[i].id, res.data[i]);
+					}
+					return scope.items;
+				}, function(data) {
+					throw new PException(data);
+				});
+			};
+			/**
+			 * یک صفحه را به کتاب اضافه می‌کند
+			 * 
+			 * @memberof PWikiBook
+			 * @param {PWikiPage}
+			 *            page صفحه‌ای که به کتاب اضافه خواهد شد
+			 * @returns {promise(PWikiBook)} خود کتاب را که صفحه جدید به آن
+			 *          اضافه شده است برمی‌گرداند
+			 */
+			pWikiBook.prototype.addPage = function(page) {
+				if (page.isAnonymous()) {
+					var dif = $q.defer();
+					$timeout(function() {
+						var ex = new PException({
+							message : 'Page id is null!'
+						});
+						dif.reject(ex);
+					}, 1);
+					return dif.promise;
+				}
+				var scope = this;
+				return $http({
+					method : 'POST',
+					url : '/api/wiki/book/' + scope.id + '/page/' + page.id,
+				}).then(function() {
+					return scope;
+				});
+			};
+
+			/**
+			 * یک صفحه را از کتاب حذف می‌کند
+			 * 
+			 * @memberof PWikiBook
+			 * @param {PWikiPage}
+			 *            page صفحه‌ای که باید از کتاب حذف شود
+			 * @returns {promise(PWikiPage)} صفحه حذف شده از کتاب را برمی‌گرداند
+			 */
+			pWikiBook.prototype.removePage = function(page) {
+				if (page.isAnonymous()) {
+					var dif = $q.defer();
+					$timeout(function() {
+						var ex = new PException({
+							message : 'Page id is null!'
+						});
+						dif.reject(ex);
+					}, 1);
+					return dif.promise;
+				}
+				var scope = this;
+				return $http({
+					method : 'DELETE',
+					url : '/api/wiki/book/' + scope.id + '/page/' + page.id,
+				}).then(function() {
+					return scope;
+				});
+			};
+
+			/**
+			 * اطلاعات یک کتاب را به‌روزرسانی می‌کند.
+			 * 
+			 * @memberof PWikiBook
+			 * @param {struct}
+			 *            b ساختاری حاوی اطلاعاتی از کتاب که باید به‌روزرسانی
+			 *            شود
+			 * @returns {promise(PWikiBook)} کتاب با اطلاعات به‌روزرسانی شده
+			 */
+			pWikiBook.prototype.update = function(b) {
+				var scope = this;
+				return $http({
+					method : 'POST',
+					url : '/api/wiki/book/' + scope.id,
+					data : $httpParamSerializerJQLike(b),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(res) {
+					scope.setData(res.data);
+					return scope;
+				}, function(data) {
+					throw new PException(data);
+				});
+			};
+
+			/**
+			 * کتاب را حذف می‌کند
+			 * 
+			 * @memberof PWikiBook
+			 * @returns {promise(PWikiBook)} کتاب حذف شده
+			 */
+			pWikiBook.prototype.remove = function() {
+				var scope = this;
+				return $http({
+					method : 'DELETE',
+					url : '/api/wiki/book/' + scope.id
+				}).then(function(res) {
+					scope.setData(res.data);
+					return scope;
+				}, function(data) {
+					throw new PException(data);
+				});
+			};
+
+			return pWikiBook;
 		});
-	};
-	/**
-	 * یک صفحه را به کتاب اضافه می‌کند
-	 *
-	 * @memberof PWikiBook
-	 * @param {PWikiPage} page صفحه‌ای که به کتاب اضافه خواهد شد
-	 * @returns {promise(PWikiBook)} خود کتاب را که صفحه جدید به آن اضافه شده است برمی‌گرداند
-	 */
-	pWikiBook.prototype.addPage = function(page) {
-		if(page.isAnonymous()){
-			var dif = $q.defer();
-			$timeout(function(){
-				var ex = new PException({message:'Page id is null!'});
-				dif.reject(ex);
-			}, 1);
-			return dif.promise;
-		}
-		var scope = this;
-		return $http({
-			method: 'POST',
-			url: '/api/wiki/book/' + scope.id + '/page/' + page.id,
-		}).then(function() {
-			return scope;
-		});
-	};
-
-	/**
-	 * یک صفحه را از کتاب حذف می‌کند
-	 *
-	 * @memberof PWikiBook
-	 * @param {PWikiPage} page صفحه‌ای که باید از کتاب حذف شود
-	 * @returns {promise(PWikiPage)} صفحه حذف شده از کتاب را برمی‌گرداند
-	 */
-	pWikiBook.prototype.removePage = function(page) {
-		if(page.isAnonymous()){
-			var dif = $q.defer();
-			$timeout(function(){
-				var ex = new PException({message:'Page id is null!'});
-				dif.reject(ex);
-			}, 1);
-			return dif.promise;
-		}
-		var scope = this;
-		return $http({
-			method: 'DELETE',
-			url: '/api/wiki/book/' + scope.id + '/page/' + page.id,
-		}).then(function() {
-			return scope;
-		});
-	};
-
-	/**
-	 * اطلاعات یک کتاب را به‌روزرسانی می‌کند.
-	 *
-	 * @memberof PWikiBook
-	 * @param {struct} b ساختاری حاوی اطلاعاتی از کتاب که باید به‌روزرسانی شود
-	 * @returns {promise(PWikiBook)} کتاب با اطلاعات به‌روزرسانی شده
-	 */
-	pWikiBook.prototype.update = function(b) {
-		var scope = this;
-		return $http({
-			method: 'POST',
-			url: '/api/wiki/book/' + scope.id,
-			data: $httpParamSerializerJQLike(b),
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			}
-		}).then(function(res) {
-			scope.setData(res.data);
-			return scope;
-		}, function(data) {
-			throw new PException(data);
-		});
-	};
-
-	/**
-	 * کتاب را حذف می‌کند
-	 *
-	 * @memberof PWikiBook
-	 * @returns {promise(PWikiBook)} کتاب حذف شده
-	 */
-	pWikiBook.prototype.remove = function() {
-		var scope = this;
-		return $http({
-			method: 'DELETE',
-			url: '/api/wiki/book/' + scope.id
-		}).then(function(res) {
-			scope.setData(res.data);
-			return scope;
-		}, function(data) {
-			throw new PException(data);
-		});
-	};
-
-	return pWikiBook;
-});
 
 /* jslint todo: true */
 /* jslint xxx: true */
 /* jshint -W100 */
 'use strict';
 
-angular.module('pluf.wiki')
+angular.module('pluf')
+
 /**
  * @ngdoc factory
  * @name PWikiPage
@@ -3921,7 +4310,7 @@ angular.module('pluf.wiki')
 /* jshint -W100 */
 'use strict';
 
-angular.module('pluf.wiki')
+angular.module('pluf')
 /**
  * @ngdoc factory
  * @name PWikiPageItem
@@ -3966,7 +4355,7 @@ angular.module('pluf.wiki')
 /* jslint xxx: true */
 /* jshint -W100 */
 'use strict';
-angular.module('pluf.wiki')
+angular.module('pluf')
 /**
  * فیلتر نمایش صفحه‌ها را ایجاد می‌کند.
  */
@@ -3982,7 +4371,7 @@ angular.module('pluf.wiki')
 'use strict';
 
 
-angular.module('pluf.wiki')
+angular.module('pluf')
 /**
 * @ngdoc service
 * @name $help

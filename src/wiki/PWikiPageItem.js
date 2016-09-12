@@ -3,7 +3,7 @@
 /* jshint -W100 */
 'use strict';
 
-angular.module('pluf.wiki')
+angular.module('pluf')
 /**
  * @ngdoc factory
  * @name PWikiPageItem
