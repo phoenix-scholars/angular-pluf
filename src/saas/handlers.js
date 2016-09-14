@@ -23,18 +23,46 @@
 
 angular.module('pluf')
 /**
- * @ngdoc factory
- * @memberof pluf.saas
- * @name PTenantSetting
- * @description
- * تنظیم‌های یک ملک را تعیین می‌کند.
- *
+ * دستگیره‌ها
+ * 
+ * تمام دستورهای و دستگیره‌هایی که در رابطه با این ماژول وجود دارد را در این
+ * پرونده اضافه شده است. این دستورها برای کاربردهای عمومی به کار می‌رود.
  */
-.factory('PTenantSetting',
-function($http, $q, $window, PObject) {
-	var pTenantSetting = function() {
-		PObject.apply(this, arguments);
-	};
-	pTenantSetting.prototype = new PObject();
-	return pTenantSetting;
+.run(function($window, $act, $saas, PException) {
+	/**
+	 * اضافه کردن دستورها و دستگیره‌ها
+	 */
+	$act
+	// Lunch an application
+	.handler({
+		command : 'tenant.lunch',
+		handle : function() {
+			if (arguments.length < 1) {
+				throw new PException('tenant not found');
+			}
+			var tenantId = arguments[0];
+			return $saas.get(tenantId)//
+			.then(function(tenant) {
+				return tenant.defaultApplication();
+			}).then(function(app) {
+				return app.run();
+			});
+		}
+	})
+	// run spa
+	.handler({
+		command : 'spa.lunch',
+		handle : function() {
+			if (arguments.length < 1) {//
+				throw new PException('application not found');
+			}
+			var spaId = arguments[0];
+			return $saas.session()//
+			.then(function(tenant) {
+				return tenant.app(spaId);
+			}).then(function(app) {
+				return app.run();
+			});
+		}
+	});
 });
