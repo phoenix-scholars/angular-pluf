@@ -3,16 +3,16 @@
 /* jshint -W100 */
 'use strict';
 
-angular.module('pluf.social')
+angular.module('pluf')
 /**
  * @ngdoc factory
  * @name PFollower
- * @memberof pluf.social
+ * @memberof pluf
  * @description
- *
+ * 
  * ابزارهای مورد نیاز برای یک برچسب را ایجاد می‌کند.
  */
-	.factory('PFollower',	function(PObject) {
+.factory('PFollower', function(PObject) {
 
 	var pFollower = function() {
 		PObject.apply(this, arguments);

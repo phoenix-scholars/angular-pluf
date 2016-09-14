@@ -31,8 +31,7 @@ angular.module('pluf')
  */
 .service('$saas', function (
 		$http, $httpParamSerializerJQLike, $q, $window,
-		$act, $usr,
-		PTenant, PSpa,
+		$act, PTenant, PSpa,
 		PException, PaginatorParameter,	PaginatorPage
 	) {
 	/*

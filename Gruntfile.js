@@ -229,12 +229,12 @@ module.exports = function(grunt) {
 				concat : {
 					tmp : {
 						src : [ '<%= yeoman.app %>/*.js',
-								'<%= yeoman.app %>/,*/*.js' ],
+								'<%= yeoman.app %>/*/*.js' ],
 						dest : '.tmp/<%= yeoman.pkg.name %>.js'
 					},
 					dist : {
 						src : [ '<%= yeoman.app %>/*.js',
-								'<%= yeoman.app %>/,*/*.js' ],
+								'<%= yeoman.app %>/*/*.js' ],
 						dest : '<%= yeoman.dist %>/<%= yeoman.pkg.name %>.js'
 					}
 				},
