@@ -264,7 +264,7 @@ angular.module('pluf')
 							page.items = [];
 							for (var i = 0; i < data.counts; i++) {
 								page.items.push(_retgate(
-										data.items[i].type, data.items[i]));
+										data.items[i].id, data.items[i]));
 							}
 							return page;
 						});
