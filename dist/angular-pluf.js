@@ -1,3 +1,105 @@
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+'use strict';
+/**
+ * @ngdoc module
+ * @name pluf.core
+ * @description
+ *
+ * ساختارهای داده‌ای پایه‌ای و مدیریت آنها در این ماژول پیاده سازی شده است. این ساختارهای داده‌ای
+ * کاربردهای مانند مدیریت خطا، صفحه بندی و ساختار اولیه موجودیت‌ها در سیستم را ایجاد می‌کند. این
+ * ساختارها در تمام ماژولها در دسترس است.
+ *
+ */
+angular.module('pluf', [])
+.run(function($usr, $act, PException) {
+	$act.command({
+		id : 'pluf.user.login',
+		label : 'login',
+		description : 'login a user',
+		visible : function() {
+			return $usr.isAnonymous();
+		},
+		category : 'usr',
+	})
+	.handler({
+		commandId : 'pluf.user.login',
+		handle : function() {
+			if (arguments.length < 1) {//
+				throw new PException('no credentioal');
+			}
+			var a = arguments[0];
+			return $usr.login(a.username, a.password);
+		}
+	})
+
+	/**
+	 * خروج کاربر جاری از سیستم
+	 */
+	.command({
+		id : 'pluf.user.logout',
+		label : 'logout',
+		description : 'logout the user',
+		visible : function() {
+			return !$usr.isAnonymous();
+		},
+		category : 'usr',
+	}).handler({
+		commandId : 'pluf.user.logout',
+		handle : function() {
+			return $usr.logout();
+		}
+	})
+
+	/**
+	 * دستور به روز کردن اطلاعات کاربر جاری
+	 */
+	.command({
+		id : 'pluf.user.update',
+		label : 'update',
+		description : 'update the current user',
+		visible : function() {
+			return !$usr.isAnonymous();
+		},
+	}).handler({
+		commandId : 'pluf.user.update',
+		handle : function() {
+			if (arguments.length < 1) {//
+				throw new PException('bad param');
+			}
+			var a = arguments[0];
+			return $usr.session().then(function(user) {
+				return user.update(a.key, a.value);
+			});
+		}
+	})
+	/*
+	 *
+	 */
+	.command({
+		id : 'pluf.user.profile.update',
+		label : 'update profile',
+		description : 'update user profile',
+		visible : function() {
+			return !$usr.isAnonymous();
+		},
+	}).handler({
+		commandId : 'pluf.user.profile.update',
+		handle : function() {
+			if (arguments.length < 1) {//
+				throw new PException('bad param');
+			}
+			var a = arguments[0];
+			return $usr.session().then(function(user) {
+				return user.profile();
+			}).then(function(profile) {
+				return profile.update(a.key, a.value);
+			});
+		}
+	});
+});
+
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
  * 
@@ -522,108 +624,6 @@ angular.module('pluf')
 			};
 
 		});
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
-'use strict';
-/**
- * @ngdoc module
- * @name pluf.core
- * @description
- *
- * ساختارهای داده‌ای پایه‌ای و مدیریت آنها در این ماژول پیاده سازی شده است. این ساختارهای داده‌ای
- * کاربردهای مانند مدیریت خطا، صفحه بندی و ساختار اولیه موجودیت‌ها در سیستم را ایجاد می‌کند. این
- * ساختارها در تمام ماژولها در دسترس است.
- *
- */
-angular.module('pluf', [])
-.run(function($usr, $act, PException) {
-	$act.command({
-		id : 'pluf.user.login',
-		label : 'login',
-		description : 'login a user',
-		visible : function() {
-			return $usr.isAnonymous();
-		},
-		category : 'usr',
-	})
-	.handler({
-		commandId : 'pluf.user.login',
-		handle : function() {
-			if (arguments.length < 1) {//
-				throw new PException('no credentioal');
-			}
-			var a = arguments[0];
-			return $usr.login(a.username, a.password);
-		}
-	})
-
-	/**
-	 * خروج کاربر جاری از سیستم
-	 */
-	.command({
-		id : 'pluf.user.logout',
-		label : 'logout',
-		description : 'logout the user',
-		visible : function() {
-			return !$usr.isAnonymous();
-		},
-		category : 'usr',
-	}).handler({
-		commandId : 'pluf.user.logout',
-		handle : function() {
-			return $usr.logout();
-		}
-	})
-
-	/**
-	 * دستور به روز کردن اطلاعات کاربر جاری
-	 */
-	.command({
-		id : 'pluf.user.update',
-		label : 'update',
-		description : 'update the current user',
-		visible : function() {
-			return !$usr.isAnonymous();
-		},
-	}).handler({
-		commandId : 'pluf.user.update',
-		handle : function() {
-			if (arguments.length < 1) {//
-				throw new PException('bad param');
-			}
-			var a = arguments[0];
-			return $usr.session().then(function(user) {
-				return user.update(a.key, a.value);
-			});
-		}
-	})
-	/*
-	 *
-	 */
-	.command({
-		id : 'pluf.user.profile.update',
-		label : 'update profile',
-		description : 'update user profile',
-		visible : function() {
-			return !$usr.isAnonymous();
-		},
-	}).handler({
-		commandId : 'pluf.user.profile.update',
-		handle : function() {
-			if (arguments.length < 1) {//
-				throw new PException('bad param');
-			}
-			var a = arguments[0];
-			return $usr.session().then(function(user) {
-				return user.profile();
-			}).then(function(profile) {
-				return profile.update(a.key, a.value);
-			});
-		}
-	});
-});
-
 /* jslint todo: true */
 /* jslint xxx: true */
 /* jshint -W100 */
@@ -3238,69 +3238,8 @@ angular.module('pluf')
 /* jslint xxx: true */
 /* jshint -W100 */
 'use strict';
-//
-///**
-// * امکانات اولیه برای مکان‌یابی را در اختیار کاربران قرار می‌دهد.
-// */
-//angular.module('pluf.jahanjoo', [ 'pluf' ])
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
-'use strict';
-
-angular.module('pluf.saas', ['pluf'])
-
-.run(function($window, $act, $saas, PException) {
-	/**
-	 * اضافه کردن دستورها و دستگیره‌ها
-	 */
-	$act
-	.command({
-		id: 'pluf.saas.lunch',
-		category: 'saas',
-	})
-	.handler({
-		commandId: 'pluf.saas.lunch',
-		handle: function() {
-			if (arguments.length < 1) {
-				throw new PException('no app found');
-			}
-			var a = arguments[0];
-			return $saas.get(a).then(function(tenant) {
-				return tenant.defaultApplication();
-			}).then(function(app) {
-				return app.run();
-			});
-		}
-	})
-	// run spa
-	.command({
-		id: 'pluf.saas.app.lunch',
-		category: 'saas',
-	})
-	.handler({
-		commandId: 'pluf.saas.app.lunch',
-		handle: function() {
-			if (arguments.length < 1) {//
-				throw new PException('no app found');
-			}
-			var a = arguments[0];
-			return $saas.session().then(function(tenant) {
-				return tenant.app(a);
-			}).then(function(app) {
-				return app.run();
-			});
-		}
-	});
-});
-
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
-'use strict';
-
-angular.module('pluf.saas')
+angular.module('pluf')
 /**
  * @ngdoc factory
  * @memberof pluf.saas
@@ -3398,7 +3337,7 @@ angular.module('pluf.saas')
 /* jshint -W100 */
 'use strict';
 
-angular.module('pluf.saas')
+angular.module('pluf')
 /**
  * @ngdoc factory
  * @memberof pluf.saas
@@ -3422,7 +3361,7 @@ function($http, $q, $window, PObject) {
 /* jshint -W100 */
 'use strict';
 
-angular.module('pluf.saas')
+angular.module('pluf')
 /**
  * @ngdoc factory
  * @memberof pluf.saas
@@ -3643,7 +3582,7 @@ angular.module('pluf.saas')
 /* jshint -W100 */
 'use strict';
 
-angular.module('pluf.saas')
+angular.module('pluf')
 /**
  * @ngdoc factory
  * @memberof pluf.saas
@@ -3665,7 +3604,7 @@ angular.module('pluf.saas')
 /* jshint -W100 */
 'use strict';
 
-angular.module('pluf.saas')
+angular.module('pluf')
 /**
  * @ngdoc factory
  * @memberof pluf.saas
@@ -3688,7 +3627,55 @@ function($http, $q, $window, PObject) {
 /* jshint -W100 */
 'use strict';
 
-angular.module('pluf.saas')
+angular.module('pluf')
+
+.run(function($window, $act, $saas, PException) {
+	/**
+	 * اضافه کردن دستورها و دستگیره‌ها
+	 */
+	$act.command({
+		id : 'pluf.saas.lunch',
+		category : 'saas',
+	}).handler({
+		commandId : 'pluf.saas.lunch',
+		handle : function() {
+			if (arguments.length < 1) {
+				throw new PException('no app found');
+			}
+			var a = arguments[0];
+			return $saas.get(a).then(function(tenant) {
+				return tenant.defaultApplication();
+			}).then(function(app) {
+				return app.run();
+			});
+		}
+	})
+	// run spa
+	.command({
+		id : 'pluf.saas.app.lunch',
+		category : 'saas',
+	}).handler({
+		commandId : 'pluf.saas.app.lunch',
+		handle : function() {
+			if (arguments.length < 1) {//
+				throw new PException('no app found');
+			}
+			var a = arguments[0];
+			return $saas.session().then(function(tenant) {
+				return tenant.app(a);
+			}).then(function(app) {
+				return app.run();
+			});
+		}
+	});
+});
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+'use strict';
+
+angular.module('pluf')
 /**
  * @ngdoc service
  * @name $saas
@@ -3872,22 +3859,9 @@ angular.module('pluf.saas')
 /* jslint todo: true */
 /* jslint xxx: true */
 /* jshint -W100 */
-(function(){
-
-	'use strict';
-	/**
-	 * امکانات اولیه برای مکان‌یابی را در اختیار کاربران قرار می‌دهد.
-	 */
-	angular.module('pluf.social', ['pluf']);
-
-})();
-
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
 'use strict';
 
-angular.module('pluf.social')
+angular.module('pluf')
 /**
  * @ngdoc factory
  * @name PFollower
@@ -3912,7 +3886,7 @@ angular.module('pluf.social')
 /* jshint -W100 */
 'use strict';
 
-angular.module('pluf.social')
+angular.module('pluf')
 
 /**
  * @ngdoc service

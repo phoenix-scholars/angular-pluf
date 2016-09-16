@@ -3,20 +3,18 @@
 /* jshint -W100 */
 'use strict';
 
-angular.module('pluf.saas', ['pluf'])
+angular.module('pluf')
 
 .run(function($window, $act, $saas, PException) {
 	/**
 	 * اضافه کردن دستورها و دستگیره‌ها
 	 */
-	$act
-	.command({
-		id: 'pluf.saas.lunch',
-		category: 'saas',
-	})
-	.handler({
-		commandId: 'pluf.saas.lunch',
-		handle: function() {
+	$act.command({
+		id : 'pluf.saas.lunch',
+		category : 'saas',
+	}).handler({
+		commandId : 'pluf.saas.lunch',
+		handle : function() {
 			if (arguments.length < 1) {
 				throw new PException('no app found');
 			}
@@ -30,12 +28,11 @@ angular.module('pluf.saas', ['pluf'])
 	})
 	// run spa
 	.command({
-		id: 'pluf.saas.app.lunch',
-		category: 'saas',
-	})
-	.handler({
-		commandId: 'pluf.saas.app.lunch',
-		handle: function() {
+		id : 'pluf.saas.app.lunch',
+		category : 'saas',
+	}).handler({
+		commandId : 'pluf.saas.app.lunch',
+		handle : function() {
 			if (arguments.length < 1) {//
 				throw new PException('no app found');
 			}

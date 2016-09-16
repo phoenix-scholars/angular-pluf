@@ -3,7 +3,7 @@
 /* jshint -W100 */
 'use strict';
 
-angular.module('pluf.saas')
+angular.module('pluf')
 /**
  * @ngdoc service
  * @name $saas
