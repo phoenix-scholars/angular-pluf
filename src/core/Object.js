@@ -67,6 +67,17 @@ angular.module('pluf')
 		 */
 		isAnonymous : function() {
 			return !(this.id && this.id > 0);
+		},
+		
+		/**
+		 * تعیین می‌کند که آیا موجودیت منقضی شده یا نه
+		 *
+		 * @memberof PObject
+		 * @returns {Boolean} معتبر بودن ساختار داده
+		 */
+		isExpired : function() {
+			// XXX: maso, 1395: check aot time
+			return false;
 		}
 	};
 	return pObject;

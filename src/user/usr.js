@@ -22,34 +22,6 @@ angular.module('pluf')
 			 * کاربران قرار می‌گیرد.
 			 */
 			this._su = new PUser();
-			/*
-			 * مخزن کاربران. تمام اطلاعاتی که از کاربران گرفته می‌شه توی این
-			 * مخزن نگهداری می‌شه
-			 */
-			this._u = {};
-			/*
-			 * اطلاعات یک کاربر با شناسه تعیین شده را بازیابی می‌کند. این مقدار
-			 * ممکن است تهی باشد.
-			 */
-			this._getUser = function(id) {
-				if (this._u[id] && !this._u[id].isAnonymous()) {
-					return this._u[id];
-				}
-				return null;
-			};
-			/*
-			 * اطلاعات یک کاربر را بازیابی می‌کند
-			 */
-			this._ret = function(id, data) {
-				var instance = this._getUser(id);
-				if (instance) {
-					instance.setData(data);
-				} else {
-					instance = new PUser(data);
-					this._u[id] = instance;
-				}
-				return instance;
-			};
 
 			/**
 			 * به صورت همزمان تعیین می‌کند که آیا کاربر جاری شناخته شده است یا
