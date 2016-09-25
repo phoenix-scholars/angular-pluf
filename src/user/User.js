@@ -174,5 +174,15 @@ angular.module('pluf')
 				return (this.id && this.id > 0 && this.staff);
 			};
 
+			pUser.prototype.removeRole = function() {
+			};
+			pUser.prototype.roles = function() {
+			};
+
+			pUser.prototype.removeGroup = function() {
+			};
+			pUser.prototype.groups = function() {
+			};
+
 			return pUser;
 		});

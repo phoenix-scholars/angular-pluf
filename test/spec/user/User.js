@@ -101,4 +101,23 @@ describe('Core module: PUser', function() {
 		expect($httpBackend.flush).not.toThrow();
 		$rootScope.$apply();
 	});
+
+	it('should contain group access', function() {
+		var user = new PUser();
+		expect(angular.isFunction(user.groups)).toBe(true);
+		expect(angular.isFunction(user.removeGroup)).toBe(true);
+	});
+
+	it('should contain role access', function() {
+		var user = new PUser();
+		expect(angular.isFunction(user.roles)).toBe(true);
+		expect(angular.isFunction(user.removeRole)).toBe(true);
+	});
+
+	it('should contain avatar', function() {
+		var user = new PUser({
+			id : 1
+		});
+		expect(user.avatar).toBe('/api/user/1/avatar');
+	});
 });

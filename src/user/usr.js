@@ -180,7 +180,7 @@ angular.module('pluf')
 			 *            detail خصوصیت‌های کاربر
 			 * @return {promise(PUser)} حساب کاربری ایجاد شده
 			 */
-			this.signup = function(detail) {
+			this.newUser = function(detail) {
 				return $http({
 					method : 'POST',
 					url : '/api/user/new',
@@ -213,43 +213,15 @@ angular.module('pluf')
 					method : 'GET',
 					url : '/api/user/find',
 					params : p.getParameter()
-				}).then(
-						function(res) {
-							var page = new PaginatorPage(res.data);
-							var items = [];
-							for (var i = 0; i < page.counts; i++) {
-								items.push(_userCache(page.items[i].id,
-										page.items[i]));
-							}
-							page.items = items;
-							return page;
-						});
-			};
-
-			/**
-			 * اطلاعات کاربر جاری را به روزرسانی می‌کند.
-			 * 
-			 * @memberof $usr
-			 * 
-			 * @return {promise(PUser)} اطلاعات به‌روزرسانی شده‌ی کاربر جاری
-			 */
-			this.updateCurrentUser = function() {
-				if (!this.isAnonymous()) {
-					var deferred = $q.defer();
-					deferred.resolve(this);
-					return deferred.promise;
-				}
-				return $http({
-					method : 'POST',
-					url : '/api/user/' + _su.id + '/account',
-					data : $httpParamSerializerJQLike(_su),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
+				}).then(function(res) {
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push(_userCache(item.id, item));
 					}
-				}).then(function(result) {
-					var data = result.data;
-					_su = _userCache.restor(data.id, data);
-					return _su;
+					page.items = items;
+					return page;
 				});
 			};
 
@@ -262,7 +234,12 @@ angular.module('pluf')
 			 *            id شناسه کاربر مورد نظر
 			 * @return {promise(PUser)} اطلاعات بازیابی شده کاربر
 			 */
-			this.getUser = function(id) {
+			this.user = function(id) {
+				if (!_userCache.contains(id)) {
+					var deferred = $q.defer();
+					deferred.resolve(_userCache.get(id));
+					return deferred.promise;
+				}
 				return $http({
 					method : 'GET',
 					url : '/api/user/' + id,
@@ -272,49 +249,18 @@ angular.module('pluf')
 				});
 			};
 
-			/**
-			 * اطلاعات کاربر با شناسه تعیین شده را به‌روزرسانی می‌کند
-			 * 
-			 * @memberof $usr
-			 * 
-			 * @param {string}
-			 *            id شناسه کاربر مورد نظر
-			 * @return {promis(PUser)} اطلاعات به‌روزرسانی شده‌ی کاربر
-			 */
-			this.updateUser = function(id, userData) {
-				return $http({
-					method : 'POST',
-					url : '/api/user/' + id,
-					data : $httpParamSerializerJQLike(userData),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(result) {
-					var data = result.data;
-					return _userCache.restor(data.id, data);
-				});
+			this.roles = function() {
+			};
+			this.role = function() {
+			};
+			this.newRole = function() {
 			};
 
-			/**
-			 * کاربر با شناسه تعیین شده را حذف می‌کند
-			 * 
-			 * @memberof $usr
-			 * 
-			 * @param {string}
-			 *            id شناسه کاربر مورد نظر
-			 * @return {promis(PUser)} اطلاعات کاربر حذف شده به عنوان خروجی
-			 *         برگردانده می‌شود
-			 */
-			this.removeUser = function(id) {
-				return $http({
-					method : 'DELETE',
-					url : '/api/user/' + id,
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function() {
-					return _userCache.remove(id);
-				});
+			this.groups = function() {
+			};
+			this.group = function() {
+			};
+			this.newGroup = function() {
 			};
 
 		});
