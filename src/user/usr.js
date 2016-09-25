@@ -1,6 +1,24 @@
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 
 angular.module('pluf')
@@ -16,12 +34,15 @@ angular.module('pluf')
 .service(
 		'$usr',
 		function($http, $httpParamSerializerJQLike, $q, $act, PUser,
-				PaginatorPage, PException) {
+				PaginatorPage, PException, PObjectCache) {
 			/*
 			 * کاربر جاری را تعیین می‌کند. این متغیر به صورت عمومی در اختیار
 			 * کاربران قرار می‌گیرد.
 			 */
-			this._su = new PUser();
+			var _su = new PUser();
+			var _userCache = new PObjectCache(function(data) {
+				return new PUser(data);
+			});
 
 			/**
 			 * به صورت همزمان تعیین می‌کند که آیا کاربر جاری شناخته شده است یا
@@ -32,7 +53,7 @@ angular.module('pluf')
 			 * @return {Boolean} درستی در صورتی که کاربر جاری گمنام باشد
 			 */
 			this.isAnonymous = function() {
-				return this._su.isAnonymous();
+				return _su.isAnonymous();
 			};
 
 			/**
@@ -44,7 +65,7 @@ angular.module('pluf')
 			 * @return {Boolean} درستی در صورتی که کاربر جاری مدیر سیستم باشد.
 			 */
 			this.isAdministrator = function() {
-				return this._su.isAdministrator();
+				return _su.isAdministrator();
 			};
 
 			/**
@@ -71,23 +92,23 @@ angular.module('pluf')
 			 *            credential پارارمترهای مورد انتظار در احراز اصالت
 			 * @return {promise(PUser)} اطلاعات کاربر جاری
 			 */
-			this.login = function(c) {
+			this.login = function(credit) {
 				if (!this.isAnonymous()) {
 					var deferred = $q.defer();
-					deferred.resolve(this);
+					deferred.resolve(_su);
 					return deferred.promise;
 				}
-				var scope = this;
 				return $http({
 					method : 'POST',
 					url : '/api/user/login',
-					data : $httpParamSerializerJQLike(c),
+					data : $httpParamSerializerJQLike(credit),
 					headers : {
 						'Content-Type' : 'application/x-www-form-urlencoded'
 					}
-				}).then(function(data) {
-					scope._su = new PUser(data.data);
-					return scope._su;
+				}).then(function(result) {
+					var data = result.data;
+					_su = _userCache.restor(data.id, data);
+					return _su;
 				});
 			};
 
@@ -103,15 +124,18 @@ angular.module('pluf')
 			 * @returns {promise(PUser)} اطلاعات کاربر جاری
 			 */
 			this.session = function() {
-				var scope = this;
 				if (!this.isAnonymous()) {
 					var deferred = $q.defer();
-					deferred.resolve(this._su);
+					deferred.resolve(_su);
 					return deferred.promise;
 				}
-				return $http.get('/api/user/account').then(function(data) {
-					scope._su = new PUser(data.data);
-					return scope._su;
+				return $http.get('/api/user/account')//
+				.then(function(result) {
+					if (result.data.id) {
+						var data = result.data;
+						_su = _userCache.restor(data.id, data);
+					}
+					return _su;
 				});
 			};
 
@@ -127,16 +151,15 @@ angular.module('pluf')
 			this.logout = function() {
 				if (this.isAnonymous()) {
 					var deferred = $q.defer();
-					deferred.resolve(this._su);
+					deferred.resolve(_su);
 					return deferred.promise;
 				}
-				var scope = this;
 				return $http({
 					method : 'POST',
 					url : '/api/user/logout',
-				}).then(function(data) {
-					scope._su = new PUser(data.data);
-					return scope._su;
+				}).then(function(result) {
+					_su = new PUser(result.data);
+					return _su;
 				});
 			};
 
@@ -158,17 +181,17 @@ angular.module('pluf')
 			 * @return {promise(PUser)} حساب کاربری ایجاد شده
 			 */
 			this.signup = function(detail) {
-				// var scope = this;
 				return $http({
 					method : 'POST',
-					url : '/api/user/signup',
+					url : '/api/user/new',
 					data : $httpParamSerializerJQLike(detail),
 					headers : {
 						'Content-Type' : 'application/x-www-form-urlencoded'
 					}
-				}).then(function(data) {
-					var user = new PUser(data.data);
-					return user;
+				}).then(function(result) {
+					var data = result.data;
+					var nu = _userCache.restor(data.id, data);
+					return nu;
 				});
 			};
 
@@ -186,21 +209,21 @@ angular.module('pluf')
 			 * @return {promise(PaginatorPage)} صفحه‌ای از کاربران سیستم.
 			 */
 			this.users = function(p) {
-				var scope = this;
 				return $http({
 					method : 'GET',
 					url : '/api/user/find',
 					params : p.getParameter()
-				}).then(function(res) {
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var t = scope._ret(page.items[i].id, page.items[i]);
-						items.push(t);
-					}
-					page.items = items;
-					return page;
-				});
+				}).then(
+						function(res) {
+							var page = new PaginatorPage(res.data);
+							var items = [];
+							for (var i = 0; i < page.counts; i++) {
+								items.push(_userCache(page.items[i].id,
+										page.items[i]));
+							}
+							page.items = items;
+							return page;
+						});
 			};
 
 			/**
@@ -216,19 +239,17 @@ angular.module('pluf')
 					deferred.resolve(this);
 					return deferred.promise;
 				}
-				var scope = this;
 				return $http({
 					method : 'POST',
-					url : '/api/user/' + scope._su.id + '/account',
-					data : $httpParamSerializerJQLike(scope._su),
+					url : '/api/user/' + _su.id + '/account',
+					data : $httpParamSerializerJQLike(_su),
 					headers : {
 						'Content-Type' : 'application/x-www-form-urlencoded'
 					}
-				}).then(function(data) {
-					var user = new PUser(data.data);
-					return user;
-				}, function(data) {
-					throw new PException(data);
+				}).then(function(result) {
+					var data = result.data;
+					_su = _userCache.restor(data.id, data);
+					return _su;
 				});
 			};
 
@@ -242,12 +263,12 @@ angular.module('pluf')
 			 * @return {promise(PUser)} اطلاعات بازیابی شده کاربر
 			 */
 			this.getUser = function(id) {
-				var scope = this;
 				return $http({
 					method : 'GET',
-					url : '/api/user/' + id + '/account',
-				}).then(function(data) {
-					return scope._ret(data.data.id, data.data);
+					url : '/api/user/' + id,
+				}).then(function(result) {
+					var data = result.data;
+					return _userCache.restor(data.id, data);
 				});
 			};
 
@@ -263,16 +284,14 @@ angular.module('pluf')
 			this.updateUser = function(id, userData) {
 				return $http({
 					method : 'POST',
-					url : '/api/user/' + id + '/account',
+					url : '/api/user/' + id,
 					data : $httpParamSerializerJQLike(userData),
 					headers : {
 						'Content-Type' : 'application/x-www-form-urlencoded'
 					}
-				}).then(function(data) {
-					var user = new PUser(data.data);
-					return user;
-				}, function(data) {
-					throw new PException(data);
+				}).then(function(result) {
+					var data = result.data;
+					return _userCache.restor(data.id, data);
 				});
 			};
 
@@ -289,34 +308,13 @@ angular.module('pluf')
 			this.removeUser = function(id) {
 				return $http({
 					method : 'DELETE',
-					url : '/api/user/' + id + '/account',
+					url : '/api/user/' + id,
 					headers : {
 						'Content-Type' : 'application/x-www-form-urlencoded'
 					}
-				}).then(function(data) {
-					var user = new PUser(data.data);
-					return user;
-				}, function(data) {
-					throw new PException(data);
+				}).then(function() {
+					return _userCache.remove(id);
 				});
 			};
 
-			/**
-			 * اطلاعات کاربر را با استفاده نام کاربری آن بازیابی می‌کند. کاربر
-			 * با استفاده از آن می‌تواند وارد سیستم شود.
-			 * 
-			 * @memberof $usr
-			 * @param {string}
-			 *            login شناسه کاربر مورد نظر
-			 * @return {promise(PUser)} اطلاعات بازیابی شده کاربر
-			 */
-			this.user = function(login) {
-				var scope = this;
-				return $http({
-					method : 'GET',
-					url : '/api/user/user/' + login,
-				}).then(function(data) {
-					return scope._ret(data.data.id, data.data);
-				});
-			};
 		});
