@@ -24,8 +24,10 @@
 describe('Core module: PRole', function() {
 	var originalTimeout;
 	var $rootScope;
-	var PRole;
 	var $httpBackend;
+	var PUser;
+	var PGroup;
+	var PRole;
 	// excuted before each "it" is run.
 	beforeEach(function() {
 		// load the module.
@@ -34,8 +36,11 @@ describe('Core module: PRole', function() {
 		// The _underscores_ are a convenience thing
 		// so you can have your variable name be the
 		// same as your injected service.
-		inject(function(_PRole_, _$rootScope_, _$httpBackend_) {
+		inject(function(_PUser_, _PRole_, _PGroup_, _$rootScope_,
+				_$httpBackend_) {
+			PUser = _PUser_;
 			PRole = _PRole_;
+			PGroup = _PGroup_;
 			$rootScope = _$rootScope_;
 			$httpBackend = _$httpBackend_;
 		});
@@ -51,66 +56,118 @@ describe('Core module: PRole', function() {
 		var role = new PRole();
 		expect(angular.isFunction(role.update)).toBe(true);
 	});
-	// it('should call /api/user/{id}/profile to get profile', function(done) {
-	// var user = new PUser();
-	// user.id = 1;
-	// user.profile().then(function(profile) {
-	// expect(profile).not.toBeNull();
-	// expect(profile.id).not.toBeNull();
-	// expect(profile.user).not.toBeNull();
-	// done();
-	// }, function() {
-	// expect(false).toBe(true);
-	// done();
-	// });
-	//
-	// $httpBackend.expect('GET', '/api/user/1/profile').respond(200, {
-	// id : '1',
-	// name : 'admin',
-	// administrator : true
-	// });
-	// expect($httpBackend.flush).not.toThrow();
-	// $rootScope.$apply();
-	// });
 
 	it('should contain remove functions', function() {
 		var role = new PRole();
 		expect(angular.isFunction(role.remove)).toBe(true);
 	});
-	// it('should call /api/user/{id} to update', function(done) {
-	// var user = new PUser();
-	// user.id = 1;
-	// user.first_name = 'xxx';
-	// user.update().then(function(user) {
-	// expect(user).not.toBeNull();
-	// expect(user.id).toBe(1);
-	// expect(user.temp).not.toBeNull();
-	// expect(user.first_name).toBe('yyy');
-	// done();
-	// }, function() {
-	// expect(false).toBe(true);
-	// done();
-	// });
-	//
-	// $httpBackend.expect('POST', '/api/user/1').respond(200, {
-	// id : 1,
-	// first_name : 'yyy',
-	// temp : true
-	// });
-	// expect($httpBackend.flush).not.toThrow();
-	// $rootScope.$apply();
-	// });
 
+	/*
+	 * Grope
+	 */
 	it('should contain group access', function() {
 		var role = new PRole();
 		expect(angular.isFunction(role.users)).toBe(true);
 		expect(angular.isFunction(role.removeUser)).toBe(true);
 	});
+	it('should call /api/role/{id}/group/find to groups', function(done) {
+		var role = new PRole({
+			id : 1
+		});
+		role.groups()//
+		.then(function(page) {
+			expect(page).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
 
+		$httpBackend//
+		.expect('GET', '/api/role/' + role.id + '/group/find')//
+		.respond(200, {
+			items : [],
+		// TODO: maso, 1395: Paginated page param
+		});
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+	it('should call /api/role/{id}/group/{id} to remove group', function(done) {
+		var role = new PRole({
+			id : 1,
+		});
+		var group = new PGroup({
+			id : 1
+		});
+
+		role.removeGroup(group)//
+		.then(function(object) {
+			expect(object).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend//
+		.expect('DELETE', '/api/role/' + role.id + '/group/' + group.id)//
+		.respond(200, group);
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+
+	/*
+	 * Users
+	 */
 	it('should contain user access', function() {
 		var role = new PRole();
 		expect(angular.isFunction(role.users)).toBe(true);
 		expect(angular.isFunction(role.removeUser)).toBe(true);
+	});
+	it('should call /api/role/{id}/user/find to users', function(done) {
+		var role = new PRole({
+			id : 1
+		});
+		role.users()//
+		.then(function(page) {
+			expect(page).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend//
+		.expect('GET', '/api/role/' + role.id + '/user/find')//
+		.respond(200, {
+			items : [],
+		// TODO: maso, 1395: Paginated page param
+		});
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+	it('should call /api/role/{id}/user/{id} to remove user', function(done) {
+		var role = new PRole({
+			id : 1,
+		});
+		var user = new PUser({
+			id : 1
+		});
+
+		role.removeUser(user)//
+		.then(function(object) {
+			expect(object).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend//
+		.expect('DELETE', '/api/role/' + role.id + '/user/' + user.id)//
+		.respond(200, user);
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
 	});
 
 });

@@ -24,10 +24,10 @@
 describe('Core module: PUser', function() {
 	var originalTimeout;
 	var $rootScope;
+	var $httpBackend;
 	var PUser;
 	var PGroup;
 	var PRole;
-	var $httpBackend;
 	// excuted before each "it" is run.
 	beforeEach(function() {
 		// load the module.
@@ -195,7 +195,7 @@ describe('Core module: PUser', function() {
 		expect($httpBackend.flush).not.toThrow();
 		$rootScope.$apply();
 	});
-	it('should call /api/user/{id}/group/{id} to remove group', function(done) {
+	it('should call /api/user/{id}/role/{id} to remove role', function(done) {
 		var user = new PUser({
 			id : 1,
 			first_name : 'first name',
