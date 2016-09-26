@@ -20,7 +20,7 @@ angular.module('pluf')
 .factory('PContent', function($http, $httpParamSerializerJQLike, $q, PObject) {
 
 	function _initContent(scope) {
-		scope.link = '/api/saascms/content/' + scope.id + '/download';
+		scope.link = '/api/cms/' + scope.id + '/download';
 	}
 
 	var pContent = function() {
@@ -39,7 +39,7 @@ angular.module('pluf')
 		var scope = this;
 		return $http({
 			method : 'POST',
-			url : '/api/saascms/content/' + this.id,
+			url : '/api/cms/' + this.id,
 			data : $httpParamSerializerJQLike(scope),
 			headers : {
 				'Content-Type' : 'application/x-www-form-urlencoded'
@@ -61,7 +61,7 @@ angular.module('pluf')
 		var scope = this;
 		return $http({
 			method : 'DELETE',
-			url : '/api/saascms/content/' + this.id
+			url : '/api/cms/' + this.id
 		}).then(function() {
 			delete scope.id;
 			return scope;
@@ -76,17 +76,10 @@ angular.module('pluf')
 	 * @return {promise} مقدار محتوی
 	 */
 	pContent.prototype.value = function() {
-		// TODO: maso, 1395: محتوی صفحه را می‌دهد
-		// if(this._cvalue()){
-		// var deferred = $q.defer();
-		// deferred.resolve(this._cvalue());
-		// return deferred.promise;
-		// }
 		return $http({
 			method : 'GET',
 			url : this.link
 		}).then(function(res) {
-			// scope._setCvalue(res.data);
 			return res.data;
 		});
 	};
