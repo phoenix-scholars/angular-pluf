@@ -33,8 +33,8 @@ angular.module('pluf')
  */
 .service(
 		'$usr',
-		function($http, $httpParamSerializerJQLike, $q, $act, PUser,
-				PaginatorPage, PException, PObjectCache) {
+		function($http, $httpParamSerializerJQLike, $q, $act, PUser, PRole,
+				PGroup, PaginatorPage, PException, PObjectCache) {
 			/*
 			 * کاربر جاری را تعیین می‌کند. این متغیر به صورت عمومی در اختیار
 			 * کاربران قرار می‌گیرد.
@@ -43,6 +43,17 @@ angular.module('pluf')
 			var _userCache = new PObjectCache(function(data) {
 				return new PUser(data);
 			});
+
+			var _roleCache = new PObjectCache(function(data) {
+				return new PRole(data);
+			});
+			var _groupCache = new PObjectCache(function(data) {
+				return new PGroup(data);
+			});
+
+			this._userCache = _userCache;
+			this._roleCache = _roleCache;
+			this._groupCache = _groupCache;
 
 			/**
 			 * به صورت همزمان تعیین می‌کند که آیا کاربر جاری شناخته شده است یا
@@ -66,6 +77,33 @@ angular.module('pluf')
 			 */
 			this.isAdministrator = function() {
 				return _su.isAdministrator();
+			};
+
+			/**
+			 * کاربری که در نشست تعیین شده است را بازیابی می‌کند. این فراخوانی
+			 * که یک فراخوانی غیر همزان است برای تعیین حالت کاربر در سیستم
+			 * استفاده می‌شود. برای نمونه ممکن است که یک تابع منجر به خروج کاربر
+			 * از سیستم شده باشد، در این حالت این فراخوانی حالت کاربر را بازیابی
+			 * کرده و سیستم را به روز می‌کند.
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @returns {promise(PUser)} اطلاعات کاربر جاری
+			 */
+			this.session = function() {
+				if (!this.isAnonymous()) {
+					var deferred = $q.defer();
+					deferred.resolve(_su);
+					return deferred.promise;
+				}
+				return $http.get('/api/user')//
+				.then(function(result) {
+					if (result.data.id) {
+						var data = result.data;
+						_su = _userCache.restor(data.id, data);
+					}
+					return _su;
+				});
 			};
 
 			/**
@@ -113,33 +151,6 @@ angular.module('pluf')
 			};
 
 			/**
-			 * کاربری که در نشست تعیین شده است را بازیابی می‌کند. این فراخوانی
-			 * که یک فراخوانی غیر همزان است برای تعیین حالت کاربر در سیستم
-			 * استفاده می‌شود. برای نمونه ممکن است که یک تابع منجر به خروج کاربر
-			 * از سیستم شده باشد، در این حالت این فراخوانی حالت کاربر را بازیابی
-			 * کرده و سیستم را به روز می‌کند.
-			 * 
-			 * @memberof $usr
-			 * 
-			 * @returns {promise(PUser)} اطلاعات کاربر جاری
-			 */
-			this.session = function() {
-				if (!this.isAnonymous()) {
-					var deferred = $q.defer();
-					deferred.resolve(_su);
-					return deferred.promise;
-				}
-				return $http.get('/api/user/account')//
-				.then(function(result) {
-					if (result.data.id) {
-						var data = result.data;
-						_su = _userCache.restor(data.id, data);
-					}
-					return _su;
-				});
-			};
-
-			/**
 			 * این فراخوانی عمل خروج کاربری جاری از سیستم را انجام می‌دهد. با
 			 * این کار تمام داده‌های کاربر جاری از سیستم حذف شده و سیستم به حالت
 			 * اولیه برخواهد گشت.
@@ -160,6 +171,36 @@ angular.module('pluf')
 				}).then(function(result) {
 					_su = new PUser(result.data);
 					return _su;
+				});
+			};
+
+			/**
+			 * فهرست کاربران را به صورت صفحه بندی شده در اختیار قرار می‌دهد. این
+			 * فهرست برای کاربردهای متفاوتی استفاده می‌شود مثل اضافه کردن به
+			 * کاربران مجاز. دسترسی به فهرست کاربران تنها بر اساس سطوح امنیتی
+			 * تعریف شده در سرور ممکن است و بسته به نوع پیاده سازی سرور متفاوت
+			 * خواهد بود.
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @param {PagintorParameter}
+			 *            parameter پارامترهای مورد استفاده در صفحه بندی نتایج
+			 * @return {promise(PaginatorPage)} صفحه‌ای از کاربران سیستم.
+			 */
+			this.users = function(p) {
+				return $http({
+					method : 'GET',
+					url : '/api/user/find',
+					params : p.getParameter()
+				}).then(function(res) {
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push(_userCache(item.id, item));
+					}
+					page.items = items;
+					return page;
 				});
 			};
 
@@ -196,36 +237,6 @@ angular.module('pluf')
 			};
 
 			/**
-			 * فهرست کاربران را به صورت صفحه بندی شده در اختیار قرار می‌دهد. این
-			 * فهرست برای کاربردهای متفاوتی استفاده می‌شود مثل اضافه کردن به
-			 * کاربران مجاز. دسترسی به فهرست کاربران تنها بر اساس سطوح امنیتی
-			 * تعریف شده در سرور ممکن است و بسته به نوع پیاده سازی سرور متفاوت
-			 * خواهد بود.
-			 * 
-			 * @memberof $usr
-			 * 
-			 * @param {PagintorParameter}
-			 *            parameter پارامترهای مورد استفاده در صفحه بندی نتایج
-			 * @return {promise(PaginatorPage)} صفحه‌ای از کاربران سیستم.
-			 */
-			this.users = function(p) {
-				return $http({
-					method : 'GET',
-					url : '/api/user/find',
-					params : p.getParameter()
-				}).then(function(res) {
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push(_userCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
-
-			/**
 			 * اطلاعات کاربر را با استفاده از شناسه آن بازیابی می‌کند.
 			 * 
 			 * @memberof $usr
@@ -249,11 +260,73 @@ angular.module('pluf')
 				});
 			};
 
-			this.roles = function() {
+			/**
+			 * فهرست تمام رولهای سیستم را تعیین می‌کند.
+			 * 
+			 * @param {PaginatorParameter}
+			 * @return promise<PaginatedPage<Prole>>
+			 */
+			this.roles = function(pagParam) {
+				var params = {};
+				if (pagParam) {
+					params = pagParam.getParameter();
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/role/find',
+					params : params
+				}).then(function(res) {
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push(_roleCache(item.id, item));
+					}
+					page.items = items;
+					return page;
+				});
 			};
-			this.role = function() {
+
+			/**
+			 * یک رول با شناسه تعیین شده را برمی‌گرداند
+			 * 
+			 * @parm {integer} شناسه نقش
+			 * @return promise<PRole>
+			 */
+			this.role = function(id) {
+				if (_roleCache.contains(id)) {
+					var deferred = $q.defer();
+					deferred.resolve(_roleCache.get(id));
+					return deferred.promise;
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/role/' + id,
+				}).then(function(result) {
+					var data = result.data;
+					return _roleCache.restor(data.id, data);
+				});
 			};
-			this.newRole = function() {
+
+			/**
+			 * یک نقش جدید در سیستم ایجاد می‌کند.
+			 * 
+			 * @param {Object}
+			 *            داده‌های مورد نیاز برای ایجاد یک نقش جدید
+			 * @return promise<PRole>
+			 */
+			this.newRole = function(detail) {
+				return $http({
+					method : 'POST',
+					url : '/api/role/new',
+					data : $httpParamSerializerJQLike(detail),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(result) {
+					var data = result.data;
+					return _roleCache.restor(data.id, data);
+				});
 			};
 
 			this.groups = function() {

@@ -48,7 +48,7 @@ angular.module('pluf')
 	 * اطلاعات یک کاربر با شناسه تعیین شده را بازیابی می‌کند. این مقدار ممکن است
 	 * تهی باشد.
 	 */
-	pObjectCache.prototype.getObject = function(id) {
+	pObjectCache.prototype.get = function(id) {
 		if (!this._cache[id]) {
 			return null;
 		}
@@ -58,6 +58,10 @@ angular.module('pluf')
 		}
 		return this._cache[id];
 	};
+	/**
+	 * 
+	 */
+	pObjectCache.prototype.getObject = pObjectCache.prototype.get;
 	/*
 	 * اطلاعات یک کاربر را بازیابی می‌کند
 	 */
@@ -70,6 +74,15 @@ angular.module('pluf')
 			this._cache[id] = instance;
 		}
 		return instance;
+	};
+
+	/**
+	 * تعیین می‌کنه که موجودیتی با شناسه تعیین شده در کش هست
+	 * 
+	 * @param {integer} شناسه موجودیت مورد نظر
+	 */
+	pObjectCache.prototype.contains = function(id) {
+		return id in this._cache;
 	};
 
 	return pObjectCache;

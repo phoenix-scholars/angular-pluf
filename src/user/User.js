@@ -63,8 +63,10 @@ angular.module('pluf')
  * نکته: در صورتی که خصوصیت گذرواژه کاربری را تغییر دهید، این تغییر در سرور
  * اعمال خواهد شد.
  */
-.factory('PUser',
-		function($http, $q, $httpParamSerializerJQLike, PObject, PProfile) {
+.factory(
+		'PUser',
+		function($http, $q, $httpParamSerializerJQLike, PObject, PProfile,
+				$injector, PaginatorPage) {
 
 			var pUser = function(data) {
 				if (data) {
@@ -174,9 +176,48 @@ angular.module('pluf')
 				return (this.id && this.id > 0 && this.staff);
 			};
 
-			pUser.prototype.removeRole = function() {
+			/**
+			 * حذف یک رول از کاربر
+			 * 
+			 * برای حذف نقش باید خود نقش را داشته باشید.
+			 * 
+			 * @param {PRole}
+			 *            نقش مورد نظر
+			 * @return promise پارامتری برای خروجی در نظر گرفته نشده
+			 */
+			pUser.prototype.removeRole = function(role) {
+				return $http({
+					method : 'DELETE',
+					url : '/api/user/' + this.id + '/role/' + role.id,
+				});
 			};
-			pUser.prototype.roles = function() {
+
+			/**
+			 * فهرست نقش‌های کاربر را تعیین می‌کند
+			 * 
+			 * @param PaginationParameter
+			 * @return promise(PaginatedPage(Role))
+			 */
+			pUser.prototype.roles = function(paginationParam) {
+				var params = {};
+				if (paginationParam) {
+					params = paginationParam.getParameter();
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/user/' + this.id + '/role/find',
+					params : params
+				}).then(function(res) {
+					var $usr = $injector.get('$usr');
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push($usr._roleCache(item.id, item));
+					}
+					page.items = items;
+					return page;
+				});
 			};
 
 			pUser.prototype.removeGroup = function() {

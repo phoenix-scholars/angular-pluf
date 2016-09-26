@@ -53,4 +53,18 @@ describe('Core module: PObjectCache', function() {
 			title : 'example'
 		});
 	});
+
+	it('should define get', function() {
+		var cache = new PObjectCache(function(data) {
+			return new PObject(data);
+		});
+		expect(angular.isFunction(cache.get)).toBe(true);
+	});
+
+	it('should define getObject', function() {
+		var cache = new PObjectCache(function(data) {
+			return new PObject(data);
+		});
+		expect(angular.isFunction(cache.getObject)).toBe(true);
+	});
 });

@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 'use strict';
-describe('Core module test: user authentication', function() {
+describe('User service: $usr', function() {
 	var originalTimeout;
 	var $rootScope;
 	var $usr;
@@ -47,13 +47,14 @@ describe('Core module test: user authentication', function() {
 	});
 
 	// check to see if it has the expected function
-	it('Check login function', function() {
+	it('should contain login function', function() {
 		expect(angular.isFunction($usr.login)).toBe(true);
 	});
-	it('Check logout function', function() {
+	it('should contain logout function', function() {
 		expect(angular.isFunction($usr.logout)).toBe(true);
 	});
-	it('Check session function', function() {
+
+	it('should contain session function', function() {
 		expect(angular.isFunction($usr.session)).toBe(true);
 	});
 
@@ -108,7 +109,7 @@ describe('Core module test: user authentication', function() {
 		$rootScope.$apply();
 	});
 
-	it('Check session (use was logedin before).', function(done) {
+	it('should call /api/user to get current user.', function(done) {
 		$usr.session().then(function(user) {
 			expect(user).not.toBeNull();
 			expect(user.login).not.toBeNull();
@@ -121,7 +122,7 @@ describe('Core module test: user authentication', function() {
 			done();
 		});
 
-		$httpBackend.expect('GET', '/api/user/account').respond(200, {
+		$httpBackend.expect('GET', '/api/user').respond(200, {
 			id : '1',
 			login : 'admin',
 			administrator : true
@@ -129,4 +130,75 @@ describe('Core module test: user authentication', function() {
 		expect($httpBackend.flush).not.toThrow();
 		$rootScope.$apply();
 	});
+
+	it('should contain role', function() {
+		expect(angular.isFunction($usr.roles)).toBe(true);
+		expect(angular.isFunction($usr.role)).toBe(true);
+		expect(angular.isFunction($usr.newRole)).toBe(true);
+	});
+	it('should call /api/role/find to list all role', function(done) {
+		$usr.roles()//
+		.then(function(rolesPage) {
+			expect(rolesPage).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend.//
+		expect('GET', '/api/role/find')//
+		.respond(200, {
+			itmes : [],
+			item_per_page : 20,
+			current_page : 1
+		// TODO: maso, 1395: add paginated page params
+		});
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+	it('should call /api/role/{id} to get a role', function(done) {
+		var id = 1;
+		$usr.role(id)//
+		.then(function(role) {
+			expect(role).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend.//
+		expect('GET', '/api/role/' + id)//
+		.respond(200, {
+			id : id,
+			title : 'role title'
+		// TODO: maso, 1395: add role params
+		});
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+	it('should call /api/role/new to create a  role', function(done) {
+		var data = {
+			title : 'title',
+			id : 1,
+			description : 'description'
+		// TODO: maso, 1395: add role params
+		};
+		$usr.newRole()//
+		.then(function(role) {
+			expect(role).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend.//
+		expect('POST', '/api/role/new')//
+		.respond(200, data);
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+
 });
