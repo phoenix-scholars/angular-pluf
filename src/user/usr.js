@@ -173,6 +173,15 @@ angular.module('pluf')
 					return _su;
 				});
 			};
+			
+			/*
+			 * TODO: maso, 1395: دسترسی به موجودیت‌های تکراری است
+			 * 
+			 * درسترسی به تمام موجودیت‌ها بر اساس مدل جدیدی که در سین معرفی شده
+			 * کاملا شبیه به هم هست که تنها چندتا از پارامترهای اون تغییر می‌کنه.
+			 * بنابر این بهتر هست که به جای زدن کدهای تکراری یک فکتوری برای ایجاد
+			 * این کدها ایجاد کنیم و در زمان اجرا کدها رو کپی کنیم.
+			 */
 
 			/**
 			 * فهرست کاربران را به صورت صفحه بندی شده در اختیار قرار می‌دهد. این
@@ -329,11 +338,75 @@ angular.module('pluf')
 				});
 			};
 
-			this.groups = function() {
+			/**
+			 * فهرست تمام گروه‌ها را تعیین می‌کند.
+			 * 
+			 * @param {PaginatorParameter}
+			 *            پارامترهای صفحه بندی
+			 * @return promise<PaginatedPage<PGroup>> فهرست گروه‌ها
+			 */
+			this.groups = function(pagParam) {
+				var params = {};
+				if (pagParam) {
+					params = pagParam.getParameter();
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/group/find',
+					params : params
+				}).then(function(res) {
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push(_groupCache(item.id, item));
+					}
+					page.items = items;
+					return page;
+				});
 			};
-			this.group = function() {
+
+			/**
+			 * اطلاعات یک گروه را بازیابی می‌کند.
+			 * 
+			 * @param {integer}
+			 *            شناسه گروه
+			 * @return {promise<PGroup>} گروه بازیابی شده
+			 */
+			this.group = function(id) {
+				if (_groupCache.contains(id)) {
+					var deferred = $q.defer();
+					deferred.resolve(_groupCache.get(id));
+					return deferred.promise;
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/group/' + id,
+				}).then(function(result) {
+					var data = result.data;
+					return _groupCache.restor(data.id, data);
+				});
 			};
-			this.newGroup = function() {
+
+			/**
+			 * یک گروه جدید در سیستم ایجاد می‌کند.
+			 * 
+			 * @param {Object}
+			 *            پارامترهای مورد نیاز برای کاربر
+			 * @return {promise<PGroup>} گروه ایجاد شده
+			 */
+			this.newGroup = function(detail) {
+				return $http({
+					method : 'POST',
+					url : '/api/group/new',
+					data : $httpParamSerializerJQLike(detail),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(result) {
+					var data = result.data;
+					return _groupCache.restor(data.id, data);
+				});
 			};
 
 		});

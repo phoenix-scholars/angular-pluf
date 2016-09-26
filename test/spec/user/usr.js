@@ -109,6 +109,9 @@ describe('User service: $usr', function() {
 		$rootScope.$apply();
 	});
 
+	/*
+	 * User
+	 */
 	it('should call /api/user to get current user.', function(done) {
 		$usr.session().then(function(user) {
 			expect(user).not.toBeNull();
@@ -131,6 +134,9 @@ describe('User service: $usr', function() {
 		$rootScope.$apply();
 	});
 
+	/*
+	 * Roles
+	 */
 	it('should contain role', function() {
 		expect(angular.isFunction($usr.roles)).toBe(true);
 		expect(angular.isFunction($usr.role)).toBe(true);
@@ -201,4 +207,76 @@ describe('User service: $usr', function() {
 		$rootScope.$apply();
 	});
 
+	/*
+	 * Groups
+	 */
+	it('should contain groups', function() {
+		expect(angular.isFunction($usr.groups)).toBe(true);
+		expect(angular.isFunction($usr.group)).toBe(true);
+		expect(angular.isFunction($usr.newGroup)).toBe(true);
+	});
+	it('should call /api/group/find to list all group', function(done) {
+		$usr.groups()//
+		.then(function(page) {
+			expect(page).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend.//
+		expect('GET', '/api/group/find')//
+		.respond(200, {
+			itmes : [],
+			item_per_page : 20,
+			current_page : 1
+		// TODO: maso, 1395: add paginated page params
+		});
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+	it('should call /api/group/{id} to get a group', function(done) {
+		var id = 1;
+		$usr.group(id)//
+		.then(function(object) {
+			expect(object).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend.//
+		expect('GET', '/api/group/' + id)//
+		.respond(200, {
+			id : id,
+			title : 'example title'
+		// TODO: maso, 1395: add role params
+		});
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+	it('should call /api/group/new to create a group', function(done) {
+		var data = {
+			id : 1,
+			title : 'title',
+			description : 'description'
+		// TODO: maso, 1395: add role params
+		};
+		$usr.newGroup()//
+		.then(function(object) {
+			expect(object).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend.//
+		expect('POST', '/api/group/new')//
+		.respond(200, data);
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
 });
