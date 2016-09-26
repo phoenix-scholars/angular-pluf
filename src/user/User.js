@@ -220,9 +220,48 @@ angular.module('pluf')
 				});
 			};
 
-			pUser.prototype.removeGroup = function() {
+			/**
+			 * رابطه میان گروه و کاربر را حذف می کند.
+			 * 
+			 * پارامتر ورودی باید یک گروه باشد.
+			 * 
+			 * @param {PGroup}
+			 *            گروه مورد نظر
+			 * @return {Promise<PGroup>}
+			 */
+			pUser.prototype.removeGroup = function(group) {
+				return $http({
+					method : 'DELETE',
+					url : '/api/user/' + this.id + '/group/' + group.id,
+				});
 			};
-			pUser.prototype.groups = function() {
+
+			/**
+			 * فهرست گروه‌هایی را تعیین می‌کند که کاربر در آنها است
+			 * 
+			 * @param {PaginationParameter}
+			 * @return {Promise<PaginatedPage<PGroup>>}
+			 */
+			pUser.prototype.groups = function(paginationParam) {
+				var params = {};
+				if (paginationParam) {
+					params = paginationParam.getParameter();
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/user/' + this.id + '/group/find',
+					params : params
+				}).then(function(res) {
+					var $usr = $injector.get('$usr');
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push($usr._groupCache(item.id, item));
+					}
+					page.items = items;
+					return page;
+				});
 			};
 
 			return pUser;
