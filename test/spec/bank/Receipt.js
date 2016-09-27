@@ -21,19 +21,67 @@
  */
 'use strict';
 
-describe('Bank module test: PReceipt', function() {
+describe('Bank module: PReceipt', function() {
 	var PReceipt;
+	var $rootScope;
+	var $httpBackend;
+	var $timeout;
+
 	beforeEach(function() {
 		module('pluf');
-		inject(function(_PReceipt_) {
+		inject(function(_PReceipt_, _$rootScope_, _$httpBackend_, _$timeout_) {
 			PReceipt = _PReceipt_;
+
+			// Concurent test
+			$rootScope = _$rootScope_;
+			$httpBackend = _$httpBackend_;
+			$timeout = _$timeout_;
 		});
 	});
 
 	// check to see if it has the expected function
-	it('Check PReceipt API', function() {
+	it('should contains update function', function() {
 		var receipt = new PReceipt();
 		expect(angular.isFunction(receipt.update)).toBe(true);
+	});
+	it('should call /api/bank/receipt/{id} to update', function(done) {
+		var data = {
+			id : 1
+		};
+		var receipt = new PReceipt(data);
+		receipt.update()//
+		.then(function(object) {
+			expect(object).not.toBeNull();
+			done();
+		});
+
+		$httpBackend//
+		.expect('POST', '/api/bank/receipt/1')//
+		.respond(200, data);
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+
+	it('should contains remove', function() {
+		var receipt = new PReceipt();
 		expect(angular.isFunction(receipt.remove)).toBe(true);
+	});
+
+	it('should call /api/bank/receipt/{id} to delete', function(done) {
+		var data = {
+			id : 1
+		};
+		var receipt = new PReceipt(data);
+		receipt.remove()//
+		.then(function(object) {
+			expect(object).not.toBeNull();
+			done();
+		});
+
+		$httpBackend//
+		.expect('DELETE', '/api/bank/receipt/1')//
+		.respond(200, data);
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
 	});
 });

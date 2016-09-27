@@ -120,9 +120,6 @@ angular.module('pluf')
 				return $http({
 					method : 'DELETE',
 					url : '/api/user/' + this.id,
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
 				}).then(function(result) {
 					scope.setData(result.data);
 					return scope;
