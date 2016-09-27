@@ -1,24 +1,6 @@
-/*
- * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
 'use strict';
 angular.module('pluf')
 
@@ -38,7 +20,7 @@ angular.module('pluf')
 .factory('PContent', function($http, $httpParamSerializerJQLike, $q, PObject) {
 
 	function _initContent(scope) {
-		scope.link = '/api/saascms/content/' + scope.id + '/download';
+		scope.link = '/api/cms/' + scope.id + '/download';
 	}
 
 	var pContent = function() {
@@ -57,7 +39,7 @@ angular.module('pluf')
 		var scope = this;
 		return $http({
 			method : 'POST',
-			url : '/api/saascms/content/' + this.id,
+			url : '/api/cms/' + this.id,
 			data : $httpParamSerializerJQLike(scope),
 			headers : {
 				'Content-Type' : 'application/x-www-form-urlencoded'
@@ -79,7 +61,7 @@ angular.module('pluf')
 		var scope = this;
 		return $http({
 			method : 'DELETE',
-			url : '/api/saascms/content/' + this.id
+			url : '/api/cms/' + this.id
 		}).then(function() {
 			delete scope.id;
 			return scope;
@@ -94,17 +76,10 @@ angular.module('pluf')
 	 * @return {promise} مقدار محتوی
 	 */
 	pContent.prototype.value = function() {
-		// TODO: maso, 1395: محتوی صفحه را می‌دهد
-		// if(this._cvalue()){
-		// var deferred = $q.defer();
-		// deferred.resolve(this._cvalue());
-		// return deferred.promise;
-		// }
 		return $http({
 			method : 'GET',
 			url : this.link
 		}).then(function(res) {
-			// scope._setCvalue(res.data);
 			return res.data;
 		});
 	};
