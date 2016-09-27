@@ -25,16 +25,53 @@ angular.module('pluf')
 /**
  * @ngdoc factory
  * @memberof pluf.saas
- * @name PTenantSetting
- * @description
- * تنظیم‌های یک ملک را تعیین می‌کند.
- *
+ * @name PTenant
+ * @description ساختار داده‌ای یک ملک را تعیین می‌کنه
  */
-.factory('PTenantSetting',
-function($http, $q, $window, PObject) {
-	var pTenantSetting = function() {
-		PObject.apply(this, arguments);
-	};
-	pTenantSetting.prototype = new PObject();
-	return pTenantSetting;
-});
+.factory('PTenant',
+		function($http, $httpParamSerializerJQLike, $window, $q, PObject) {
+			var pTenant = function() {
+				PObject.apply(this, arguments);
+			};
+			pTenant.prototype = new PObject();
+
+			/**
+			 * یک ملک را حذف می‌کند
+			 * 
+			 * @memberof PTenant
+			 * @return {promise<PTenant>} ملک حذف شده
+			 */
+			pTenant.prototype.remove = function() {
+				var scope = this;
+				return $http({
+					method : 'DELETE',
+					url : '/api/tenant/' + this.id,
+				}).then(function(res) {
+					scope.setData(res.data);
+					return scope;
+				});
+			};
+
+			/**
+			 * اطلاعات ملک را به روز می‌کند
+			 * 
+			 * @memberof PTenant
+			 * @return {promise<PTenant>} خود ملک
+			 */
+			pTenant.prototype.update = function() {
+				var scope = this;
+				return $http({
+					method : 'POST',
+					url : '/api/tenant/' + this.id,
+					data : $httpParamSerializerJQLike(this),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(res) {
+					scope.setData(res.data);
+					return scope;
+				});
+			};
+
+			return pTenant;
+		});
