@@ -151,7 +151,7 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PBank', function(PObject) {
+.factory('PBank', function(PObject, $http, $httpParamSerializerJQLike) {
 
 	/*
 	 * Creates new instance
@@ -166,14 +166,32 @@ angular.module('pluf')
 	 * Updates bank
 	 */
 	pBank.prototype.update = function() {
-		// NOTE: Imposible
+		var scope = this;
+		return $http({
+			method : 'POST',
+			url : '/api/bank/engine/' + scope.id,
+			data : $httpParamSerializerJQLike(scope),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
+		}).then(function(result) {
+			scope.setData(result.data);
+			return scope;
+		});
 	};
 
 	/**
 	 * remove bank
 	 */
 	pBank.prototype.remove = function() {
-		// NOTE: Imposible
+		var scope = this;
+		return $http({
+			method : 'DELETE',
+			url : '/api/bank/engine/' + this.id,
+		}).then(function(result) {
+			scope.setData(result.data);
+			return scope;
+		});
 	};
 	//
 	return pBank;
@@ -379,10 +397,19 @@ angular.module('pluf')
  */
 .service(
 		'$bank',
-		function($http, $q, PaginatorPage, PBank, PGate, PReceipt,$httpParamSerializerJQLike) {
-			var _banks = {};
-			var _gates = {};
-			var _receipts = {};
+		function($http, $q, PaginatorPage, PBank, PGate, PReceipt,$httpParamSerializerJQLike, PObjectCache) {
+			
+			var _banksCache = new PObjectCache(function(data) {
+				return new PBank(data);
+			});
+			
+			var _gateCache = new PObjectCache(function(data) {
+				return new PBank(data);
+			});
+			var _receiptCache = new PObjectCache(function(data) {
+				return new PBank(data);
+			});
+			
 
 			// TODO: maso, 1395: add to PObject
 			function _paginatorParams(paginatorParam) {
@@ -392,56 +419,7 @@ angular.module('pluf')
 				return paginatorParam.getParameter();
 			}
 			
-			// TODO: maso, 1395: replace with PObjectCache
-			/*
-			 * گرفتن یک محتوی
-			 */
-			function _bank(id) {
-				return _banks[id];
-			}
-			/*
-			 * بازیابی یک محتوی نامدار
-			 */
-			function _retbank(id, data) {
-				var bank = _banks[id];
-				if (bank) {
-					bank.setData(data);
-				} else {
-					bank = new PBank(data);
-					_banks[id] = bank;
-				}
-				return bank;
-			}
-			
-			function _gate(id){
-				return _gates[id];
-			}
 
-			function _retgate(id, data) {
-				var gate = _gates[id];
-				if (gate) {
-					gate.setData(data);
-				} else {
-					gate = new PGate(data);
-					_gates[id] = gate;
-				}
-				return gate;
-			}
-			
-			function _receipt(id){
-				return _receipts[id];
-			}
-			
-			function _retreceipt(id, data) {
-				var receipt = _receipts[id];
-				if (receipt) {
-					receipt.setData(data);
-				} else {
-					receipt = new PReceipt(data);
-					_receipts[id] = receipt;
-				}
-				return receipt;
-			}
 			
 			/**
 			 * Creates new receipt
@@ -460,7 +438,7 @@ angular.module('pluf')
 						'Content-Type' : 'application/x-www-form-urlencoded'
 					}
 				}).then(function(res){
-					return _retreceipt(res.data.id, res.data);
+					return _receiptCache.restor(res.data.id, res.data);
 				});
 			};
 
@@ -473,30 +451,15 @@ angular.module('pluf')
 			 * 
 			 */
 			this.receipt = function(id) {
-				var receipt = _receipt(id);
-				if(receipt){
+				if(_receiptCache.contains(id)){
 					var deferred = $q.defer();
-					deferred.resolve(receipt);
+					deferred.resolve(_receiptCache.get(id));
 					return deferred.promise;
 				}
-				return $http({
-					method : 'GET',
-					url : '/api/bank/receipt/'+id,
-				}).then(function(res){
-					return _retreceipt(res.data.id, res.data);
+				return $http.get('/api/bank/receipt/'+id)//
+				.then(function(res){
+					return _receiptCache.restor(res.data.id, res.data);
 				});
-			};
-
-			/**
-			 * Gets receipt detail
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PReceipt>
-			 * createdreceipt
-			 * 
-			 */
-			this.receiptById = function(id) {
-				return this.receipt(id);
 			};
 
 			/**
@@ -518,8 +481,9 @@ angular.module('pluf')
 							var page = new PaginatorPage(data);
 							page.items = [];
 							for (var i = 0; i < data.counts; i++) {
-								page.items.push(_retreceipt(
-										data.items[i].type, data.items[i]));
+								var item = data.items[i];
+								page.items.push(_receiptCache.resotr(
+										item.id, item));
 							}
 							return page;
 						});
@@ -540,7 +504,7 @@ angular.module('pluf')
 						'Content-Type' : 'application/x-www-form-urlencoded'
 					}
 				}).then(function(res){
-					return _retgate(res.data.id, res.data);
+					return _gateCache.restor(res.data.id, res.data);
 				});
 			};
 
@@ -551,17 +515,16 @@ angular.module('pluf')
 			 * @return Promise<PGate> a gate
 			 */
 			this.gate = function(id) {
-				var gate = _gate(id);
-				if(gate){
+				if(_gateCache.contains(id)){
 					var deferred = $q.defer();
-					deferred.resolve(gate);
+					deferred.resolve(_gateCache.get(id));
 					return deferred.promise;
 				}
 				return $http({
 					method : 'GET',
 					url : '/api/bank/backend/'+id,
 				}).then(function(res){
-					return _retgate(res.data.id, res.data);
+					return _gateCache.restor(res.data.id, res.data);
 				});
 			};
 
@@ -583,8 +546,14 @@ angular.module('pluf')
 							var page = new PaginatorPage(data);
 							page.items = [];
 							for (var i = 0; i < data.counts; i++) {
+<<<<<<< HEAD
 								page.items.push(_retgate(
 										data.items[i].id, data.items[i]));
+=======
+								var item = data.items[i];
+								page.items.push(_gateCache.restor(
+										item.id, item));
+>>>>>>> refs/heads/release/1.0.0
 							}
 							return page;
 						});
@@ -597,18 +566,16 @@ angular.module('pluf')
 			 * @return Promise<PBank>
 			 */
 			this.bank = function(type) {
-				var bank = _bank(type);
-				if(bank){
+				if(_banksCache.contains(type)){
 					var deferred = $q.defer();
-					deferred.resolve(bank);
+					deferred.resolve(_banksCache.get(type));
 					return deferred.promise;
 				}
 				return $http({
 					method : 'GET',
 					url : '/api/bank/engine/'+type,
 				}).then(function(res){
-					bank = _retbank(res.data.type, res.data);
-					return bank;
+					return _banksCache.restor(res.data.type, res.data);
 				});
 			};
 			
@@ -624,23 +591,712 @@ angular.module('pluf')
 					method : 'GET',
 					url : '/api/bank/engine/find',
 					params : _paginatorParams(paginatorParam)
-				}).then(
+				})//
+				.then(
 						function(res) {
 							var data = res.data;
 							var page = new PaginatorPage(data);
 							page.items = [];
 							for (var i = 0; i < data.counts; i++) {
-								page.items.push(_retbank(
-										data.items[i].type, data.items[i]));
+								var item = data.items[i];
+								page.items.push(_banksCache.restor(
+										item.type, item));
 							}
 							return page;
 						});
 			};
 
 		});
+<<<<<<< HEAD
+=======
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+/**
+ * @ngdoc factory
+ * @name PWikiBook
+ * @memberof wiki
+ * 
+ * @description ساختار داده‌ای یک کتاب به همراه اطلاعات کامل صفحه.
+ * 
+ * @attr {Integer} id شناسه کتاب
+ * @attr {String} title عنوان کتاب
+ * @attr {String} state وضعیت کتاب
+ * @attr {String} language زبان مورد استفاده در متن صفحات کتاب
+ * @attr {String} summary خلاصه یا توضیحی کوتاه در مورد کتاب
+ * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد کتاب
+ * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
+ */
+.factory(
+		'PBook',
+		function(PObject, PaginatorPage, $http, $httpParamSerializerJQLike, $q,
+				PPage) {
+
+			var pBook = function() {
+				PObject.apply(this, arguments);
+			};
+			pBook.prototype = new PObject();
+
+			/**
+			 * فهرستی از صفحات کتاب را برمی‌گرداند
+			 * 
+			 * @memberof PWikiBook
+			 * @returns {promise(PaginatedPage<PWikiPageItem>)} فهرستی صفحه
+			 *          بندی شده از PageItem های مربوط به صفحات کتاب
+			 */
+			pBook.prototype.pages = function() {
+				return $http({
+					method : 'GET',
+					url : '/api/book/' + this.id + '/page/find',
+				}).then(function(res) {
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push(new PPage(item));
+					}
+					page.items = items;
+					return page;
+				});
+			};
+
+			/**
+			 * یک صفحه را به کتاب اضافه می‌کند
+			 * 
+			 * @memberof PWikiBook
+			 * @param {PWikiPage}
+			 *            page صفحه‌ای که به کتاب اضافه خواهد شد
+			 * @returns {promise(PWikiBook)} خود کتاب را که صفحه جدید به آن
+			 *          اضافه شده است برمی‌گرداند
+			 */
+			pBook.prototype.newPage = function(bookDetail) {
+				return $http({
+					method : 'POST',
+					url : '/api/book/' + this.id + '/page/new',
+					data : $httpParamSerializerJQLike(bookDetail)
+				}).then(function(res) {
+					return new PPage(res.data);
+				});
+			};
+
+			/**
+			 * یک صفحه را از کتاب حذف می‌کند
+			 * 
+			 * @memberof PWikiBook
+			 * @param {PWikiPage}
+			 *            page صفحه‌ای که باید از کتاب حذف شود
+			 * @returns {promise(PWikiPage)} صفحه حذف شده از کتاب را برمی‌گرداند
+			 */
+			pBook.prototype.page = function(id) {
+				return $http({
+					method : 'GET',
+					url : '/api/book/' + this.id + '/page/' + id,
+				}).then(function(res) {
+					return new PPage(res.data);
+				});
+			};
+
+			/**
+			 * اطلاعات یک کتاب را به‌روزرسانی می‌کند.
+			 * 
+			 * @memberof PWikiBook
+			 * @param {struct}
+			 *            b ساختاری حاوی اطلاعاتی از کتاب که باید به‌روزرسانی
+			 *            شود
+			 * @returns {promise(PWikiBook)} کتاب با اطلاعات به‌روزرسانی شده
+			 */
+			pBook.prototype.update = function() {
+				var scope = this;
+				return $http({
+					method : 'POST',
+					url : '/api/book/' + scope.id,
+					data : $httpParamSerializerJQLike(this),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(res) {
+					scope.setData(res.data);
+					return scope;
+				});
+			};
+
+			/**
+			 * کتاب را حذف می‌کند
+			 * 
+			 * @memberof PWikiBook
+			 * @returns {promise(PWikiBook)} کتاب حذف شده
+			 */
+			pBook.prototype.remove = function() {
+				var scope = this;
+				return $http({
+					method : 'DELETE',
+					url : '/api/book/' + scope.id
+				}).then(function(res) {
+					scope.setData(res.data);
+					return scope;
+				});
+			};
+
+			return pBook;
+		});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @ngdoc factory
+ * @name PWikiPage
+ * @memberof pluf.wiki
+ * 
+ * @description ساختار داده‌ای یک صفحه به همراه اطلاعات کامل صفحه.
+ * 
+ * @attr {Integer} id شناسه صفحه
+ * 
+ * @attr {Integer} priority با این خصوصیت می‌توان برای فهرستی از صفحات یک ترتیب
+ *       در نظر گرفت
+ * 
+ * @attr {String} title عنوان صفحه
+ * @attr {String} state وضعیت صفحه
+ * @attr {Integer} book شناسه کتابی که این صفحه متعلق به آن است
+ * @attr {String} language زبان مورد استفاده در متن صفحه
+ * @attr {String} summary خلاصه‌ای از متن صفحه
+ * @attr {Blob} content محتوای صفحه
+ * 
+ * @attr {String} content_type نوع متن صفحه. مثلا: text/html, text/plain,
+ *       text/markdown , ...
+ * 
+ * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد page
+ * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
+ */
+
+.factory('PPage', function($http, $httpParamSerializerJQLike, PObject) {
+
+	var pPage = function(data) {
+		if (data) {
+			this.setData(data);
+		}
+	};
+	pPage.prototype = new PObject();
+
+	/**
+	 * اطلاعات یک صفحه را به‌روزرسانی می‌کند.
+	 * 
+	 * @memberof PWikiPage
+	 * 
+	 * @returns {promise(PWikiPage)} صفحه به‌روزرسانی شده
+	 */
+	pPage.prototype.update = function() {
+		var scope = this;
+		return $http({
+			method : 'POST',
+			url : '/api/book/' + this.book + '/page/' + this.id,
+			data : $httpParamSerializerJQLike(this),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
+		}).then(function(res) {
+			scope.setData(res.data);
+			return scope;
+		});
+	};
+
+	/**
+	 * صفحه را حذف می‌کند
+	 * 
+	 * @memberof PWikiPage
+	 * 
+	 * @returns {promise(PWikiPage)} صفحه حذف شده برگردانده می شود
+	 */
+	pPage.prototype.remove = function() {
+		var scope = this;
+		return $http({
+			method : 'DELETE',
+			url : '/api/book/' + this.book + '/page/' + this.id
+		}).then(function(res) {
+			scope.setData(res.data);
+			return scope;
+		});
+	};
+
+	/**
+	 * محتوای صفحه را به قالب html تبدیل می‌کند.
+	 * 
+	 * @memberof PWikiPage
+	 * 
+	 * @returns {String} محتوای صفحه در قالب html
+	 */
+	pPage.prototype.toHTML = function() {
+		return markdown.toHTML(this.content);
+	};
+	return pPage;
+});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+/**
+ * @ngdoc service
+ * @name $book
+ * @memberof pluf
+ * 
+ * @description این سرویس امکانات مدیریت صفحه‌ها و کتاب‌های ویکی را فراهم
+ *              می‌کند. با استفاده از این سرویس می‌توان صفحات و کتاب‌های ویکی را
+ *              ایجاد، حذف، جستجو و یا دریافت کرد.
+ */
+.service(
+		'$book',
+		function($http, $httpParamSerializerJQLike, $q, PBook, PaginatorPage,
+				PObjectCache) {
+
+			var postct = 'application/x-www-form-urlencoded';
+			var _cache = new PObjectCache(function(data) {
+				return new PBook(data);
+			});
+			this._cache = _cache;
+
+			/* فراخوانی‌های عمومی */
+			/**
+			 * کتاب‌های ویکی را با توجه به پارامتر p مورد جستجو قرار می‌دهد و
+			 * نتیجه را در قالب یک فهرست صفحه‌بندی شده به صورت غیرهمزمان
+			 * برمی‌گرداند. پارامتر p ساختاری است که در آن خصوصیات مورد نظر برای
+			 * کتاب‌های مورد جستجو تعیین می‌شود.
+			 * 
+			 * @memberof $book
+			 * @param {PaginatorParameter}
+			 *            p ساختاری که در آن خصوصیات مورد نظر برای کتاب‌های مورد
+			 *            جستجو تعیین می‌شود.
+			 * @return {promise(PaginatorPage<PWikiBook>)} ساختاری صفحه‌بندی
+			 *         شده از کتاب‌ها در نتیجه جستجو
+			 */
+			this.books = function(pagParam) {
+				var param = {};
+				if (pagParam) {
+					param = pagParam.getParameter();
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/book/find',
+					params : pagParam,
+				}).then(function(res) {
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						item = _cache.restor(item.id, item);
+						items.push(item);
+					}
+					page.items = items;
+					return page;
+				});
+			};
+
+			/**
+			 * کتاب با شناسه داده شده را برمی گرداند.
+			 * 
+			 * @memberof $help
+			 * @param {Integer}
+			 *            id شناسه کتاب مورد نظر
+			 * @return {PWikiBook} ساختاری حاوی اطلاعات کتاب با شناسه داده شده
+			 */
+			this.book = function(id) {
+				if (_cache.contains(id)) {
+					var deferred = $q.defer();
+					deferred.resolve(_cache.get(id));
+					return deferred.promise;
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/book/' + id,
+				}).then(function(res) {
+					return _cache.restor(res.data.id, res.data);
+				});
+			};
+
+			/**
+			 * یک کتاب را بر اساس اطلاعات داده شده ایجاد می‌کند و کتاب ایجاد شده
+			 * را به صورت غیرهمزمان برمی‌گرداند.
+			 * 
+			 * @memberof $help
+			 * @param {PWikiBook}
+			 *            b کتابی که باید ذخیره شود
+			 * @return {PWikiBook} ساختاری حاوی اطلاعات کتاب پس از ذخیره شدن
+			 */
+			this.newBook = function(bookDetail) {
+				return $http({
+					method : 'POST',
+					url : '/api/book/new',
+					data : $httpParamSerializerJQLike(bookDetail),
+					headers : {
+						'Content-Type' : postct
+					}
+				}).then(function(res) {
+					return _cache.restor(res.data.id, res.data);
+				});
+			};
+		});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+angular.module('pluf')
+/**
+ * فیلتر نمایش صفحه‌ها را ایجاد می‌کند.
+ */
+.filter('unsafe', function($sce) {
+	return function(val) {
+		return $sce.trustAsHtml(val);
+	};
+});
+
+>>>>>>> refs/heads/release/1.0.0
 /* jslint todo: true */
 /* jslint xxx: true */
 /* jshint -W100 */
+'use strict';
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @ngdoc factory
+ * @name PContent
+ * @description ساختار داده‌ای محتوی را ایجاد می‌کند. این ساختار داده‌ای شامل
+ *              اطلاعات کلی از محتوی است که از این میان می‌توان به موارد زیر
+ *              اشاره کرد:
+ * 
+ * @attr {integer} id
+ * @attr {string} name
+ * @attr {string} mimetype
+ * @attr {integer} tenant
+ */
+.factory('PContent', function($http, $httpParamSerializerJQLike, $q, PObject) {
+
+	function _initContent(scope) {
+		scope.link = '/api/cms/' + scope.id + '/download';
+	}
+
+	var pContent = function() {
+		PObject.apply(this, arguments);
+		_initContent(this);
+	};
+	pContent.prototype = new PObject();
+
+	/**
+	 * محتوی را به روز می‌کند
+	 * 
+	 * @memberof PContent
+	 * @return {promise} محتوی جدید ایجاد شده
+	 */
+	pContent.prototype.update = function() {
+		var scope = this;
+		return $http({
+			method : 'POST',
+			url : '/api/cms/' + this.id,
+			data : $httpParamSerializerJQLike(scope),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
+		}).then(function(data) {
+			scope.setData(data.data);
+			_initContent(scope);
+			return scope;
+		});
+	};
+
+	/**
+	 * محتوی را حذف می‌کند
+	 * 
+	 * @memberof PContent
+	 * @return {promise} محتوی حذف شده
+	 */
+	pContent.prototype.remove = function() {
+		var scope = this;
+		return $http({
+			method : 'DELETE',
+			url : '/api/cms/' + this.id
+		}).then(function() {
+			delete scope.id;
+			return scope;
+		});
+	};
+
+	/**
+	 * مقدار محتوی را تعیین می‌کند که معمولا برای گرفتن محتوی ساختار یافته و
+	 * رشته‌ها مناسب است. در سایر موارد استفاده از پیوند محتوی بهتر است.
+	 * 
+	 * @memberof PContent
+	 * @return {promise} مقدار محتوی
+	 */
+	pContent.prototype.value = function() {
+		return $http({
+			method : 'GET',
+			url : this.link
+		}).then(function(res) {
+			return res.data;
+		});
+	};
+
+	/**
+	 * مقدار جدیدی را برای این محتوی تعیین می‌کند.
+	 * 
+	 * @memberof PContent
+	 * @param {object}
+	 *            data مقدار جدید برای محتوی
+	 * @return {promise} محتوی به روز شده
+	 */
+	pContent.prototype.setValue = function(newValue) {
+		var scope = this;
+		return $http({
+			method : 'POST',
+			url : this.link,
+			data : newValue,
+		}).then(function() {
+			return scope;
+		});
+	};
+
+	/**
+	 * یک فایل را به عنوان مقدار بار می‌کند
+	 * 
+	 * ورودی باید فایل جاوسکریپت باشه.
+	 * 
+	 * @param file
+	 * @returns
+	 */
+	pContent.prototype.upload = function(file) {
+		var fd = new FormData();
+		fd.append('file', file);
+		return $http.post(this.link, fd, {
+			transformRequest : angular.identity,
+			headers : {
+				'Content-Type' : undefined
+			}
+		});
+	};
+
+	return pContent;
+});
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+'use strict';
+angular.module('pluf')
+/**
+ * @memberof pluf
+ * @ngdoc service
+ * @name $cms
+ * 
+ * @description مهم‌ترین سرویسی است که در این بسته ارائه شده و کار با محتوی و
+ *              اطلاعات آن را آسان می‌کند. این سرویس برای جستجو و یا گرفتن
+ *              اطلاعات هر محتوایی از سیستم کاربرد دارد. متحوی کاربرد زیادی توی
+ *              صفحه‌های وب داره مثلا با استفاده از محتوی می‌تونید صفحه اول سایت
+ *              رو طراحی کنید و یا یک کلیپ آموزشی روی سایت بزارید.
+ * 
+ * برای هر محتوی می‌تونید یک نام در نظر بگیرد که در این صورت بهش می‌گیم محتوی
+ * نام دارد. این نوع محتوی برای استفاده در سایت‌ها خیلی مناسب هست. برای نمونه در
+ * یک صفحه می‌تونید مطالب رو به صورت زیر بگیرد و نمایش بدید:
+ * 
+ * <pre><code>
+ * $cms.namedContent('about-us').then(function(nc) {
+ * 	return nc.value();
+ * }).then(function(cv) {
+ * 	$scope.content = cv;
+ * });
+ * </code></pre>
+ * 
+ * البته ما اینجا فرض کردیم که محتوی موجود از نوع جیسون هست برای همین به صورت یک
+ * موجودیت جاواسکریپتی باهاش برخورد کردیم.
+ * 
+ * @version 1.0 بر اساس قراردادهایی که در سین ۲ معرفی شده است ساختار این کلاس به
+ *          روز شدا تا مدلهای جدید داده‌ای را ارائه کند. این ساختار به مراتب
+ *          ساده‌تر از مدلی است که در نسخه‌های قبل ارائه شده است.
+ */
+.service(
+		'$cms',
+		function($http, $httpParamSerializerJQLike, $q, $timeout, PContent,
+				PaginatorPage, PObjectCache) {
+			var postct = 'application/x-www-form-urlencoded';
+			var _cache = new PObjectCache(function(data) {
+				return new PContent(data);
+			});
+			this._cache = _cache;
+
+			/**
+			 * این فراخوانی یک ساختار داده‌ای جدید ایجاد می‌کند.
+			 * 
+			 * @memberof $cms
+			 * @param {PContent}
+			 *            contet ساختار داده‌ای محتوی برای ایجاد
+			 * @return {promise(PContent)}
+			 */
+			this.newContent = function(detail) {
+				return $http({
+					method : 'POST',
+					url : '/api/cms/new',
+					data : $httpParamSerializerJQLike(detail),
+					headers : {
+						'Content-Type' : postct
+					}
+				}).then(function(res) {
+					return _cache.restor(res.data.id, res.data);
+				});
+			};
+
+			/**
+			 * یک محتوی با شناسه خاص را تعیین می‌کند.
+			 * 
+			 * @memberof $cms
+			 * @param {Integer}
+			 *            id شناسه محتوی
+			 * @return {promise(PContent)} محتوی معادل
+			 */
+			this.content = function(id) {
+				if (_cache.contains(id)) {
+					var deferred = $q.defer();
+					deferred.resolve(_cache.get(id));
+					return deferred.promise;
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/cms/' + id,
+				}).then(function(res) {
+					return _cache.restor(id, res.data);
+				});
+			};
+
+			/**
+			 * فهرست تمام محتوی موجود را تعیین می‌کند
+			 * 
+			 * @memberof $cms
+			 * @param {PaginatorParameter}
+			 *            param پارامترهای جستجو
+			 * @return {promise(PaginatorPage(PContent))} نتیجه جستجو
+			 */
+			this.contents = function(pagParam) {
+				var param = {};
+				if (pagParam) {
+					param = pagParam.getParameter();
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/cms/find',
+					params : param
+				}).then(function(res) {
+					var page = new PaginatorPage(res.data);
+					page.items = [];
+					for (var i = 0; i < res.data.counts; i++) {
+						var item = res.data.items[i];
+						page.items.push(_cache.restor(item.id, item));
+					}
+					return page;
+				});
+			};
+		});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 angular.module('pluf')
 
@@ -768,143 +1424,27 @@ angular.module('pluf')
   return pCommand;
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
-'use strict';
-angular.module('pluf')
-
-/**
- * @memberof pluf
- * @ngdoc factory
- * @name PContent
- * @description ساختار داده‌ای محتوی را ایجاد می‌کند. این ساختار داده‌ای شامل
- *              اطلاعات کلی از محتوی است که از این میان می‌توان به موارد زیر
- *              اشاره کرد:
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
  * 
- * @attr {integer} id
- * @attr {string} name
- * @attr {string} mimetype
- * @attr {integer} tenant
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
-.factory('PContent', function($http, $httpParamSerializerJQLike, $q, PObject) {
-
-	function _initContent(scope) {
-		scope.link = '/api/saascms/content/' + scope.id + '/download';
-	}
-
-	var pContent = function() {
-		PObject.apply(this, arguments);
-		_initContent(this);
-	};
-	pContent.prototype = new PObject();
-
-	/**
-	 * محتوی را به روز می‌کند
-	 * 
-	 * @memberof PContent
-	 * @return {promise} محتوی جدید ایجاد شده
-	 */
-	pContent.prototype.update = function() {
-		var scope = this;
-		return $http({
-			method : 'POST',
-			url : '/api/saascms/content/' + this.id,
-			data : $httpParamSerializerJQLike(scope),
-			headers : {
-				'Content-Type' : 'application/x-www-form-urlencoded'
-			}
-		}).then(function(data) {
-			scope.setData(data.data);
-			_initContent(scope);
-			return scope;
-		});
-	};
-
-	/**
-	 * محتوی را حذف می‌کند
-	 * 
-	 * @memberof PContent
-	 * @return {promise} محتوی حذف شده
-	 */
-	pContent.prototype.remove = function() {
-		var scope = this;
-		return $http({
-			method : 'DELETE',
-			url : '/api/saascms/content/' + this.id
-		}).then(function() {
-			delete scope.id;
-			return scope;
-		});
-	};
-
-	/**
-	 * مقدار محتوی را تعیین می‌کند که معمولا برای گرفتن محتوی ساختار یافته و
-	 * رشته‌ها مناسب است. در سایر موارد استفاده از پیوند محتوی بهتر است.
-	 * 
-	 * @memberof PContent
-	 * @return {promise} مقدار محتوی
-	 */
-	pContent.prototype.value = function() {
-		// TODO: maso, 1395: محتوی صفحه را می‌دهد
-		// if(this._cvalue()){
-		// var deferred = $q.defer();
-		// deferred.resolve(this._cvalue());
-		// return deferred.promise;
-		// }
-		return $http({
-			method : 'GET',
-			url : this.link
-		}).then(function(res) {
-			// scope._setCvalue(res.data);
-			return res.data;
-		});
-	};
-
-	/**
-	 * مقدار جدیدی را برای این محتوی تعیین می‌کند.
-	 * 
-	 * @memberof PContent
-	 * @param {object}
-	 *            data مقدار جدید برای محتوی
-	 * @return {promise} محتوی به روز شده
-	 */
-	pContent.prototype.setValue = function(newValue) {
-		var scope = this;
-		return $http({
-			method : 'POST',
-			url : this.link,
-			data : newValue,
-		}).then(function() {
-			return scope;
-		});
-	};
-
-	/**
-	 * یک فایل را به عنوان مقدار بار می‌کند
-	 * 
-	 * ورودی باید فایل جاوسکریپت باشه.
-	 * 
-	 * @param file
-	 * @returns
-	 */
-	pContent.prototype.upload = function(file) {
-		var fd = new FormData();
-		fd.append('file', file);
-		return $http.post(this.link, fd, {
-			transformRequest : angular.identity,
-			headers : {
-				'Content-Type' : undefined
-			}
-		});
-	};
-
-	return pContent;
-});
-
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
 'use strict';
 angular.module('pluf')
 
@@ -939,9 +1479,27 @@ angular.module('pluf')
 	return pException;
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 angular.module('pluf')
 
@@ -974,9 +1532,27 @@ angular.module('pluf')
   return pHandler;
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 angular.module('pluf')
 
@@ -1058,9 +1634,27 @@ angular.module('pluf')
   return pMenu;
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 angular.module('pluf')
 
@@ -1145,9 +1739,27 @@ angular.module('pluf')
   return pMenuItem;
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 angular.module('pluf')
 
@@ -1219,89 +1831,27 @@ angular.module('pluf')
   return pMessage;
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
-'use strict';
-angular.module('pluf')
-
-/**
- * @memberof pluf
- * @ngdoc factory
- * @name PNamedContent
- * @description
- * ساختار داده‌ای و ابزارهای مورد نیاز با یک محتوی نامدار را تعیین می‌کند. محتوی نام دار یک محتوی
- * است که با استفاده از یک نام منحصر به فرد قابل دسترسی است. از این مدل محتوی در جایی
- * استفاده می‌شود که شناسه محتوی مهم نیست و محتوی به هر شکلی باید موجود باشد.
- *
- * برای نمونه محتویی که در صفحه اول یک سایت نمایش داده می‌شود، مستقل از این که شناسه آن
- * چیست و در چه زمانی ایجاد شده است می‌تواند با نام مشخض به صورت زیر در دسترس باشد:
- *
- * <pre><code>
- * $cms.namedContent('main').then(function(nc){
- * 	$scope.namedContent = nc;
- * 	return nc.value();
- * }).then(function(content){
- * 	// Put content in your view
- * })
- * </code></pre>
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
-.factory('PNamedContent', function ($http, $httpParamSerializerJQLike, $q,
-	PObject){
-	var pNamedContent = function() {
-		PObject.apply(this, arguments);
-	};
-	pNamedContent.prototype = new PObject();
-	/**
-	 * محتوی نامدار را به روز می‌کند.
-	 * @memberof PNamedContent
-	 * @return {promise} محتوی جدید
-	 */
-	pNamedContent.prototype.update = function(){
-		// XXX: maso, 1395: به روز کردن صفحه
-	};
-
-	/**
-	 * محتوی نامدار را از سیستم حذف می‌‌کند.
-	 *
-	 * @memberof PNamedContent
-	 * @return {promise} محتوی حذف شده
-	 */
-	pNamedContent.prototype.remove = function(){
-		// XXX: maso, 1395: حذف صفحه
-	};
-	// // XXX: maso, 1395: تعیین محتوی
-	// pNamedContent.prototype.content = function(){
-	// 	var deferred = $q.defer();
-	// 	deferred.resolve(new PContent({id:2}));
-	// 	return deferred.promise;
-	// }
-	/**
-	 * محتوی این صفحه نامدار را تعیین می‌کند. این فراخوانی زمانیکه محتوی به صورت یم مقدار
-	 * رشته‌ای و یا یک ساختار داده‌ای است بسیار مناسب است.
-	 *
-	 * @memberof PNamedContent
-	 * @return {object} محتوی صفحه
-	 */
-	pNamedContent.prototype.value = function(){
-		return this.content.value();
-	};
-
-	/**
-	 * مقدار جدیدی را برای این محتوی نامدار تعیین می‌کند.
-	 * @memberof PNamedContent
-	 * @param  {object} v محتوی جدید
-	 * @return {promise}   محتوی به روز شده
-	 */
-	pNamedContent.prototype.setValue = function(v){
-		return this.content.setValue(v);
-	};
-	return pNamedContent;
-});
-
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
 'use strict';
 angular.module('pluf')
 /**
@@ -1368,14 +1918,133 @@ angular.module('pluf')
 		 */
 		isAnonymous : function() {
 			return !(this.id && this.id > 0);
+		},
+		
+		/**
+		 * تعیین می‌کند که آیا موجودیت منقضی شده یا نه
+		 *
+		 * @memberof PObject
+		 * @returns {Boolean} معتبر بودن ساختار داده
+		 */
+		isExpired : function() {
+			// XXX: maso, 1395: check aot time
+			return false;
 		}
 	};
 	return pObject;
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+angular.module('pluf')
+/**
+ * @memberof pluf
+ * @ngdoc factory
+ * @name PObject
+ * 
+ * @description یک مخزن برای نگهداری تمام موجودیت‌هایی است که از ساختارهای
+ *              داده‌ای ما پیروی می‌کنند.
+ * 
+ */
+.factory('PObjectCache', function() {
+	/**
+	 * این فراخوانی یک نمونه جدید از این موجودیت ایجاد کرده و مقادیر داده ورودی
+	 * را به عنوان داده‌های این موجودیت قرار می‌دهد.
+	 * 
+	 * @memberof PObject
+	 * @param {data}
+	 *            ساختار داده‌ای موجودیت مورد نظر
+	 */
+	var pObjectCache = function(factory) {
+		this._cache = [];
+		this.factory = factory;
+	};
+
+	/*
+	 * اطلاعات یک کاربر با شناسه تعیین شده را بازیابی می‌کند. این مقدار ممکن است
+	 * تهی باشد.
+	 */
+	pObjectCache.prototype.get = function(id) {
+		if (!this._cache[id]) {
+			return null;
+		}
+		if (this._cache[id].isAnonymous() || this._cache[id].isExpired()) {
+			delete this._cache[id];
+			return null;
+		}
+		return this._cache[id];
+	};
+	/**
+	 * 
+	 */
+	pObjectCache.prototype.getObject = pObjectCache.prototype.get;
+	/*
+	 * اطلاعات یک کاربر را بازیابی می‌کند
+	 */
+	pObjectCache.prototype.restor = function(id, data) {
+		var instance = this.getObject(id);
+		if (instance) {
+			instance.setData(data);
+		} else {
+			instance = this.factory(data);
+			this._cache[id] = instance;
+		}
+		return instance;
+	};
+
+	/**
+	 * تعیین می‌کنه که موجودیتی با شناسه تعیین شده در کش هست
+	 * 
+	 * @param {integer} شناسه موجودیت مورد نظر
+	 */
+	pObjectCache.prototype.contains = function(id) {
+		return id in this._cache;
+	};
+
+	return pObjectCache;
+});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 angular.module('pluf')
 
@@ -1421,9 +2090,27 @@ angular.module('pluf')
 	return paginatorPage;
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 angular.module('pluf')
 
@@ -1508,9 +2195,27 @@ angular.module('pluf')
 	return pagParam;
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 angular.module('pluf')
 
@@ -1583,9 +2288,27 @@ angular.module('pluf')
 	return pPreferenceNode;
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 angular.module('pluf')
 
@@ -1617,9 +2340,27 @@ angular.module('pluf')
 	return pPreferenceProperty;
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 angular.module('pluf')
 
@@ -1863,42 +2604,28 @@ angular.module('pluf')
 	return pProcess;
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
-'use strict';
-
-angular.module('pluf')
-
-
-/**
- * @ngdoc factory
- * @name PProfile
- * @memberof pluf
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
  * 
- * @description
- * هر کاربر در هر سیستم یک پروفایل مخصوص به خود دارد که شامل یه سری اطلاعات کلی می‌شود.
- * این اطلاعات برای هر نرم افزار می‌تواند متفاوت باشد برای نمونه شما در سیستم فروش یک پروفایل
- * دارید که شامل شماره تماس است اما در سیستم کتابداری پروفایل شما شامل شماره دانشجویی
- * است.
- *
- * طبعت متغیر این مدل داده‌ای منجر به این شده که این مدل یک مدل کلی به صورت کلید مقدار باشد
- * که شما می‌توانید مقادیر مورد نظر خود را در آن اضافه و کم کنید.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  * 
- * @attr {Integer} id شناسه
- * @attr {Integer} user شناسه حساب کاربری مربوط به این پروفایل
- * @attr {Boolean} validate وضعیت اعتبار پروفایل
- * @attr {String} country کشور
- * @attr {String} city شهر
- * @attr {String} address آدرس
- * @attr {String} postal_code کد پستی
- * @attr {String} phone_number شماره تلفن
- * @attr {String} mobile_number شماره موبایل
- * @attr {String} national_id کد ملی
- * @attr {String} shaba شماره شبای بانکی
- * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد پروفایل
- * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
+<<<<<<< HEAD
 .factory('PProfile', function( $http, $httpParamSerializerJQLike, $q, PObject) {
 	/*
 	 * یک نمونه جدید از این موجودیت ایجاد می کند.
@@ -2126,6 +2853,8 @@ angular.module('pluf')
 /* jslint todo: true */
 /* jslint xxx: true */
 /* jshint -W100 */
+=======
+>>>>>>> refs/heads/release/1.0.0
 'use strict';
 angular.module('pluf')
 
@@ -2331,246 +3060,27 @@ angular.module('pluf')
 	};
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
-'use strict';
-angular .module('pluf')
-/**
- * @memberof pluf
- * @ngdoc service
- * @name $cms
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
  * 
- * @description
- * مهم‌ترین سرویسی است که در این بسته ارائه شده و کار با محتوی و اطلاعات آن را آسان می‌کند.
- * این سرویس برای جستجو و یا گرفتن اطلاعات هر محتوایی از سیستم کاربرد دارد. متحوی کاربرد زیادی
- * توی صفحه‌های وب داره مثلا با استفاده از محتوی می‌تونید صفحه اول سایت رو طراحی کنید و یا یک
- * کلیپ آموزشی روی سایت بزارید.
- *
- * برای هر محتوی می‌تونید یک نام در نظر بگیرد که در این صورت بهش می‌گیم محتوی نام دارد. این
- * نوع محتوی برای استفاده در سایت‌ها خیلی مناسب هست. برای نمونه در یک صفحه می‌تونید مطالب
- * رو به صورت زیر بگیرد و نمایش بدید:
- *
- * <pre><code>
- * 	$cms.namedContent('about-us').then(function(nc){
- * 		return nc.value();
- * 	}).then(function(cv){
- * 		$scope.content = cv;
- * 	});
- * </code></pre>
- *
- * البته ما اینجا فرض کردیم که محتوی موجود از نوع جیسون هست برای همین به صورت یک موجودیت
- * جاواسکریپتی باهاش برخورد کردیم.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
-.service('$cms',function($http, $httpParamSerializerJQLike, $q, $timeout,
-	PContent, PNamedContent, PaginatorPage, PException) {
-	/*
-	 * مخزن محتوی نامدار
-	 */
-	this._nc = {};
-	/*
-	 * گرفتن یک محتوی
-	 */
-	this._getnc = function(id){
-		return this._nc[id];
-	};
-	/*
-	 * بازیابی یک محتوی نامدار
-	 */
-	this._retnc = function(id, d) {
-		var i = this._nc[id];
-		if (i) {
-			i.setData(d);
-		} else {
-			i = new PNamedContent(d);
-			this._nc[id] = i;
-		}
-		return i;
-	};
-	/*
-	 * مخزن محتوی
-	 */
-	this._c ={};
-	/*
-	 * گرفتن یک محتوی
-	 */
-	this._getc = function(id){
-		return this._c[id];
-	};
-	/*
-	 * بازیابی یک محتوی
-	 */
-	this._retc = function(id, c){
-		var i = this._c[id];
-		if (i) {
-			i.setData(c);
-		} else {
-			i = new PContent(c);
-			this._c[c.id] = i;
-		}
-		return i;
-	};
-
-	/**
-	 * این فراخوانی یک ساختار داده‌ای جدید ایجاد می‌کند.
-	 *
-	 * @memberof $cms
-	 * @param {PContent} contet ساختار داده‌ای محتوی برای ایجاد
-	 * @return {promise(PContent)}
-	 */
-	this.newContent = function(c){
-		var scope = this;
-		return $http({
-			method: 'POST',
-			url: '/api/saascms/content/new',
-			data : $httpParamSerializerJQLike(c),
-			headers : {
-				'Content-Type' : 'application/x-www-form-urlencoded'
-			}
-		}).then(function(res){
-			return scope._retc(res.data.id, res.data);
-		});
-	};
-
-	/**
-	 * یک محتوی با شناسه خاص را تعیین می‌کند.
-	 *
-	 * @memberof $cms
-	 * @param  {Integer} id شناسه محتوی
-	 * @return {promise(PContent)}   محتوی معادل
-	 */
-	this.content = function(i){
-		var t = this._getc(i);
-		if(t){
-			var deferred = $q.defer();
-			deferred.resolve(t);
-			return deferred.promise;
-		}
-		t = this;
-		return $http({
-			method : 'GET',
-			url : '/api/saascms/content/'+i,
-		}).then(function(res){
-			return t._retc(i, res.data);
-		});
-	};
-
-	/**
-	 * فهرست تمام محتوی موجود را تعیین می‌کند
-	 *
-	 * @memberof $cms
-	 * @param  {PaginatorParameter} param پارامترهای جستجو
-	 * @return {promise(PaginatorPage(PContent))}  نتیجه جستجو
-	 */
-	this.contents = function(p){
-		var scope = this;
-		return $http({
-			method : 'GET',
-			url : '/api/saascms/content/find',
-			params : p.getParameter()
-		}).then(function(res) {
-			var page = new PaginatorPage(res.data);
-			page.items = [];
-			for (var i = 0; i < res.data.counts; i++) {
-				page.items.push(
-					scope._retc(res.data.items[i].id, res.data.items[i])
-				);
-			}
-			return page;
-		}, function(data) {
-			throw new PException(data);
-		});
-	};
-
-	/**
-	 * یک صفحه نامدار جدید ایجاد می‌کند.
-	 *
-	 * @memberof $cms
-	 * @param  {string} name عنوان برای صفحه
-	 * @param  {PContent} content محتوی مورد نظر
-	 * @return {promise(PNamedContent)}   محتوی نام دار ایجاد شده
-	 */
-	this.newNamedContent = function(n, c){
-		var scope = this;
-		var nc;
-		return $http({
-			method: 'POST',
-			url: '/api/saascms/page/new',
-			data: $httpParamSerializerJQLike({
-				content: c.id,
-				name: n
-			}),
-			headers : {
-				'Content-Type' : 'application/x-www-form-urlencoded'
-			}
-		}).then(function(res){
-			nc = scope._retnc(res.data.name, res.data);
-			return scope.content(nc.content);
-		}).then(function(c){
-			nc.content = c;
-			return nc;
-		});
-	};
-
-	/**
-	 * گرفتن یک صفحه نامدار با استفاده از عنوان آن
-	 *
-	 * @memberof $cms
-	 * @param  {string} name عنوان محتوی را تعیین می‌کند
-	 * @return {promise(PNamedContent)}  محتوی معادل با نام
-	 */
-	this.namedContent = function(n){
-		var t = this._getnc(n);
-		if(t){
-			var deferred = $q.defer();
-			deferred.resolve(t);
-			return deferred.promise;
-		}
-		var scope = this;
-		var nc;
-		return $http({
-			method : 'GET',
-			url : '/api/saascms/page/'+n,
-		}).then(function(res){
-			nc = scope._retnc(res.data.name, res.data);
-			return scope.content(nc.content);
-		}).then(function(c){
-			nc.content = c;
-			return nc;
-		});
-	};
-	/**
-	 * فهرست تمام محتوهای نامدار رو می‌ده.
-	 *
-	 * @memberof $cms
-	 * @param  {PaginatorParameter} paginatorParameter پارامترهای مورد استفاده در صفحه بندی
-	 * @return {promise(PaginatorPage(PNamedContent))}  دستگیره برای دریافت اطلاعا صفحه
-	 */
-	this.namedContents = function(p){
-		var scope = this;
-		return $http({
-			method : 'GET',
-			url : '/api/saascms/page/find',
-			params : p.getParameter()
-		}).then(function(res) {
-			var page = new PaginatorPage(res.data);
-			page.items = [];
-			for (var i = 0; i < res.data.counts; i++) {
-				page.items.push(
-					scope._retnc(
-						res.data.items[i].name,
-						res.data.items[i]
-					)
-				)	;
-			}
-			return page;
-		});
-	};
-});
-
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
 'use strict';
 
 angular.module('pluf')
@@ -2686,9 +3196,27 @@ angular.module('pluf')
 	};
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 
 angular.module('pluf')
@@ -2817,9 +3345,27 @@ angular.module('pluf')
 	};
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 angular.module('pluf')
 
@@ -2855,9 +3401,27 @@ angular.module('pluf')
 	this.nodes = function() {};
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 
 angular.module('pluf')
@@ -2896,13 +3460,32 @@ angular.module('pluf')
   this.process = function(){};
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 
 angular.module('pluf')
 /**
+<<<<<<< HEAD
  * @memberof pluf
  * @ngdoc service
  * @name $usr
@@ -3272,85 +3855,92 @@ angular.module('pluf')
 
 angular.module('pluf')
 /**
+=======
+>>>>>>> refs/heads/release/1.0.0
  * @ngdoc factory
  * @memberof pluf.saas
  * @name PSpa
- * @description
- * اطلاعات یک نرم افزار را تعیین می‌کند.
- *
+ * @description اطلاعات یک نرم افزار را تعیین می‌کند.
+ * 
  * @attr {integer} id
  * @attr {string} name
- *
+ * 
  */
-.factory('PSpa', function($http, $q, $window, PSpaDetail, PObject) {
+.factory('PSpa',
+		function($http, $httpParamSerializerJQLike, $q, $window, PObject) {
 
-	var pSpa = function() {
-		PObject.apply(this, arguments);
-	};
+			var pSpa = function() {
+				PObject.apply(this, arguments);
+			};
 
-	pSpa.prototype = new PObject();
+			pSpa.prototype = new PObject();
 
-	/**
-	 * ملک پیش فرض را تعیین می‌کند. به صورتی پیش فرض یک نرم افزار به ملک خاصی تعلق ندارد
-	 * اما برای سادگی توسعه اگر فهرست نرم افزارهای یک ملک را بگیرید ملک پیش فرض آن نیز
-	 * تعیین می‌شود.
-	 *
-	 * @memberof PSpa
-	 * @param  {PTenant} tenant ملک پیش فرض
-	 * @return {PSpa}  خود نرم افزار
-	 */
-	pSpa.prototype.setTenant = function(tenant) {
-		this._tenant = tenant;
-		return this;
-	};
+			/**
+			 * ملک پیش فرض را تعیین می‌کند. به صورتی پیش فرض یک نرم افزار به ملک
+			 * خاصی تعلق ندارد اما برای سادگی توسعه اگر فهرست نرم افزارهای یک
+			 * ملک را بگیرید ملک پیش فرض آن نیز تعیین می‌شود.
+			 * 
+			 * @memberof PSpa
+			 * @param {PTenant}
+			 *            tenant ملک پیش فرض
+			 * @return {PSpa} خود نرم افزار
+			 */
+			pSpa.prototype.setTenant = function(tenant) {
+				this._tenant = tenant;
+				return this;
+			};
 
-	/**
-	 * اطلاعات نرم افزار را دوباره بازیابی می‌کند. زمانی که یک نرم افزار به روز شده باشد با این
-	 * فراخوانی اطلاعات جدید آن بارگذاری می‌شود.
-	 *
-	 * @memberof PSpa
-	 * @return {PSpa} خود نرم افزار
-	 */
-	pSpa.prototype.reload = function(){};
+			/**
+			 * اطلاعات نرم افزار را دوباره بازیابی می‌کند. زمانی که یک نرم افزار
+			 * به روز شده باشد با این فراخوانی اطلاعات جدید آن بارگذاری می‌شود.
+			 * 
+			 * @memberof PSpa
+			 * @return {PSpa} خود نرم افزار
+			 */
+			pSpa.prototype.reload = function() {
+			};
 
-	/**
-	 * نرم افزار را به روز رسانی می‌کنند.
-	 *
-	 * @memberof PSpa
-	 * @return {promise<PSpa>} نرم افزار به روز شده
-	 */
-	pSpa.prototype.update = function(){};
+			/**
+			 * نرم افزار را به روز رسانی می‌کنند.
+			 * 
+			 * @memberof PSpa
+			 * @return {promise<PSpa>} نرم افزار به روز شده
+			 */
+			pSpa.prototype.update = function() {
+				var scope = this;
+				return $http({
+					method : 'POST',
+					url : '/api/spa/' + this.id,
+					data : $httpParamSerializerJQLike(this),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(res) {
+					scope.setData(res.data);
+					return scope;
+				});
+			};
 
-	/**
-	 * نرم افزار را حذف می‌کند.
-	 *
-	 * @return {PSpa} نرم افزار حذف شده
-	 */
-	pSpa.prototype.delete = function(){};
+			/**
+			 * نرم افزار را حذف می‌کند.
+			 * 
+			 * @return {PSpa} نرم افزار حذف شده
+			 */
+			pSpa.prototype.remove = function() {
+				var scope = this;
+				return $http({
+					method : 'DELETE',
+					url : '/api/spa/' + this.id,
+				}).then(function(res) {
+					scope.setData(res.data);
+					return scope;
+				});
+			};
 
-	/**
-	 * جزئیات یک نرم افزار را تعیین می‌کند. این جزئیات شامل اطلاعاتی مثل نویسندگان، ادرس تارنما
-	 * و سایر مواردی می شود که توسعه دهنده در اختیار ما قرار می‌دهد.
-	 *
-	 * @memberof PSpa
-	 * @return {PSpaDetail} جزئیات نرم افزار
-	 */
-	pSpa.prototype.detail = function() {
-		if (this._detail) {
-			var def = $q.defer();
-			def.resolve(this._detail);
-			return def.promise;
-		}
-		var scope = this;
-		return $http({
-			method: 'GET',
-			url: '/api/saas/spa/' + this.id + '/detail',
-		}).then(function(res) {
-			scope._detail = new PSpaDetail(res.data);
-			return scope._detail;
+			return pSpa;
 		});
-	};
 
+<<<<<<< HEAD
 	/**
 	 * اجرای نرم افزار.
 	 *
@@ -3395,7 +3985,30 @@ angular.module('pluf')
  * هر نسخه می‌تواند از یک نوع نرم افزار خاص نصب شده استفاده کند. البته نرم
  * افزارها باید تنها از خدمات ارائه شده در نسخه نصبی استفاده کنند. هر نرم افزار
  * می‌تواند شامل تنظیم‌های متفاتی باشد.
+=======
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+>>>>>>> refs/heads/release/1.0.0
  */
+<<<<<<< HEAD
 .factory('PSpaDetail',
 function($http, $q, $window, PObject) {
 	var pSpaDetail = function() {
@@ -3426,6 +4039,8 @@ function($http, $q, $window, PObject) {
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+=======
+>>>>>>> refs/heads/release/1.0.0
 'use strict';
 
 angular.module('pluf')
@@ -3433,62 +4048,57 @@ angular.module('pluf')
  * @ngdoc factory
  * @memberof pluf.saas
  * @name PTenant
- * @description
- *  ساختار داده‌ای یک ملک را تعیین می‌کنه
+ * @description ساختار داده‌ای یک ملک را تعیین می‌کنه
  */
-.factory('PTenant', function(
-	$http, $httpParamSerializerJQLike, $window, $q,
-	PObject, PException, PProfile, PaginatorParameter, PaginatorPage,
-	PSpa) {
-	var pTenant = function() {
-		PObject.apply(this, arguments);
-	};
-	pTenant.prototype = new PObject();
+.factory('PTenant',
+		function($http, $httpParamSerializerJQLike, $window, $q, PObject) {
+			var pTenant = function() {
+				PObject.apply(this, arguments);
+			};
+			pTenant.prototype = new PObject();
 
-	pTenant.prototype._spa = [];
-	pTenant.prototype._retSpa = function(spaData) {
-		var t;
-		if (spaData.id in this._spa) {
-			t = this._spa[spaData.id];
-			t.setData(spaData);
-			return t;
-		}
-		t = new PSpa(spaData).setTenant(this);
-		this._spa[t.id] = t;
-		return t;
-	};
+			/**
+			 * یک ملک را حذف می‌کند
+			 * 
+			 * @memberof PTenant
+			 * @return {promise<PTenant>} ملک حذف شده
+			 */
+			pTenant.prototype.remove = function() {
+				var scope = this;
+				return $http({
+					method : 'DELETE',
+					url : '/api/tenant/' + this.id,
+				}).then(function(res) {
+					scope.setData(res.data);
+					return scope;
+				});
+			};
 
-	/**
-	 * یک ملک را حذف می‌کند
-	 *
-	 * @memberof PTenant
-	 * @return {promise<PTenant>} ملک حذف شده
-	 */
-	pTenant.prototype.delete = function(){
-		//TODO:
-	};
+			/**
+			 * اطلاعات ملک را به روز می‌کند
+			 * 
+			 * @memberof PTenant
+			 * @return {promise<PTenant>} خود ملک
+			 */
+			pTenant.prototype.update = function() {
+				var scope = this;
+				return $http({
+					method : 'POST',
+					url : '/api/tenant/' + this.id,
+					data : $httpParamSerializerJQLike(this),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(res) {
+					scope.setData(res.data);
+					return scope;
+				});
+			};
 
-	/**
-	 * اطلاعات ملک را به روز می‌کند
-	 *
-	 * @memberof PTenant
-	 * @return {promise<PTenant>} خود ملک
-	 */
-	pTenant.prototype.update = function() {
-		var scope = this;
-		return $http({
-			method: 'POST',
-			url: '/api/saas/' + this.id,
-			data: $httpParamSerializerJQLike(this),
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			}
-		}).then(function(res) {
-			scope.setData(res.data);
-			return scope;
+			return pTenant;
 		});
-	};
 
+<<<<<<< HEAD
 	/**
 	 * تنظیم‌های یک ملک را تعیین می‌کند. این تنظیم‌ها توسط سیستم ایجاد شده است و تنها مدیریت
 	 * سیستم قادر به تغییر آنها خواهد بود.
@@ -3644,6 +4254,8 @@ angular.module('pluf')
 	return pTenant;
 });
 
+=======
+>>>>>>> refs/heads/release/1.0.0
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
  * 
@@ -3668,6 +4280,7 @@ angular.module('pluf')
 'use strict';
 
 angular.module('pluf')
+<<<<<<< HEAD
 /**
  * @ngdoc factory
  * @memberof pluf.saas
@@ -3683,7 +4296,200 @@ angular.module('pluf')
 	pTenantGroup.prototype = new PObject();
 	return pTenantGroup;
 });
+=======
+		/**
+		 * @ngdoc service
+		 * @name $saas
+		 * @memberof pluf.saas
+		 * @description مدیریت ملک و نرم افزارها را انجام می‌دهد.
+		 */
+		.service(
+				'$saas',
+				function($http, $httpParamSerializerJQLike, $q, $window, $act,
+						$usr, PTenant, PSpa, PaginatorParameter, PaginatorPage,
+						PObjectCache) {
+					var contentType = 'application/x-www-form-urlencoded';
+>>>>>>> refs/heads/release/1.0.0
 
+<<<<<<< HEAD
+=======
+					var _tenantCache = new PObjectCache(function(data) {
+						return new PTenant(data);
+					});
+
+					var _spaCache = new PObjectCache(function(data) {
+						return new PSpa(data);
+					});
+
+					/**
+					 * نمونه جاری را تعیین می‌کند. به صورت پیش فرض اجرای هر نرم
+					 * افزار روی یک ملک اجرا می‌شود این فراخوانی ملکی را تعیین
+					 * می‌کند که نرم افزار جاری روی آن کار می‌کند.
+					 * 
+					 * @memberof $saas
+					 * @return {permision(PTenant)} ملک جاری را تعیین می‌کند.
+					 */
+					this.session = function() {
+						return $http.get('/api/tenant')//
+						.then(function(res) {
+							return _tenantCache.restor(res.data);
+						});
+					};
+
+					/**
+					 * فهرست تمام ملک‌هایی را که کاربر به آنها دسترسی دارد را
+					 * تعیین می‌کند.
+					 * 
+					 * @memberof $saas
+					 * @param {PaginatorParameter}
+					 *            paginatorParameter پارامترهای مورد استفاده در
+					 *            صفحه بندی
+					 * @return {promise<PaginatorPage<PTenant>>} فهرست ملک‌ها
+					 *         به صورت صفحه بندی
+					 */
+					this.tenants = function(paginatorParameter) {
+						var param = {};
+						if (paginatorParameter) {
+							param = paginatorParameter.getParameter();
+						}
+						return $http({
+							method : 'GET',
+							url : '/api/tenant/find',
+							params : param
+						}).then(
+								function(res) {
+									var page = new PaginatorPage(res.data);
+									page.items = [];
+									for (var i = 0; i < page.counts; i++) {
+										var item = res.data.items[i];
+										page.items.push(_tenantCache.restor(
+												item.id, item));
+									}
+									return page;
+								});
+					};
+
+					/**
+					 * ملک تعیین شده با شناسه را برمی‌گرداند.
+					 * 
+					 * @memberof $saas
+					 * @param {integer}
+					 *            id شناسه ملک مورد نظر
+					 * @return {promise<PTenant>} ملک تعیین شده.
+					 */
+					this.tenant = function(id) {
+						if (_tenantCache.contains(id)) {
+							var deferred = $q.defer();
+							deferred.resolve(_tenantCache.get(id));
+							return deferred.promise;
+						}
+						return $http.get('/api/tenant/' + id)//
+						.then(function(res) {
+							return _tenantCache.restor(res.data.id, res.data);
+						});
+					};
+
+					/**
+					 * یک ملک جدید ایجاد می‌کند و ساختار ایجاد شده برای آنرا به
+					 * عنوان نتیجه برمی‌گرداند.
+					 * 
+					 * @memberof $saas
+					 * @param {Struct}
+					 *            tenantData ساختار داده‌ای ملک
+					 * @return {promise<PTenant>} مکل ایجاد شده
+					 */
+					this.newTenant = function(t) {
+						return $http({
+							method : 'POST',
+							url : '/api/tenant/new',
+							data : $httpParamSerializerJQLike(t),
+							headers : {
+								'Content-Type' : contentType
+							}
+						})//
+						.then(function(res) {
+							return _tenantCache.restor(res.data.id, res.data);
+						});
+					};
+
+					/**
+					 * فهرست تمام نرم افزارهایی را تعیین می‌کند که برای ملک جاری
+					 * در دسترس است.
+					 * 
+					 * @memberof $saas
+					 * @param {PaginatorParameter}
+					 *            paginatorParameter پارامترهای مورد استفاده در
+					 *            صفحه بندی
+					 * @return {promise<PaginatorPage<PSpa>>} فهرست نرم
+					 *         افزارها
+					 */
+					this.spas = function(paginatorParameter) {
+						var param = {};
+						if (paginatorParameter) {
+							param = paginatorParameter.getParameter();
+						}
+						return $http({
+							method : 'GET',
+							url : '/api/spa/find',
+							params : param
+						})//
+						.then(
+								function(res) {
+									var page = new PaginatorPage(res.data);
+									page.items = [];
+									for (var i = 0; i < page.counts; i++) {
+										var item = res.data.items[i];
+										page.items.push(_spaCache.restore(
+												item.id, item));
+									}
+									return page;
+								});
+					};
+
+					/**
+					 * نرم افزار معادل با شناسه ورودی را بازیابی می‌کند.
+					 * 
+					 * @memberof $saas
+					 * @param {integer}
+					 *            id شناسه نرم افزار
+					 * @return {promise<PSpa>} نرم‌افزار معادل
+					 */
+					this.spa = function(id) {
+						if (_spaCache.contains(id)) {
+							var deferred = $q.defer();
+							deferred.resolve(_spaCache.get(id));
+							return deferred.promise;
+						}
+						return $http.get('/api/spa/' + id)//
+						.then(function(res) {
+							return _spaCache.restor(res.data.id, res.data);
+						});
+					};
+
+					/**
+					 * یک نرم افزار جدید در سیستم ایجاد می‌کند.
+					 * 
+					 * @memberof $saas
+					 * @param {Struct}
+					 *            spa ساختار داده‌ای یک spa
+					 * @return {promise<PSpa} نرم‌افزار معادل ایجاد شده
+					 */
+					this.newSpa = function(detail) {
+						return $http({
+							method : 'POST',
+							url : '/api/spa/new',
+							data : $httpParamSerializerJQLike(detail),
+							headers : {
+								'Content-Type' : contentType
+							}
+						})//
+						.then(function(res) {
+							return _spaCache.restor(res.data.id, res.data);
+						});
+					};
+				});
+
+>>>>>>> refs/heads/release/1.0.0
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
  * 
@@ -3708,6 +4514,7 @@ angular.module('pluf')
 'use strict';
 
 angular.module('pluf')
+<<<<<<< HEAD
 /**
  * @ngdoc factory
  * @memberof pluf.saas
@@ -4046,6 +4853,8 @@ angular.module('pluf')
 'use strict';
 
 angular.module('pluf')
+=======
+>>>>>>> refs/heads/release/1.0.0
 /**
  * @ngdoc factory
  * @name PFollower
@@ -4065,9 +4874,27 @@ angular.module('pluf')
 	return pFollower;
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 
 angular.module('pluf')
@@ -4160,584 +4987,1189 @@ angular.module('pluf')
 	this.follower = function(){};
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 
 angular.module('pluf')
+
 /**
  * @ngdoc factory
- * @name PWikiBook
- * @memberof wiki
+ * @name PGroup
+ * @memberof pluf
  * 
- * @description ساختار داده‌ای یک کتاب به همراه اطلاعات کامل صفحه.
+ * @description
  * 
- * @attr {Integer} id شناسه کتاب
- * @attr {String} title عنوان کتاب
- * @attr {String} state وضعیت کتاب
- * @attr {String} language زبان مورد استفاده در متن صفحات کتاب
- * @attr {String} summary خلاصه یا توضیحی کوتاه در مورد کتاب
- * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد کتاب
- * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
 .factory(
-		'PWikiBook',
-		function(PObject, PException, PWikiPageItem, PaginatorPage, $http,
-				$httpParamSerializerJQLike, $q, $timeout) {
-
-			var pWikiBook = function() {
-				PObject.apply(this, arguments);
-			};
-
-			pWikiBook.prototype = new PObject();
-
-			/**
-			 * صفحه با شناسه داده شده را از فهرست صفحات کتاب بازیابی می‌کند.
-			 * 
-			 * @private
-			 * @memberof PWikiBook
-			 * @param id
-			 *            شناسه صفحه
-			 * @param data
-			 *            داده‌های صفحه
-			 * @returns {PWikiPageItem}
+		'PGroup',
+		function(PObject, $http, $httpParamSerializerJQLike, $q, $injector,
+				PaginatorPage) {
+			/*
+			 * یک نمونه جدید از این موجودیت ایجاد می کند.
 			 */
-			pWikiBook.prototype._retItem = function(id, data) {
-				var item = null;
-				for ( var i in this.items) {
-					if (this.items[i].id === id) {
-						item = this.items[i];
-						break;
-					}
+			var pGroup = function(data) {
+				if (data) {
+					this.setData(data);
 				}
-				if (!item) {
-					item = new PWikiPageItem(data);
-					this.items.push(item);
-				}
-				item.setData(data);
-				return item;
 			};
 
-			/**
-			 * اولین صفحه کتاب را برمی‌گرداند
-			 * 
-			 * @memberof PWikiBook
-			 * @returns {promise(PWikiPageItem)} یک PageItem مربوط به صفحه اول
-			 *          کتاب
-			 */
-			pWikiBook.prototype.firstPage = function() {
-				var def = $q.defer();
-				var scope = this;
-				$timeout(function() {
-					def.resolve(scope.items[0]);
-				}, 1);
-				return def.promise;
-			};
+			pGroup.prototype = new PObject();
 
 			/**
-			 * فهرستی از صفحات کتاب را برمی‌گرداند
+			 * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور
+			 * انتقال می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
+			 * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
+			 * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
 			 * 
-			 * @memberof PWikiBook
-			 * @returns {promise(PaginatedPage<PWikiPageItem>)} فهرستی صفحه
-			 *          بندی شده از PageItem های مربوط به صفحات کتاب
-			 */
-			pWikiBook.prototype.pages = function() {
-				var scope = this;
-				return $http({
-					method : 'GET',
-					url : '/api/wiki/book/' + scope.id + '/pages',
-				}).then(function(res) {
-					scope.items = [];
-					for (var i = 0; i < res.data.length; i++) {
-						scope._retItem(res.data[i].id, res.data[i]);
-					}
-					return scope.items;
-				}, function(data) {
-					throw new PException(data);
-				});
-			};
-			/**
-			 * یک صفحه را به کتاب اضافه می‌کند
+			 * @memberof PProfile
 			 * 
-			 * @memberof PWikiBook
-			 * @param {PWikiPage}
-			 *            page صفحه‌ای که به کتاب اضافه خواهد شد
-			 * @returns {promise(PWikiBook)} خود کتاب را که صفحه جدید به آن
-			 *          اضافه شده است برمی‌گرداند
+			 * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
 			 */
-			pWikiBook.prototype.addPage = function(page) {
-				if (page.isAnonymous()) {
-					var dif = $q.defer();
-					$timeout(function() {
-						var ex = new PException({
-							message : 'Page id is null!'
-						});
-						dif.reject(ex);
-					}, 1);
-					return dif.promise;
+			pGroup.prototype.update = function() {
+				if (this.isAnonymous()) {
+					var deferred = $q.defer();
+					deferred.reject();
+					return deferred.promise;
 				}
 				var scope = this;
 				return $http({
 					method : 'POST',
-					url : '/api/wiki/book/' + scope.id + '/page/' + page.id,
-				}).then(function() {
-					return scope;
-				});
-			};
-
-			/**
-			 * یک صفحه را از کتاب حذف می‌کند
-			 * 
-			 * @memberof PWikiBook
-			 * @param {PWikiPage}
-			 *            page صفحه‌ای که باید از کتاب حذف شود
-			 * @returns {promise(PWikiPage)} صفحه حذف شده از کتاب را برمی‌گرداند
-			 */
-			pWikiBook.prototype.removePage = function(page) {
-				if (page.isAnonymous()) {
-					var dif = $q.defer();
-					$timeout(function() {
-						var ex = new PException({
-							message : 'Page id is null!'
-						});
-						dif.reject(ex);
-					}, 1);
-					return dif.promise;
-				}
-				var scope = this;
-				return $http({
-					method : 'DELETE',
-					url : '/api/wiki/book/' + scope.id + '/page/' + page.id,
-				}).then(function() {
-					return scope;
-				});
-			};
-
-			/**
-			 * اطلاعات یک کتاب را به‌روزرسانی می‌کند.
-			 * 
-			 * @memberof PWikiBook
-			 * @param {struct}
-			 *            b ساختاری حاوی اطلاعاتی از کتاب که باید به‌روزرسانی
-			 *            شود
-			 * @returns {promise(PWikiBook)} کتاب با اطلاعات به‌روزرسانی شده
-			 */
-			pWikiBook.prototype.update = function(b) {
-				var scope = this;
-				return $http({
-					method : 'POST',
-					url : '/api/wiki/book/' + scope.id,
-					data : $httpParamSerializerJQLike(b),
+					url : '/api/group/' + this.id,
+					data : $httpParamSerializerJQLike(scope),
 					headers : {
 						'Content-Type' : 'application/x-www-form-urlencoded'
 					}
 				}).then(function(res) {
 					scope.setData(res.data);
 					return scope;
-				}, function(data) {
-					throw new PException(data);
 				});
 			};
 
 			/**
-			 * کتاب را حذف می‌کند
+			 * پروفایل کاربری را حذف می کند
 			 * 
-			 * @memberof PWikiBook
-			 * @returns {promise(PWikiBook)} کتاب حذف شده
+			 * @memberof PProfile
+			 * 
+			 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف
+			 *          شده
 			 */
-			pWikiBook.prototype.remove = function() {
+			pGroup.prototype.remove = function() {
 				var scope = this;
 				return $http({
 					method : 'DELETE',
-					url : '/api/wiki/book/' + scope.id
-				}).then(function(res) {
-					scope.setData(res.data);
+					url : '/api/group/' + this.id,
+				}).then(function(data) {
+					scope.setData(data.data);
 					return scope;
-				}, function(data) {
-					throw new PException(data);
 				});
 			};
 
-			return pWikiBook;
+			/**
+			 * حذف یک رول
+			 * 
+			 * برای حذف نقش باید خود نقش را داشته باشید.
+			 * 
+			 * @param {PRole}
+			 *            نقش مورد نظر
+			 * @return promise پارامتری برای خروجی در نظر گرفته نشده
+			 */
+			pGroup.prototype.removeRole = function(role) {
+				return $http({
+					method : 'DELETE',
+					url : '/api/group/' + this.id + '/role/' + role.id,
+				});
+			};
+
+			/**
+			 * فهرست نقش‌های گروه را تعیین می‌کند
+			 * 
+			 * @param PaginationParameter
+			 * @return promise(PaginatedPage(Role))
+			 */
+			pGroup.prototype.roles = function(paginationParam) {
+				var params = {};
+				if (paginationParam) {
+					params = paginationParam.getParameter();
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/group/' + this.id + '/role/find',
+					params : params
+				}).then(function(res) {
+					var $usr = $injector.get('$usr');
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push($usr._roleCache(item.id, item));
+					}
+					page.items = items;
+					return page;
+				});
+			};
+
+			/**
+			 * کاربر رو حذف می‌کنه
+			 * 
+			 * معادل با حذف نقش کاربر هست.
+			 * 
+			 * @param {PUser}
+			 *            کاربر مورد نظر
+			 */
+			pGroup.prototype.removeUser = function(user) {
+				return $http({
+					method : 'DELETE',
+					url : '/api/group/' + this.id + '/user/' + user.id,
+				});
+			};
+
+			/**
+			 * فهرست کاربران را تعیین می‌کند
+			 * 
+			 */
+			pGroup.prototype.users = function(paginationParam) {
+				var params = {};
+				if (paginationParam) {
+					params = paginationParam.getParameter();
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/group/' + this.id + '/user/find',
+					params : params
+				}).then(function(res) {
+					var $usr = $injector.get('$usr');
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push($usr._userCache(item.id, item));
+					}
+					page.items = items;
+					return page;
+				});
+			};
+
+			return pGroup;
 		});
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 
 angular.module('pluf')
 
+
 /**
  * @ngdoc factory
- * @name PWikiPage
- * @memberof pluf.wiki
- *
+ * @name PProfile
+ * @memberof pluf
+ * 
  * @description
- * ساختار داده‌ای یک صفحه به همراه اطلاعات کامل صفحه.
+ * هر کاربر در هر سیستم یک پروفایل مخصوص به خود دارد که شامل یه سری اطلاعات کلی می‌شود.
+ * این اطلاعات برای هر نرم افزار می‌تواند متفاوت باشد برای نمونه شما در سیستم فروش یک پروفایل
+ * دارید که شامل شماره تماس است اما در سیستم کتابداری پروفایل شما شامل شماره دانشجویی
+ * است.
  *
- * @attr {Integer} id شناسه صفحه
- *
- * @attr {Integer} priority
- * با این خصوصیت می‌توان برای فهرستی از صفحات یک ترتیب در نظر گرفت
- *
- * @attr {String} title عنوان صفحه
- * @attr {String} state وضعیت صفحه
- * @attr {Integer} book شناسه کتابی که این صفحه متعلق به آن است
- * @attr {String} language زبان مورد استفاده در متن صفحه
- * @attr {String} summary خلاصه‌ای از متن صفحه
- * @attr {Blob} content محتوای صفحه
- *
- * @attr {String} content_type
- * نوع متن صفحه. مثلا: text/html, text/plain, text/markdown , ...
- *
- * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد page
+ * طبعت متغیر این مدل داده‌ای منجر به این شده که این مدل یک مدل کلی به صورت کلید مقدار باشد
+ * که شما می‌توانید مقادیر مورد نظر خود را در آن اضافه و کم کنید.
+ * 
+ * @attr {Integer} id شناسه
+ * @attr {Integer} user شناسه حساب کاربری مربوط به این پروفایل
+ * @attr {Boolean} validate وضعیت اعتبار پروفایل
+ * @attr {String} country کشور
+ * @attr {String} city شهر
+ * @attr {String} address آدرس
+ * @attr {String} postal_code کد پستی
+ * @attr {String} phone_number شماره تلفن
+ * @attr {String} mobile_number شماره موبایل
+ * @attr {String} national_id کد ملی
+ * @attr {String} shaba شماره شبای بانکی
+ * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد پروفایل
  * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
-
-.factory('PWikiPage', function($http, $httpParamSerializerJQLike, PException, PObject) {
-
-	var wikiPage = function(d) {
-		if (d) {
-			this.setData(d);
+.factory('PProfile', function( $http, $httpParamSerializerJQLike, $q, PObject) {
+	/*
+	 * یک نمونه جدید از این موجودیت ایجاد می کند.
+	 */
+	var pProfile = function(data) {
+		if(data){
+			this.setData(data);
 		}
 	};
-
-	wikiPage.prototype = new PObject();
+	
+	pProfile.prototype = new PObject();
 
 	/**
-	 * اطلاعات یک صفحه را به‌روزرسانی می‌کند.
+	 * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور انتقال می‌دهد.
+	 * تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای اعمال شده در این ساختار داده‌ای تنها
+	 * در برنامه کاربر خواهد بود و با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
 	 *
-	 * @memberof PWikiPage
-	 *
-	 * @returns {promise(PWikiPage)} صفحه به‌روزرسانی شده
+	 * @memberof PProfile
+	 * 
+	 * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
 	 */
-	wikiPage.prototype.update = function() {
+	pProfile.prototype.update = function() {
+		if (this.user.isAnonymous()) {
+			var deferred = $q.defer();
+			deferred.reject();
+			return deferred.promise;
+		}
 		var scope = this;
 		return $http({
-			method: 'POST',
-			url: '/api/wiki/page/' + this.id,
-			data: $httpParamSerializerJQLike(scope),
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
+			method : 'POST',
+			url : '/api/user/'+ this.user.id + '/profile',
+			data : $httpParamSerializerJQLike(scope),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
 			}
 		}).then(function(res) {
 			scope.setData(res.data);
 			return scope;
-		}, function(data) {
-			throw new PException(data);
 		});
 	};
-
+	
 	/**
-	 * صفحه را حذف می‌کند
-	 *
-	 * @memberof PWikiPage
-	 *
-	 * @returns {promise(PWikiPage)} صفحه حذف شده برگردانده می شود
+	 * پروفایل کاربری را حذف می کند
+	 * 
+	 * @memberof PProfile
+	 * 
+	 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف شده
 	 */
-	wikiPage.prototype.remove = function() {
+	pProfile.prototype.remove = function(){
 		var scope = this;
 		return $http({
-			method: 'DELETE',
-			url: '/api/wiki/page/' + scope.id
-		}).then(function(res) {
-			scope.setData(res.data);
+			method : 'DELETE',
+			url : '/api/user/' + this.user + '/profile',
+			data : $httpParamSerializerJQLike(scope),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
+		}).then(function(data){
+			scope.setData(data.data);
 			return scope;
-		}, function(data) {
-			throw new PException(data);
 		});
 	};
-
-	/**
-	 * محتوای صفحه را به قالب html تبدیل می‌کند.
-	 *
-	 * @memberof PWikiPage
-	 *
-	 * @returns {String} محتوای صفحه در قالب html
-	 */
-	wikiPage.prototype.toHTML = function() {
-		return markdown.toHTML(this.content);
-	};
-	return wikiPage;
+	
+	return pProfile;
 });
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 
 angular.module('pluf')
+
 /**
  * @ngdoc factory
- * @name PWikiPageItem
- * @memberof wiki
- *
- * @description
- * ساختار داده‌ای یک آیتم از نوع صفحه با کمترین اطلاعات ممکن.
- *
- * @attr {Integer} id شناسه PageItem
- *
- * @attr {Integer} priority
- * با این خصوصیت می‌توان برای فهرستی از صفحات یک ترتیب در نظر گرفت
- *
- * @attr {String} title عنوان صفحه
- * @attr {String} state وضعیت صفحه
- *
+ * @name PProfile
+ * @memberof pluf
+ * 
+ * @description هر کاربر در هر سیستم یک پروفایل مخصوص به خود دارد که شامل یه سری
+ *              اطلاعات کلی می‌شود. این اطلاعات برای هر نرم افزار می‌تواند
+ *              متفاوت باشد برای نمونه شما در سیستم فروش یک پروفایل دارید که
+ *              شامل شماره تماس است اما در سیستم کتابداری پروفایل شما شامل شماره
+ *              دانشجویی است.
+ * 
+ * طبعت متغیر این مدل داده‌ای منجر به این شده که این مدل یک مدل کلی به صورت کلید
+ * مقدار باشد که شما می‌توانید مقادیر مورد نظر خود را در آن اضافه و کم کنید.
+ * 
+ * @attr {Integer} id شناسه
+ * @attr {Integer} user شناسه حساب کاربری مربوط به این پروفایل
+ * @attr {Boolean} validate وضعیت اعتبار پروفایل
+ * @attr {String} country کشور
+ * @attr {String} city شهر
+ * @attr {String} address آدرس
+ * @attr {String} postal_code کد پستی
+ * @attr {String} phone_number شماره تلفن
+ * @attr {String} mobile_number شماره موبایل
+ * @attr {String} national_id کد ملی
+ * @attr {String} shaba شماره شبای بانکی
+ * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد پروفایل
+ * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
-.factory('PWikiPageItem', function(PObject) {
+.factory(
+		'PRole',
+		function(PObject, $http, $httpParamSerializerJQLike, $q, $injector,
+				PaginatorPage) {
+			/*
+			 * یک نمونه جدید از این موجودیت ایجاد می کند.
+			 */
+			var pRole = function(data) {
+				if (data) {
+					this.setData(data);
+				}
+			};
 
-	var wikiPageItem = function(d) {
-		if (d) {
-			this.setData(d);
-		}
-	};
+			pRole.prototype = new PObject();
 
-	wikiPageItem.prototype = new PObject();
+			/**
+			 * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور
+			 * انتقال می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
+			 * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
+			 * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
+			 * 
+			 * @memberof PProfile
+			 * 
+			 * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
+			 */
+			pRole.prototype.update = function() {
+				if (this.isAnonymous()) {
+					var deferred = $q.defer();
+					deferred.reject();
+					return deferred.promise;
+				}
+				var scope = this;
+				return $http({
+					method : 'POST',
+					url : '/api/role/' + this.id,
+					data : $httpParamSerializerJQLike(this),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(res) {
+					scope.setData(res.data);
+					return scope;
+				});
+			};
 
-	/**
-	 * صفحه مربوط به این PageItem را برمی گرداند
-	 *
-	 * @memberof PWikiPageItem
-	 * @returns {promise(PWikiPage)} صفحه مربوط به این PageItem
-	 */
-	wikiPageItem.prototype.page = function() {
-		// TODO: پیاده‌سازی شود
-	};
+			/**
+			 * پروفایل کاربری را حذف می کند
+			 * 
+			 * @memberof PProfile
+			 * 
+			 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف
+			 *          شده
+			 */
+			pRole.prototype.remove = function() {
+				var scope = this;
+				return $http({
+					method : 'DELETE',
+					url : '/api/role/' + this.id,
+					data : $httpParamSerializerJQLike(scope),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(data) {
+					scope.setData(data.data);
+					return scope;
+				});
+			};
 
-	return wikiPageItem;
-});
+			/**
+			 * کاربر رو حذف می‌کنه
+			 * 
+			 * معادل با حذف نقش کاربر هست.
+			 * 
+			 * @param {PUser}
+			 *            کاربر مورد نظر
+			 */
+			pRole.prototype.removeUser = function(user) {
+				return $http({
+					method : 'DELETE',
+					url : '/api/role/' + this.id + '/user/' + user.id,
+				});
+			};
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+			/**
+			 * فهرست کاربران را تعیین می‌کند
+			 * 
+			 */
+			pRole.prototype.users = function(paginationParam) {
+				var params = {};
+				if (paginationParam) {
+					params = paginationParam.getParameter();
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/role/' + this.id + '/user/find',
+					params : params
+				}).then(function(res) {
+					var $usr = $injector.get('$usr');
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push($usr._userCache(item.id, item));
+					}
+					page.items = items;
+					return page;
+				});
+			};
+
+			/**
+			 * گروه رو حذف می‌کنه
+			 * 
+			 * این فراخوانی معادل با حذف یک نقش از یک گروه هست.
+			 * 
+			 * 
+			 */
+			pRole.prototype.removeGroup = function(group) {
+				return $http({
+					method : 'DELETE',
+					url : '/api/role/' + this.id + '/group/' + group.id,
+				});
+			};
+
+			/**
+			 * فهرست گوره‌هایی که در این نقش هستند
+			 */
+			pRole.prototype.groups = function(paginationParam) {
+				var params = {};
+				if (paginationParam) {
+					params = paginationParam.getParameter();
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/role/' + this.id + '/group/find',
+					params : params
+				}).then(function(res) {
+					var $usr = $injector.get('$usr');
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push($usr._groupCache(item.id, item));
+					}
+					page.items = items;
+					return page;
+				});
+			};
+			return pRole;
+		});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
 angular.module('pluf')
+
 /**
- * فیلتر نمایش صفحه‌ها را ایجاد می‌کند.
+ * @ngdoc factory
+ * @name PUser
+ * @memberof pluf
+ * 
+ * @description ساختار داده‌ای یک کاربر را در سیستم تعیین می‌کند. از این مدل
+ *              برای مدیریت کردن اطلاعات کاربری استفاده می‌شود.
+ * 
+ * @attr {Integer} id شناسه
+ * @attr {String} login نام کاربری به منظور لاگین کردن
+ * @attr {String} password کلمه عبور کاربر برای لاگین کردن
+ * @attr {String} first_name نام کاربر
+ * @attr {String} last_name نام خانوادگی کاربر
+ * @attr {String} email آدرس ایمیل کاربر
+ * @attr {String} language زبان پیش‌فرض کاربر
+ * @attr {String} timezone منطقه زمانی کاربر
+ * @attr {Datetime} date_joined تاریخ و زمان ایجاد حساب
+ * @attr {Datetime} last_login تاریخ و زمان آخرین لاگین
+ * @attr {Boolean} administrator تعیین می‌کند که آیا این کاربر دسترسی ادمین دارد
+ *       یا نه
+ * @attr {Boolean} staff تعیین می‌کند که این کاربر دسترسی staff دارد یا نه
+ * 
+ * @attr {String} avatar مسیر اواتار رو تعیین می‌کنه و به صورت پویا ایجاد می‌شه.
+ *       فرض این هست که شناسه کاربر در حین کار تغییر نمی‌کنه
+ * 
+ * از این موجودیت برای مدیریت (ایجاد، ویرایش و حذف) حساب کاربری استفاده می‌شود.
+ * برای نمونه فرض کنید که می‌خواهیم نام یک کاربر را تغییر دهیم، برای این کار کد
+ * زیر باید استفاده شود:
+ * 
+ * <pre><code>
+ * 	var user;
+ * 	...
+ * 	user.first_name = 'new first name';
+ * 	user.update().then(function(){
+ * 		// user account is updated
+ * 	});
+ * </code></pre>
+ * 
+ * نکته: در صورتی که خصوصیت گذرواژه کاربری را تغییر دهید، این تغییر در سرور
+ * اعمال خواهد شد.
  */
-.filter('unsafe', function($sce) {
-	return function(val) {
-		return $sce.trustAsHtml(val);
-	};
-});
+.factory(
+		'PUser',
+		function($http, $q, $httpParamSerializerJQLike, PObject, PProfile,
+				$injector, PaginatorPage) {
 
-/* jslint todo: true */
-/* jslint xxx: true */
-/* jshint -W100 */
+			var pUser = function(data) {
+				if (data) {
+					this.setData(data);
+					/*
+					 * NOTE: فرض ما این هست که شناسه داره و این شناسه تغییر
+					 * نمی‌کنه
+					 */
+					this.avatar = '/api/user/' + this.id + '/avatar';
+				}
+			};
+
+			pUser.prototype = new PObject();
+
+			/**
+			 * اطلاعات حساب کاربری را به‌روزرسانی می‌کند
+			 * 
+			 * تغییراتی که در ساختارهای داده‌ای اعمال شده است را در سرور نیز
+			 * اعمال می‌کند. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
+			 * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
+			 * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد.
+			 * 
+			 * @memberof PUser
+			 * 
+			 * @return {promise(PUser)} ساختار داده‌ای به‌روز شده‌ی حساب کاربری
+			 */
+			pUser.prototype.update = function() {
+				var scope = this;
+				return $http({
+					method : 'POST',
+					url : '/api/user/' + this.id,
+					data : $httpParamSerializerJQLike(scope),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(result) {
+					scope.setData(result.data);
+					return scope;
+				});
+			};
+
+			/**
+			 * حساب کاربری را حذف می‌کند
+			 * 
+			 * @memberof PUser
+			 * 
+			 * @return {promise(PUser)} ساختار داده‌ای حساب کاربری حذف شده
+			 */
+			pUser.prototype.remove = function() {
+				var scope = this;
+				return $http({
+					method : 'DELETE',
+					url : '/api/user/' + this.id,
+				}).then(function(result) {
+					scope.setData(result.data);
+					return scope;
+				});
+			};
+
+			/**
+			 * پروفایل کاربر را تعیین می‌کند.
+			 * 
+			 * @memberof PUser
+			 * 
+			 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری مربوط
+			 *          به این حساب کاربری
+			 */
+			pUser.prototype.profile = function() {
+				var deferred;
+				if (this.isAnonymous()) {
+					deferred = $q.defer();
+					deferred.reject();
+					return deferred.promise;
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/user/' + this.id + '/profile',
+				}).then(function(res) {
+					return new PProfile(res.data);
+				});
+			};
+
+			/**
+			 * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی
+			 * به صورت هم زمان انجام می‌شود.
+			 * 
+			 * @memberof PUser
+			 * 
+			 * @return {boolean} حالت مدیر بودن کاربر
+			 */
+			pUser.prototype.isAdministrator = function() {
+				return (this.id && this.id > 0 && this.administrator);
+			};
+
+			/**
+			 * تعیین می‌کند که آیا کاربر جاری staff است یا نه. این فراخوانی به
+			 * صورت هم زمان انجام می‌شود.
+			 * 
+			 * @memberof PUser
+			 * 
+			 * @return {boolean} حالت staff بودن کاربر
+			 */
+			pUser.prototype.isStaff = function() {
+				return (this.id && this.id > 0 && this.staff);
+			};
+
+			/**
+			 * حذف یک رول از کاربر
+			 * 
+			 * برای حذف نقش باید خود نقش را داشته باشید.
+			 * 
+			 * @param {PRole}
+			 *            نقش مورد نظر
+			 * @return promise پارامتری برای خروجی در نظر گرفته نشده
+			 */
+			pUser.prototype.removeRole = function(role) {
+				return $http({
+					method : 'DELETE',
+					url : '/api/user/' + this.id + '/role/' + role.id,
+				});
+			};
+
+			/**
+			 * فهرست نقش‌های کاربر را تعیین می‌کند
+			 * 
+			 * @param PaginationParameter
+			 * @return promise(PaginatedPage(Role))
+			 */
+			pUser.prototype.roles = function(paginationParam) {
+				var params = {};
+				if (paginationParam) {
+					params = paginationParam.getParameter();
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/user/' + this.id + '/role/find',
+					params : params
+				}).then(function(res) {
+					var $usr = $injector.get('$usr');
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push($usr._roleCache(item.id, item));
+					}
+					page.items = items;
+					return page;
+				});
+			};
+
+			/**
+			 * رابطه میان گروه و کاربر را حذف می کند.
+			 * 
+			 * پارامتر ورودی باید یک گروه باشد.
+			 * 
+			 * @param {PGroup}
+			 *            گروه مورد نظر
+			 * @return {Promise<PGroup>}
+			 */
+			pUser.prototype.removeGroup = function(group) {
+				return $http({
+					method : 'DELETE',
+					url : '/api/user/' + this.id + '/group/' + group.id,
+				});
+			};
+
+			/**
+			 * فهرست گروه‌هایی را تعیین می‌کند که کاربر در آنها است
+			 * 
+			 * @param {PaginationParameter}
+			 * @return {Promise<PaginatedPage<PGroup>>}
+			 */
+			pUser.prototype.groups = function(paginationParam) {
+				var params = {};
+				if (paginationParam) {
+					params = paginationParam.getParameter();
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/user/' + this.id + '/group/find',
+					params : params
+				}).then(function(res) {
+					var $usr = $injector.get('$usr');
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push($usr._groupCache(item.id, item));
+					}
+					page.items = items;
+					return page;
+				});
+			};
+
+			return pUser;
+		});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 'use strict';
-
 
 angular.module('pluf')
 /**
-* @ngdoc service
-* @name $help
-* @memberof wiki
-*
-* @description
-* این سرویس امکانات مدیریت صفحه‌ها و کتاب‌های ویکی را فراهم می‌کند. با استفاده از این سرویس
-* می‌توان صفحات و کتاب‌های ویکی را ایجاد، حذف، جستجو و یا دریافت کرد.
-*/
-.service('$help', function($http, $httpParamSerializerJQLike, $q, PException, PWikiPage,
-		PWikiBook, PaginatorPage) {
-	/*
-	 * کار با صفحه‌ها
-	 */
-	/** @private */
-	this._ppage = {};
-	/** @private */
-	this._getPage = function(id) {
-		return this._ppage[id];
-	};
-	/** @private */
-	this._setPage = function(page) {
-		this._ppage[page.id] = page;
-	};
-	/** @private */
-	this._retPage = function(id, data) {
-		var instance = this._getPage(id);
-		if (instance) {
-			instance.setData(data);
-		} else {
-			instance = new PWikiPage(data);
-			this._setPage(instance);
-		}
-		return instance;
-	};
+ * @memberof pluf
+ * @ngdoc service
+ * @name $usr
+ * 
+ * @description یکی از مهم‌ترین سرویس‌هایی است که در این ماژول ارائه می‌شود. این
+ *              سرویس موظف است که کاربر جاری را مدیریت کند. علاوه بر این
+ *              امکاناتی برای ورود و خروج کاربران نیز فراهم کرده است.
+ */
+.service(
+		'$usr',
+		function($http, $httpParamSerializerJQLike, $q, $act, PUser, PRole,
+				PGroup, PaginatorPage, PException, PObjectCache) {
+			/*
+			 * کاربر جاری را تعیین می‌کند. این متغیر به صورت عمومی در اختیار
+			 * کاربران قرار می‌گیرد.
+			 */
+			var _su = new PUser();
+			var _userCache = new PObjectCache(function(data) {
+				return new PUser(data);
+			});
 
-	/*
-	 * کار با کتابها
-	 */
-	/** @private */
-	this._pbook = {};
-	/** @private */
-	this._getBook = function(id) {
-		return this._pbook[id];
-	};
-	/** @private */
-	this._setBook = function(page) {
-		this._pbook[page.id] = page;
-	};
-	/** @private */
-	this._retBook = function(id, data) {
-		var instance = this._getBook(id);
-		if (instance) {
-			instance.setData(data);
-		} else {
-			instance = new PWikiBook(data);
-			this._setBook(instance);
-		}
-		return instance;
-	};
+			var _roleCache = new PObjectCache(function(data) {
+				return new PRole(data);
+			});
+			var _groupCache = new PObjectCache(function(data) {
+				return new PGroup(data);
+			});
 
-	/* فراخوانی‌های عمومی */
-	/**
-	 * کتاب‌های ویکی را با توجه به پارامتر p مورد جستجو قرار می‌دهد و نتیجه را در قالب
-	 * یک فهرست صفحه‌بندی شده به صورت غیرهمزمان برمی‌گرداند.
-	 * پارامتر p ساختاری است که در آن خصوصیات مورد نظر برای کتاب‌های مورد جستجو تعیین می‌شود.
-	 *
-	 * @memberof $help
-	 * @param {PaginatorParameter} p ساختاری که در آن خصوصیات مورد نظر برای کتاب‌های مورد جستجو تعیین می‌شود.
-	 * @return {promise(PaginatorPage<PWikiBook>)} ساختاری صفحه‌بندی شده از کتاب‌ها در نتیجه جستجو
-	 */
-	this.books = function(p) {
-		var scope = this;
-		return $http({
-			method: 'GET',
-			url: '/api/wiki/book/find',
-			params: p.getParameter(),
-		}).then(function(res) {
-			var page = new PaginatorPage(res.data);
-			var items = [];
-			for (var i = 0; i < page.counts; i++) {
-				var t = scope._retBook(page.items[i].id, page.items[i]);
-				items.push(t);
-			}
-			page.items = items;
-			return page;
-		}, function(data) {
-			throw new PException(data);
+			this._userCache = _userCache;
+			this._roleCache = _roleCache;
+			this._groupCache = _groupCache;
+
+			/**
+			 * به صورت همزمان تعیین می‌کند که آیا کاربر جاری شناخته شده است یا
+			 * نه. از این فراخوانی در نمایش و یا جایی که باید به صورت همزمان
+			 * وضعیت کاربر جاری را تعیین کرده استفاده می‌شود.
+			 * 
+			 * @memberof $usr
+			 * @return {Boolean} درستی در صورتی که کاربر جاری گمنام باشد
+			 */
+			this.isAnonymous = function() {
+				return _su.isAnonymous();
+			};
+
+			/**
+			 * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی
+			 * نیز یک فراخوانی هم زمان است و در کارهای نمایشی کاربرد دارد.
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @return {Boolean} درستی در صورتی که کاربر جاری مدیر سیستم باشد.
+			 */
+			this.isAdministrator = function() {
+				return _su.isAdministrator();
+			};
+
+			/**
+			 * کاربری که در نشست تعیین شده است را بازیابی می‌کند. این فراخوانی
+			 * که یک فراخوانی غیر همزان است برای تعیین حالت کاربر در سیستم
+			 * استفاده می‌شود. برای نمونه ممکن است که یک تابع منجر به خروج کاربر
+			 * از سیستم شده باشد، در این حالت این فراخوانی حالت کاربر را بازیابی
+			 * کرده و سیستم را به روز می‌کند.
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @returns {promise(PUser)} اطلاعات کاربر جاری
+			 */
+			this.session = function() {
+				if (!this.isAnonymous()) {
+					var deferred = $q.defer();
+					deferred.resolve(_su);
+					return deferred.promise;
+				}
+				return $http.get('/api/user')//
+				.then(function(result) {
+					if (result.data.id) {
+						var data = result.data;
+						_su = _userCache.restor(data.id, data);
+					}
+					return _su;
+				});
+			};
+
+			/**
+			 * عمل ورود کاربر به سیستم را انجام می‌دهد. برای ورود بسته به اینکه
+			 * از چه سیستمی استفاده می‌شود پارامترهای متفاوتی مورد نیاز است که
+			 * با استفاده از یک ساختار داده‌ای برای این فراخوانی ارسال می‌شود.
+			 * برای نمونه در مدل عادی این فراخوانی نیاز به نام کاربری و گذرواژه
+			 * دارد که به صورت زیر عمل ورود انجام خواهد شد:
+			 * 
+			 * <pre><code>
+			 * $usr.login({
+			 * 	login : 'user name',
+			 * 	password : 'password'
+			 * }).then(function(user) {
+			 * 	//Success
+			 * 	}, function(ex) {
+			 * 		//Fail
+			 * 	});
+			 * </code></pre>
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @param {object}
+			 *            credential پارارمترهای مورد انتظار در احراز اصالت
+			 * @return {promise(PUser)} اطلاعات کاربر جاری
+			 */
+			this.login = function(credit) {
+				if (!this.isAnonymous()) {
+					var deferred = $q.defer();
+					deferred.resolve(_su);
+					return deferred.promise;
+				}
+				return $http({
+					method : 'POST',
+					url : '/api/user/login',
+					data : $httpParamSerializerJQLike(credit),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(result) {
+					var data = result.data;
+					_su = _userCache.restor(data.id, data);
+					return _su;
+				});
+			};
+
+			/**
+			 * این فراخوانی عمل خروج کاربری جاری از سیستم را انجام می‌دهد. با
+			 * این کار تمام داده‌های کاربر جاری از سیستم حذف شده و سیستم به حالت
+			 * اولیه برخواهد گشت.
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @returns {promise(PUser)} کاربر جاری که اکنون لاگ‌اوت شده است
+			 */
+			this.logout = function() {
+				if (this.isAnonymous()) {
+					var deferred = $q.defer();
+					deferred.resolve(_su);
+					return deferred.promise;
+				}
+				return $http({
+					method : 'POST',
+					url : '/api/user/logout',
+				}).then(function(result) {
+					_su = new PUser(result.data);
+					return _su;
+				});
+			};
+			
+			/*
+			 * TODO: maso, 1395: دسترسی به موجودیت‌های تکراری است
+			 * 
+			 * درسترسی به تمام موجودیت‌ها بر اساس مدل جدیدی که در سین معرفی شده
+			 * کاملا شبیه به هم هست که تنها چندتا از پارامترهای اون تغییر می‌کنه.
+			 * بنابر این بهتر هست که به جای زدن کدهای تکراری یک فکتوری برای ایجاد
+			 * این کدها ایجاد کنیم و در زمان اجرا کدها رو کپی کنیم.
+			 */
+
+			/**
+			 * فهرست کاربران را به صورت صفحه بندی شده در اختیار قرار می‌دهد. این
+			 * فهرست برای کاربردهای متفاوتی استفاده می‌شود مثل اضافه کردن به
+			 * کاربران مجاز. دسترسی به فهرست کاربران تنها بر اساس سطوح امنیتی
+			 * تعریف شده در سرور ممکن است و بسته به نوع پیاده سازی سرور متفاوت
+			 * خواهد بود.
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @param {PagintorParameter}
+			 *            parameter پارامترهای مورد استفاده در صفحه بندی نتایج
+			 * @return {promise(PaginatorPage)} صفحه‌ای از کاربران سیستم.
+			 */
+			this.users = function(p) {
+				return $http({
+					method : 'GET',
+					url : '/api/user/find',
+					params : p.getParameter()
+				}).then(function(res) {
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push(_userCache(item.id, item));
+					}
+					page.items = items;
+					return page;
+				});
+			};
+
+			/**
+			 * اطلاعات یک کاربر جدید را دریافت کرده و آن را به عنوان یک کاربر در
+			 * سیستم ثبت می‌کند. حالت نهایی کاربر به نوع پیاده سازی سرور بستگی
+			 * دارد. بر برخی از سرورها، به محض اینکه کاربر ثبت نام کرد حالت فعال
+			 * رو داره و می‌تونه وارد سیستم بشه اما در برخی از سیستم‌ها نیاز به
+			 * فرآیند فعال سازی دارد.
+			 * 
+			 * پارامترهای مورد نیاز برای ایجاد کاربر هم متفاوت هست. در برخی
+			 * سیستم‌ها ایمیل، نام کاربری و گذرواژه مهم است و سایر پارامترهای به
+			 * صورت دلخواه خواهد بود.
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @param {object}
+			 *            detail خصوصیت‌های کاربر
+			 * @return {promise(PUser)} حساب کاربری ایجاد شده
+			 */
+			this.newUser = function(detail) {
+				return $http({
+					method : 'POST',
+					url : '/api/user/new',
+					data : $httpParamSerializerJQLike(detail),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(result) {
+					var data = result.data;
+					var nu = _userCache.restor(data.id, data);
+					return nu;
+				});
+			};
+
+			/**
+			 * اطلاعات کاربر را با استفاده از شناسه آن بازیابی می‌کند.
+			 * 
+			 * @memberof $usr
+			 * 
+			 * @param {string}
+			 *            id شناسه کاربر مورد نظر
+			 * @return {promise(PUser)} اطلاعات بازیابی شده کاربر
+			 */
+			this.user = function(id) {
+				if (!_userCache.contains(id)) {
+					var deferred = $q.defer();
+					deferred.resolve(_userCache.get(id));
+					return deferred.promise;
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/user/' + id,
+				}).then(function(result) {
+					var data = result.data;
+					return _userCache.restor(data.id, data);
+				});
+			};
+
+			/**
+			 * فهرست تمام رولهای سیستم را تعیین می‌کند.
+			 * 
+			 * @param {PaginatorParameter}
+			 * @return promise<PaginatedPage<Prole>>
+			 */
+			this.roles = function(pagParam) {
+				var params = {};
+				if (pagParam) {
+					params = pagParam.getParameter();
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/role/find',
+					params : params
+				}).then(function(res) {
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push(_roleCache(item.id, item));
+					}
+					page.items = items;
+					return page;
+				});
+			};
+
+			/**
+			 * یک رول با شناسه تعیین شده را برمی‌گرداند
+			 * 
+			 * @parm {integer} شناسه نقش
+			 * @return promise<PRole>
+			 */
+			this.role = function(id) {
+				if (_roleCache.contains(id)) {
+					var deferred = $q.defer();
+					deferred.resolve(_roleCache.get(id));
+					return deferred.promise;
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/role/' + id,
+				}).then(function(result) {
+					var data = result.data;
+					return _roleCache.restor(data.id, data);
+				});
+			};
+
+			/**
+			 * یک نقش جدید در سیستم ایجاد می‌کند.
+			 * 
+			 * @param {Object}
+			 *            داده‌های مورد نیاز برای ایجاد یک نقش جدید
+			 * @return promise<PRole>
+			 */
+			this.newRole = function(detail) {
+				return $http({
+					method : 'POST',
+					url : '/api/role/new',
+					data : $httpParamSerializerJQLike(detail),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(result) {
+					var data = result.data;
+					return _roleCache.restor(data.id, data);
+				});
+			};
+
+			/**
+			 * فهرست تمام گروه‌ها را تعیین می‌کند.
+			 * 
+			 * @param {PaginatorParameter}
+			 *            پارامترهای صفحه بندی
+			 * @return promise<PaginatedPage<PGroup>> فهرست گروه‌ها
+			 */
+			this.groups = function(pagParam) {
+				var params = {};
+				if (pagParam) {
+					params = pagParam.getParameter();
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/group/find',
+					params : params
+				}).then(function(res) {
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push(_groupCache(item.id, item));
+					}
+					page.items = items;
+					return page;
+				});
+			};
+
+			/**
+			 * اطلاعات یک گروه را بازیابی می‌کند.
+			 * 
+			 * @param {integer}
+			 *            شناسه گروه
+			 * @return {promise<PGroup>} گروه بازیابی شده
+			 */
+			this.group = function(id) {
+				if (_groupCache.contains(id)) {
+					var deferred = $q.defer();
+					deferred.resolve(_groupCache.get(id));
+					return deferred.promise;
+				}
+				return $http({
+					method : 'GET',
+					url : '/api/group/' + id,
+				}).then(function(result) {
+					var data = result.data;
+					return _groupCache.restor(data.id, data);
+				});
+			};
+
+			/**
+			 * یک گروه جدید در سیستم ایجاد می‌کند.
+			 * 
+			 * @param {Object}
+			 *            پارامترهای مورد نیاز برای کاربر
+			 * @return {promise<PGroup>} گروه ایجاد شده
+			 */
+			this.newGroup = function(detail) {
+				return $http({
+					method : 'POST',
+					url : '/api/group/new',
+					data : $httpParamSerializerJQLike(detail),
+					headers : {
+						'Content-Type' : 'application/x-www-form-urlencoded'
+					}
+				}).then(function(result) {
+					var data = result.data;
+					return _groupCache.restor(data.id, data);
+				});
+			};
+
 		});
-	};
-
-	/**
-	 * کتاب با شناسه داده شده را برمی گرداند.
-	 *
-	 * @memberof $help
-	 * @param {Integer} id شناسه کتاب مورد نظر
-	 * @return {PWikiBook} ساختاری حاوی اطلاعات کتاب با شناسه داده شده
-	 */
-	this.book = function(id) {
-		var scope = this;
-		return $http({
-			method: 'GET',
-			url: '/api/wiki/book/' + id,
-		}).then(function(res) {
-			var book = scope._retBook(res.data.id, res.data);
-			return book;
-		}, function(data) {
-			throw new PException(data);
-		});
-	};
-
-	/**
-	 * یک کتاب را بر اساس اطلاعات داده شده ایجاد می‌کند و کتاب ایجاد شده را
-	 * به صورت غیرهمزمان برمی‌گرداند.
-	 *
-	 * @memberof $help
-	 * @param {PWikiBook} b کتابی که باید ذخیره شود
-	 * @return {PWikiBook} ساختاری حاوی اطلاعات کتاب پس از ذخیره شدن
-	 */
-	this.createBook = function(b) {
-		var scope = this;
-		return $http({
-			method: 'POST',
-			url: '/api/wiki/book/create',
-			data: $httpParamSerializerJQLike(b),
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			}
-		}).then(function(res) {
-			var t = scope._retBook(res.data.id, res.data);
-			return t;
-		}, function(data) {
-			throw new PException(data);
-		});
-	};
-
-	/**
-	 * صفحات ویکی را با توجه به پارامتر p مورد جستجو قرار داده و صفحات نتیجه را
-	 * در قالب یک ساختار صفحه‌بندی شده به صورت غیرهمزمان برمی‌گرداند.
-	 * پارامتر p ساختاری است که در آن خصوصیات مورد نظر برای صفحات مورد جستجو تعیین می‌شود
-	 *
-	 * @memberof $help
-	 * @param {PaginatorParameter} p ساختاری که در آن خصوصیات مورد نظر برای صفحات مورد جستجو تعیین می‌شود
-	 * @return {promise(PaginatorPage<PWikiPage>)} ساختاری صفحه‌بندی شده از صفحات در نتیجه جستجو
-	 */
-	this.pages = function(p) {
-		var scope = this;
-		return $http({
-			method: 'GET',
-			url: '/api/wiki/page/find',
-			params: p.getParameter(),
-		}).then(function(res) {
-			var page = new PaginatorPage(res.data);
-			var items = [];
-			for (var i = 0; i < page.counts; i++) {
-				var t = scope._retPage(page.items[i].id, page.items[i]);
-				items.push(t);
-			}
-			page.items = items;
-			return page;
-		}, function(data) {
-			throw new PException(data);
-		});
-	};
-
-	/**
-	 * صفحه با شناسه داده شده را برمی گرداند.
-	 *
-	 * @memberof $help
-	 * @param {Integer} id شناسه صفحه مورد نظر
-	 * @return {promise(PWikiPage)} ساختاری حاوی اطلاعات صفحه با شناسه داده شده
-	 */
-	this.page = function(id) {
-		var scope = this;
-		return $http({
-			method: 'GET',
-			url: '/api/wiki/page/' + id,
-		}).then(function(res) {
-			var page = scope._retPage(res.data.id, res.data);
-			return page;
-		}, function(data) {
-			throw new PException(data);
-		});
-	};
-
-	/**
-	 * یک صفحه را بر اساس اطلاعات داده شده ایجاد می‌کند و صفحه ایجاد شده را
-	 * به صورت غیرهمزمان برمی‌گرداند.
-	 *
-	 * @memberof $help
-	 * @param {PWikiPage} b صفحه‌ای که باید ذخیره شود
-	 * @return {PWikiPage} ساختاری حاوی اطلاعات صفحه پس از ذخیره شدن
-	 */
-	this.createPage = function(p) {
-		var scope = this;
-		return $http({
-			method: 'POST',
-			url: '/api/wiki/page/create',
-			data: $httpParamSerializerJQLike(p),
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			}
-		}).then(function(res) {
-			var t = scope._retPage(res.data.id, res.data);
-			return t;
-		}, function(data) {
-			throw new PException(data);
-		});
-	};
-
-});
