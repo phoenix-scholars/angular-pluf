@@ -99,7 +99,7 @@ angular.module('pluf')
 			 */
 			pBook.prototype.page = function(id) {
 				return $http({
-					method : 'POST',
+					method : 'GET',
 					url : '/api/book/' + this.id + '/page/' + id,
 				}).then(function(res) {
 					return new PPage(res.data);
