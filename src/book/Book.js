@@ -38,58 +38,14 @@ angular.module('pluf')
  * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
 .factory(
-		'PWikiBook',
-		function(PObject, PException, PWikiPageItem, PaginatorPage, $http,
-				$httpParamSerializerJQLike, $q, $timeout) {
+		'PBook',
+		function(PObject, PaginatorPage, $http, $httpParamSerializerJQLike, $q,
+				PPage) {
 
-			var pWikiBook = function() {
+			var pBook = function() {
 				PObject.apply(this, arguments);
 			};
-
-			pWikiBook.prototype = new PObject();
-
-			/**
-			 * صفحه با شناسه داده شده را از فهرست صفحات کتاب بازیابی می‌کند.
-			 * 
-			 * @private
-			 * @memberof PWikiBook
-			 * @param id
-			 *            شناسه صفحه
-			 * @param data
-			 *            داده‌های صفحه
-			 * @returns {PWikiPageItem}
-			 */
-			pWikiBook.prototype._retItem = function(id, data) {
-				var item = null;
-				for ( var i in this.items) {
-					if (this.items[i].id === id) {
-						item = this.items[i];
-						break;
-					}
-				}
-				if (!item) {
-					item = new PWikiPageItem(data);
-					this.items.push(item);
-				}
-				item.setData(data);
-				return item;
-			};
-
-			/**
-			 * اولین صفحه کتاب را برمی‌گرداند
-			 * 
-			 * @memberof PWikiBook
-			 * @returns {promise(PWikiPageItem)} یک PageItem مربوط به صفحه اول
-			 *          کتاب
-			 */
-			pWikiBook.prototype.firstPage = function() {
-				var def = $q.defer();
-				var scope = this;
-				$timeout(function() {
-					def.resolve(scope.items[0]);
-				}, 1);
-				return def.promise;
-			};
+			pBook.prototype = new PObject();
 
 			/**
 			 * فهرستی از صفحات کتاب را برمی‌گرداند
@@ -98,21 +54,22 @@ angular.module('pluf')
 			 * @returns {promise(PaginatedPage<PWikiPageItem>)} فهرستی صفحه
 			 *          بندی شده از PageItem های مربوط به صفحات کتاب
 			 */
-			pWikiBook.prototype.pages = function() {
-				var scope = this;
+			pBook.prototype.pages = function() {
 				return $http({
 					method : 'GET',
-					url : '/api/wiki/book/' + scope.id + '/pages',
+					url : '/api/book/' + this.id + '/page/find',
 				}).then(function(res) {
-					scope.items = [];
-					for (var i = 0; i < res.data.length; i++) {
-						scope._retItem(res.data[i].id, res.data[i]);
+					var page = new PaginatorPage(res.data);
+					var items = [];
+					for (var i = 0; i < page.counts; i++) {
+						var item = page.items[i];
+						items.push(new PPage(item));
 					}
-					return scope.items;
-				}, function(data) {
-					throw new PException(data);
+					page.items = items;
+					return page;
 				});
 			};
+
 			/**
 			 * یک صفحه را به کتاب اضافه می‌کند
 			 * 
@@ -122,23 +79,13 @@ angular.module('pluf')
 			 * @returns {promise(PWikiBook)} خود کتاب را که صفحه جدید به آن
 			 *          اضافه شده است برمی‌گرداند
 			 */
-			pWikiBook.prototype.addPage = function(page) {
-				if (page.isAnonymous()) {
-					var dif = $q.defer();
-					$timeout(function() {
-						var ex = new PException({
-							message : 'Page id is null!'
-						});
-						dif.reject(ex);
-					}, 1);
-					return dif.promise;
-				}
-				var scope = this;
+			pBook.prototype.newPage = function(bookDetail) {
 				return $http({
 					method : 'POST',
-					url : '/api/wiki/book/' + scope.id + '/page/' + page.id,
-				}).then(function() {
-					return scope;
+					url : '/api/book/' + this.id + '/page/new',
+					data : $httpParamSerializerJQLike(bookDetail)
+				}).then(function(res) {
+					return new PPage(res.data);
 				});
 			};
 
@@ -150,23 +97,12 @@ angular.module('pluf')
 			 *            page صفحه‌ای که باید از کتاب حذف شود
 			 * @returns {promise(PWikiPage)} صفحه حذف شده از کتاب را برمی‌گرداند
 			 */
-			pWikiBook.prototype.removePage = function(page) {
-				if (page.isAnonymous()) {
-					var dif = $q.defer();
-					$timeout(function() {
-						var ex = new PException({
-							message : 'Page id is null!'
-						});
-						dif.reject(ex);
-					}, 1);
-					return dif.promise;
-				}
-				var scope = this;
+			pBook.prototype.page = function(id) {
 				return $http({
-					method : 'DELETE',
-					url : '/api/wiki/book/' + scope.id + '/page/' + page.id,
-				}).then(function() {
-					return scope;
+					method : 'POST',
+					url : '/api/book/' + this.id + '/page/' + id,
+				}).then(function(res) {
+					return new PPage(res.data);
 				});
 			};
 
@@ -179,20 +115,18 @@ angular.module('pluf')
 			 *            شود
 			 * @returns {promise(PWikiBook)} کتاب با اطلاعات به‌روزرسانی شده
 			 */
-			pWikiBook.prototype.update = function(b) {
+			pBook.prototype.update = function() {
 				var scope = this;
 				return $http({
 					method : 'POST',
-					url : '/api/wiki/book/' + scope.id,
-					data : $httpParamSerializerJQLike(b),
+					url : '/api/book/' + scope.id,
+					data : $httpParamSerializerJQLike(this),
 					headers : {
 						'Content-Type' : 'application/x-www-form-urlencoded'
 					}
 				}).then(function(res) {
 					scope.setData(res.data);
 					return scope;
-				}, function(data) {
-					throw new PException(data);
 				});
 			};
 
@@ -202,18 +136,16 @@ angular.module('pluf')
 			 * @memberof PWikiBook
 			 * @returns {promise(PWikiBook)} کتاب حذف شده
 			 */
-			pWikiBook.prototype.remove = function() {
+			pBook.prototype.remove = function() {
 				var scope = this;
 				return $http({
 					method : 'DELETE',
-					url : '/api/wiki/book/' + scope.id
+					url : '/api/book/' + scope.id
 				}).then(function(res) {
 					scope.setData(res.data);
 					return scope;
-				}, function(data) {
-					throw new PException(data);
 				});
 			};
 
-			return pWikiBook;
+			return pBook;
 		});
