@@ -21,20 +21,68 @@
  */
 'use strict';
 
-describe('Core module test: PProfile', function() {
+describe('Bank module: PBank', function() {
 	var PBank;
+	var $rootScope;
+	var $httpBackend;
+	var $timeout;
+
 	beforeEach(function() {
 		module('pluf');
-		inject(function(_PBank_) {
+		inject(function(_PBank_, _$rootScope_, _$httpBackend_, _$timeout_) {
 			PBank = _PBank_;
+
+			// Concurent test
+			$rootScope = _$rootScope_;
+			$httpBackend = _$httpBackend_;
+			$timeout = _$timeout_;
 		});
 	});
 
 	// check to see if it has the expected function
-	it('Check PBank API', function() {
+	it('should contain update function', function() {
 		var bank = new PBank();
 		expect(angular.isFunction(bank.update)).toBe(true);
+	});
+
+	it('should call /api/bank/engine/{id} to update', function(done) {
+		var data = {
+			id : 1
+		};
+		var bank = new PBank(data);
+		bank.update()//
+		.then(function(object) {
+			expect(object).not.toBeNull();
+			done();
+		});
+
+		$httpBackend//
+		.expect('POST', '/api/bank/engine/1')//
+		.respond(200, data);
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+
+	it('should contain remove function', function() {
+		var bank = new PBank();
 		expect(angular.isFunction(bank.remove)).toBe(true);
 	});
 
+	it('should call /api/bank/engine/{id} to delete', function(done) {
+		var data = {
+			id : 1
+		};
+		var bank = new PBank(data);
+		bank.remove()//
+		.then(function(object) {
+			expect(object).not.toBeNull();
+			done();
+		});
+
+		$httpBackend//
+		.expect('DELETE', '/api/bank/engine/1')//
+		.respond(200, data);
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
 });

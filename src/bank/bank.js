@@ -59,10 +59,19 @@ angular.module('pluf')
  */
 .service(
 		'$bank',
-		function($http, $q, PaginatorPage, PBank, PGate, PReceipt,$httpParamSerializerJQLike) {
-			var _banks = {};
-			var _gates = {};
-			var _receipts = {};
+		function($http, $q, PaginatorPage, PBank, PGate, PReceipt,$httpParamSerializerJQLike, PObjectCache) {
+			
+			var _banksCache = new PObjectCache(function(data) {
+				return new PBank(data);
+			});
+			
+			var _gateCache = new PObjectCache(function(data) {
+				return new PBank(data);
+			});
+			var _receiptCache = new PObjectCache(function(data) {
+				return new PBank(data);
+			});
+			
 
 			// TODO: maso, 1395: add to PObject
 			function _paginatorParams(paginatorParam) {
@@ -72,56 +81,7 @@ angular.module('pluf')
 				return paginatorParam.getParameter();
 			}
 			
-			// TODO: maso, 1395: replace with PObjectCache
-			/*
-			 * گرفتن یک محتوی
-			 */
-			function _bank(id) {
-				return _banks[id];
-			}
-			/*
-			 * بازیابی یک محتوی نامدار
-			 */
-			function _retbank(id, data) {
-				var bank = _banks[id];
-				if (bank) {
-					bank.setData(data);
-				} else {
-					bank = new PBank(data);
-					_banks[id] = bank;
-				}
-				return bank;
-			}
-			
-			function _gate(id){
-				return _gates[id];
-			}
 
-			function _retgate(id, data) {
-				var gate = _gates[id];
-				if (gate) {
-					gate.setData(data);
-				} else {
-					gate = new PGate(data);
-					_gates[id] = gate;
-				}
-				return gate;
-			}
-			
-			function _receipt(id){
-				return _receipts[id];
-			}
-			
-			function _retreceipt(id, data) {
-				var receipt = _receipts[id];
-				if (receipt) {
-					receipt.setData(data);
-				} else {
-					receipt = new PReceipt(data);
-					_receipts[id] = receipt;
-				}
-				return receipt;
-			}
 			
 			/**
 			 * Creates new receipt
@@ -140,7 +100,7 @@ angular.module('pluf')
 						'Content-Type' : 'application/x-www-form-urlencoded'
 					}
 				}).then(function(res){
-					return _retreceipt(res.data.id, res.data);
+					return _receiptCache.restor(res.data.id, res.data);
 				});
 			};
 
@@ -153,30 +113,15 @@ angular.module('pluf')
 			 * 
 			 */
 			this.receipt = function(id) {
-				var receipt = _receipt(id);
-				if(receipt){
+				if(_receiptCache.contains(id)){
 					var deferred = $q.defer();
-					deferred.resolve(receipt);
+					deferred.resolve(_receiptCache.get(id));
 					return deferred.promise;
 				}
-				return $http({
-					method : 'GET',
-					url : '/api/bank/receipt/'+id,
-				}).then(function(res){
-					return _retreceipt(res.data.id, res.data);
+				return $http.get('/api/bank/receipt/'+id)//
+				.then(function(res){
+					return _receiptCache.restor(res.data.id, res.data);
 				});
-			};
-
-			/**
-			 * Gets receipt detail
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PReceipt>
-			 * createdreceipt
-			 * 
-			 */
-			this.receiptById = function(id) {
-				return this.receipt(id);
 			};
 
 			/**
@@ -198,8 +143,9 @@ angular.module('pluf')
 							var page = new PaginatorPage(data);
 							page.items = [];
 							for (var i = 0; i < data.counts; i++) {
-								page.items.push(_retreceipt(
-										data.items[i].type, data.items[i]));
+								var item = data.items[i];
+								page.items.push(_receiptCache.resotr(
+										item.id, item));
 							}
 							return page;
 						});
@@ -220,7 +166,7 @@ angular.module('pluf')
 						'Content-Type' : 'application/x-www-form-urlencoded'
 					}
 				}).then(function(res){
-					return _retgate(res.data.id, res.data);
+					return _gateCache.restor(res.data.id, res.data);
 				});
 			};
 
@@ -231,17 +177,16 @@ angular.module('pluf')
 			 * @return Promise<PGate> a gate
 			 */
 			this.gate = function(id) {
-				var gate = _gate(id);
-				if(gate){
+				if(_gateCache.contains(id)){
 					var deferred = $q.defer();
-					deferred.resolve(gate);
+					deferred.resolve(_gateCache.get(id));
 					return deferred.promise;
 				}
 				return $http({
 					method : 'GET',
 					url : '/api/bank/backend/'+id,
 				}).then(function(res){
-					return _retgate(res.data.id, res.data);
+					return _gateCache.restor(res.data.id, res.data);
 				});
 			};
 
@@ -263,8 +208,9 @@ angular.module('pluf')
 							var page = new PaginatorPage(data);
 							page.items = [];
 							for (var i = 0; i < data.counts; i++) {
-								page.items.push(_retgate(
-										data.items[i].id, data.items[i]));
+								var item = data.items[i];
+								page.items.push(_gateCache.restor(
+										item.id, item));
 							}
 							return page;
 						});
@@ -277,18 +223,16 @@ angular.module('pluf')
 			 * @return Promise<PBank>
 			 */
 			this.bank = function(type) {
-				var bank = _bank(type);
-				if(bank){
+				if(_banksCache.contains(type)){
 					var deferred = $q.defer();
-					deferred.resolve(bank);
+					deferred.resolve(_banksCache.get(type));
 					return deferred.promise;
 				}
 				return $http({
 					method : 'GET',
 					url : '/api/bank/engine/'+type,
 				}).then(function(res){
-					bank = _retbank(res.data.type, res.data);
-					return bank;
+					return _banksCache.restor(res.data.type, res.data);
 				});
 			};
 			
@@ -304,14 +248,16 @@ angular.module('pluf')
 					method : 'GET',
 					url : '/api/bank/engine/find',
 					params : _paginatorParams(paginatorParam)
-				}).then(
+				})//
+				.then(
 						function(res) {
 							var data = res.data;
 							var page = new PaginatorPage(data);
 							page.items = [];
 							for (var i = 0; i < data.counts; i++) {
-								page.items.push(_retbank(
-										data.items[i].type, data.items[i]));
+								var item = data.items[i];
+								page.items.push(_banksCache.restor(
+										item.type, item));
 							}
 							return page;
 						});

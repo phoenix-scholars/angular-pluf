@@ -31,7 +31,7 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PReceipt', function(PObject, $http) {
+.factory('PReceipt', function(PObject, $http, $httpParamSerializerJQLike) {
 
 	/*
 	 * Creates new instance
@@ -46,7 +46,11 @@ angular.module('pluf')
 		var scope = this;
 		return $http({
 			method : 'POST',
-			url : '/api/bank/receipt/' + this.secure_id,
+			url : '/api/bank/receipt/' + this.id,
+			data : $httpParamSerializerJQLike(this),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
 		}).then(function(res) {
 			scope.setData(res.data);
 			return scope;

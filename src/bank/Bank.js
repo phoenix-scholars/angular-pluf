@@ -31,7 +31,7 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PBank', function(PObject) {
+.factory('PBank', function(PObject, $http, $httpParamSerializerJQLike) {
 
 	/*
 	 * Creates new instance
@@ -46,14 +46,32 @@ angular.module('pluf')
 	 * Updates bank
 	 */
 	pBank.prototype.update = function() {
-		// NOTE: Imposible
+		var scope = this;
+		return $http({
+			method : 'POST',
+			url : '/api/bank/engine/' + scope.id,
+			data : $httpParamSerializerJQLike(scope),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
+		}).then(function(result) {
+			scope.setData(result.data);
+			return scope;
+		});
 	};
 
 	/**
 	 * remove bank
 	 */
 	pBank.prototype.remove = function() {
-		// NOTE: Imposible
+		var scope = this;
+		return $http({
+			method : 'DELETE',
+			url : '/api/bank/engine/' + this.id,
+		}).then(function(result) {
+			scope.setData(result.data);
+			return scope;
+		});
 	};
 	//
 	return pBank;

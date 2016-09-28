@@ -21,7 +21,7 @@
  */
 'use strict';
 
-describe('Bank module test: $bank', function() {
+describe('Bank module: $bank', function() {
 	var $bank;
 	var $rootScope;
 	var $httpBackend;
@@ -45,23 +45,6 @@ describe('Bank module test: $bank', function() {
 		});
 	});
 
-	it('Check $bank API', function() {
-		// receipt functions
-		expect(angular.isFunction($bank.receipt)).toBe(true);
-		expect(angular.isFunction($bank.receiptById)).toBe(true);
-		expect(angular.isFunction($bank.createReceipt)).toBe(true);
-		expect(angular.isFunction($bank.receipts)).toBe(true);
-
-		// gate api
-		expect(angular.isFunction($bank.createGate)).toBe(true);
-		expect(angular.isFunction($bank.gate)).toBe(true);
-		expect(angular.isFunction($bank.gates)).toBe(true);
-
-		// bank api
-		expect(angular.isFunction($bank.bank)).toBe(true);
-		expect(angular.isFunction($bank.banks)).toBe(true);
-	});
-
 	/*
 	 * جستجو گرفتن بانک تست شده است.
 	 */
@@ -69,6 +52,11 @@ describe('Bank module test: $bank', function() {
 	/***************************************************************************
 	 * Bank
 	 **************************************************************************/
+	it('should implements bank API', function() {
+		// bank api
+		expect(angular.isFunction($bank.bank)).toBe(true);
+		expect(angular.isFunction($bank.banks)).toBe(true);
+	});
 	it('find bank with params', function(done) {
 		var pag = new PaginatorParameter();
 		$bank.banks(pag).then(function(banks) {
@@ -129,6 +117,12 @@ describe('Bank module test: $bank', function() {
 	/***************************************************************************
 	 * Gates
 	 **************************************************************************/
+	it('should implements gate API', function() {
+		// gate api
+		expect(angular.isFunction($bank.createGate)).toBe(true);
+		expect(angular.isFunction($bank.gate)).toBe(true);
+		expect(angular.isFunction($bank.gates)).toBe(true);
+	});
 	it('find gate with params', function(done) {
 		var pag = new PaginatorParameter();
 		$bank.gates(pag).then(function(gates) {
@@ -211,6 +205,12 @@ describe('Bank module test: $bank', function() {
 	/***************************************************************************
 	 * Receipt
 	 **************************************************************************/
+	it('should implements receipt API', function() {
+		// receipt functions
+		expect(angular.isFunction($bank.receipt)).toBe(true);
+		expect(angular.isFunction($bank.createReceipt)).toBe(true);
+		expect(angular.isFunction($bank.receipts)).toBe(true);
+	});
 	it('find receipts with params', function(done) {
 		var pag = new PaginatorParameter();
 		$bank.receipts(pag).then(function(receipts) {
