@@ -2114,62 +2114,59 @@ angular.module('pluf')
  * @memberof pluf
  * @ngdoc factory
  * @name PaginatorParameter
- * @description
- * بسیاری از داده‌هایی که در سیستم موجود است به صورت صفحه بندی شده در اختیار کاربران قرار
- * می‌گیرد. در این بخش ابزارهایی برای کار با صفحه بندی ارائه شده است.
- *
- *
+ * @description بسیاری از داده‌هایی که در سیستم موجود است به صورت صفحه بندی شده
+ *              در اختیار کاربران قرار می‌گیرد. در این بخش ابزارهایی برای کار با
+ *              صفحه بندی ارائه شده است.
+ * 
+ * 
  * از جمله خصوصیاتی که می‌توان در این ساختار قرار داد عبارتند از:
- *
+ * 
  * @attr {string} _px_q متن مورد جستجو در فیلدهای مختلف
- * @attr {Integer} _px_p  شماره صفحه مورد نظر از فهرست صفحه‌بندی شده
- * @attr {Integer} _px_ps  تعداد آیتم‌های موجود در هر صفحه
- * @attr {string} _px_fk نام خصوصیتی که برای فیلتر کردن مورد استفاده قرار می‌گیرد
- * @attr {string} _px_fv مقداری مورد نظر برای خصوصیتی که بر اساس آن فیلتر انجام می‌شود.
+ * @attr {Integer} _px_p شماره صفحه مورد نظر از فهرست صفحه‌بندی شده
+ * @attr {Integer} _px_ps تعداد آیتم‌های موجود در هر صفحه
+ * @attr {string} _px_fk نام خصوصیتی که برای فیلتر کردن مورد استفاده قرار
+ *       می‌گیرد
+ * @attr {string} _px_fv مقداری مورد نظر برای خصوصیتی که بر اساس آن فیلتر انجام
+ *       می‌شود.
  * @attr {string} _px_sk نام خصوصیتی که فهرست باید بر اساس آن مرتب شود.
- * @attr {string} _px_so ترتیب مرتب‌سازی، اینکه مرتب‌سازی به صورت صعودی باشد یا نزولی
- *
+ * @attr {string} _px_so ترتیب مرتب‌سازی، اینکه مرتب‌سازی به صورت صعودی باشد یا
+ *       نزولی
+ * 
  */
 .factory('PaginatorParameter', function() {
-	var pagParam = function(paginatorParam) {
-		if (paginatorParam) {
-			this.setData(paginatorParam);
-		} else {
-			this.setData({});
-		}
+	var pagParam = function() {
+		// init
+		this.param = {};
 	};
 	pagParam.prototype = {
-		param : {},
-		setData : function(paginatorParam) {
-			// angular.extend(this.param, paginatorParam);
-			this.param = paginatorParam;
-		},
-		setSize : function($size) {
-			this.param._px_c = $size;
+		setSize : function(size) {
+			this.param._px_c = size;
 			return this;
 		},
-		setQuery : function($query) {
-			this.param._px_q = $query;
+		setQuery : function(query) {
+			this.param._px_q = query;
 			return this;
 		},
 		/**
 		 * تعیین صفحه مورد نظر
-		 *
-		 * این فراخوانی صفحه‌ای را تعیین می‌کند که مورد نظر کاربر است. برای نمونه اگر صفحه دوم از
-		 * یک کاوش مد نظر باشد باید مقدار یک به عنوان ورودی این تابع استفاده شود.
-		 *
-		 * اندیس تمام صفحه‌ها از صفر شروع می‌شود. بنابر این صفحه اول اندیس صفر و صفحه دوم
-		 * اندیس یک دارد.
-		 *
-		 * @param  int $page شماره صفحه
-		 * @return PaginatorParameter    خود شئی به عنوان خروجی برگردانده می‌شود.
+		 * 
+		 * این فراخوانی صفحه‌ای را تعیین می‌کند که مورد نظر کاربر است. برای
+		 * نمونه اگر صفحه دوم از یک کاوش مد نظر باشد باید مقدار یک به عنوان
+		 * ورودی این تابع استفاده شود.
+		 * 
+		 * اندیس تمام صفحه‌ها از صفر شروع می‌شود. بنابر این صفحه اول اندیس صفر و
+		 * صفحه دوم اندیس یک دارد.
+		 * 
+		 * @param int
+		 *            $page شماره صفحه
+		 * @return PaginatorParameter خود شئی به عنوان خروجی برگردانده می‌شود.
 		 */
 		setPage : function($page) {
 			this.param._px_p = $page;
 			return this;
 		},
-		nextPage: function(){
-			this.param._px_p +=1;
+		nextPage : function() {
+			this.param._px_p += 1;
 			return this;
 		},
 
@@ -2185,6 +2182,42 @@ angular.module('pluf')
 		},
 		getParameter : function() {
 			return this.param;
+		},
+		/**
+		 * پارامترهای اضافه
+		 * 
+		 * در برخی از کاربردها نیاز به ارسال پارامترهای بیشتری به سرور هست. این
+		 * فراخوانی امکان اضافه کردن پارامترهای اضافه را فراهم می‌کند.
+		 * 
+		 * @memberof PaginatorParameter
+		 * @since 1.0.2
+		 * 
+		 * @param Object
+		 *            value
+		 * @param String
+		 *            key کلید پارامتر مورد نظر
+		 * @return خود موجودیت
+		 */
+		put : function(key, value) {
+			this.param[key] = value;
+			return this;
+		},
+
+		/**
+		 * دسترسی به یک پارامترها خاص
+		 * 
+		 * این فراخوانی برای دسترسی به یک پارامتر خواص در نظر گرفته شده. این
+		 * پارامترها معمولا به صورت اضافه برای سرور ارسال می‌شوند.
+		 * 
+		 * @memberof PaginatorParameter
+		 * @since 1.0.2
+		 * 
+		 * @param String
+		 *            key کلید پارامتر مورد نظر
+		 * @return مقدار معادل با کلید
+		 */
+		get : function(key) {
+			return this.param[key];
 		}
 
 	};
