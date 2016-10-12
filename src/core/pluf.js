@@ -73,7 +73,7 @@ angular.module('pluf')
 				var urlTemplate = params.url;
 				return function(id) {
 					if (_cache.contains(id)) {
-						var deffer = $q.deffer();
+						var deffer = $q.defer();
 						deffer.resolve(_cache.get(id));
 						return deffer.promise();
 					}
