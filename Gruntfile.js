@@ -108,7 +108,7 @@ module.exports = function(grunt) {
 						options : {
 							jshintrc : 'test/.jshintrc'
 						},
-						src : [ 'test/spec/{,*/}*.js' ]
+						src : [ 'test/spec/{,**/}*.js' ]
 					}
 				},
 
@@ -140,7 +140,7 @@ module.exports = function(grunt) {
 						src : [ 'Gruntfile.js', '<%= yeoman.app %>/{,*/}*.js' ]
 					},
 					test : {
-						src : [ 'test/spec/{,*/}*.js' ]
+						src : [ 'test/spec/{,**/}*.js' ]
 					}
 				},
 
@@ -149,7 +149,7 @@ module.exports = function(grunt) {
 				 */
 				jsdoc : {
 					all : {
-						src : [ '<%= yeoman.app %>/{,*/}*.js' ],
+						src : [ '<%= yeoman.app %>/{,**/}*.js' ],
 						options : {
 							destination : '<%= yeoman.dist %>/doc/jsdoc',
 							configure : 'node_modules/angular-jsdoc/common/conf.json',
@@ -248,12 +248,12 @@ module.exports = function(grunt) {
 				concat : {
 					tmp : {
 						src : [ '<%= yeoman.app %>/*.js',
-								'<%= yeoman.app %>/*/*.js' ],
+								'<%= yeoman.app %>/**/*.js' ],
 						dest : '.tmp/<%= yeoman.pkg.name %>.js'
 					},
 					dist : {
 						src : [ '<%= yeoman.app %>/*.js',
-								'<%= yeoman.app %>/*/*.js' ],
+								'<%= yeoman.app %>/**/*.js' ],
 						dest : '<%= yeoman.dist %>/<%= yeoman.pkg.name %>.js'
 					}
 				},
