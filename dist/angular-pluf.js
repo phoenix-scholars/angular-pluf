@@ -23,100 +23,15 @@
 /**
  * @ngdoc module
  * @name pluf.core
- * @description
- *
- * ساختارهای داده‌ای پایه‌ای و مدیریت آنها در این ماژول پیاده سازی شده است. این ساختارهای داده‌ای
- * کاربردهای مانند مدیریت خطا، صفحه بندی و ساختار اولیه موجودیت‌ها در سیستم را ایجاد می‌کند. این
- * ساختارها در تمام ماژولها در دسترس است.
- *
+ * @description ابزارهای پایه‌ای برای توسعه سیستم‌های مبتنی بر سین
+ * 
+ * ساختارهای داده‌ای پایه‌ای و مدیریت آنها در این ماژول پیاده سازی شده است. این
+ * ساختارهای داده‌ای کاربردهای مانند مدیریت خطا، صفحه بندی و ساختار اولیه
+ * موجودیت‌ها در سیستم را ایجاد می‌کند. این ساختارها در تمام ماژولها در دسترس
+ * است.
+ * 
  */
-angular.module('pluf', [])
-.run(function($usr, $act, PException) {
-	$act.command({
-		id : 'pluf.user.login',
-		label : 'login',
-		description : 'login a user',
-		visible : function() {
-			return $usr.isAnonymous();
-		},
-		category : 'usr',
-	})
-	.handler({
-		commandId : 'pluf.user.login',
-		handle : function() {
-			if (arguments.length < 1) {//
-				throw new PException('no credentioal');
-			}
-			var a = arguments[0];
-			return $usr.login(a.username, a.password);
-		}
-	})
-
-	/**
-	 * خروج کاربر جاری از سیستم
-	 */
-	.command({
-		id : 'pluf.user.logout',
-		label : 'logout',
-		description : 'logout the user',
-		visible : function() {
-			return !$usr.isAnonymous();
-		},
-		category : 'usr',
-	}).handler({
-		commandId : 'pluf.user.logout',
-		handle : function() {
-			return $usr.logout();
-		}
-	})
-
-	/**
-	 * دستور به روز کردن اطلاعات کاربر جاری
-	 */
-	.command({
-		id : 'pluf.user.update',
-		label : 'update',
-		description : 'update the current user',
-		visible : function() {
-			return !$usr.isAnonymous();
-		},
-	}).handler({
-		commandId : 'pluf.user.update',
-		handle : function() {
-			if (arguments.length < 1) {//
-				throw new PException('bad param');
-			}
-			var a = arguments[0];
-			return $usr.session().then(function(user) {
-				return user.update(a.key, a.value);
-			});
-		}
-	})
-	/*
-	 *
-	 */
-	.command({
-		id : 'pluf.user.profile.update',
-		label : 'update profile',
-		description : 'update user profile',
-		visible : function() {
-			return !$usr.isAnonymous();
-		},
-	}).handler({
-		commandId : 'pluf.user.profile.update',
-		handle : function() {
-			if (arguments.length < 1) {//
-				throw new PException('bad param');
-			}
-			var a = arguments[0];
-			return $usr.session().then(function(user) {
-				return user.profile();
-			}).then(function(profile) {
-				return profile.update(a.key, a.value);
-			});
-		}
-	});
-});
+angular.module('pluf', []);
 
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -1499,33 +1414,33 @@ angular.module('pluf')
 'use strict';
 angular.module('pluf')
 
-
 /**
  * @memberof pluf
  * @ngdoc factory
  * @name PHandler
- * @description
- * ساختار داده‌ای برای یک دستگیره را ایجاد می‌کند. دستگیره یک عمل اجرایی است که در مقابل فراخوانی
- * یک دستور در سیستم اجرا می‌شود.
+ * @description ساختار داده‌ای برای یک دستگیره را ایجاد می‌کند. دستگیره یک عمل
+ *              اجرایی است که در مقابل فراخوانی یک دستور در سیستم اجرا می‌شود.
  */
 .factory('PHandler', function() {
-  var pHandler  = function(data) {
-    this.priority = 0;
-    if (data) {
-      this.setData(data);
-    }
-  };
-  /**
-   * داده‌های اولیه را تعیین می‌کند.
-   * @memberof PHandler
-   * @param  {object} data داده‌ها
-   * @return {PHandler}    دستگیره
-   */
-  pHandler.prototype.setData = function(data) {
-    angular.extend(this, data);
-    return this;
-  };
-  return pHandler;
+	var pHandler = function(data) {
+		this.priority = 0;
+		if (data) {
+			this.setData(data);
+		}
+	};
+	/**
+	 * داده‌های اولیه را تعیین می‌کند.
+	 * 
+	 * @memberof PHandler
+	 * @param {object}
+	 *            data داده‌ها
+	 * @return {PHandler} دستگیره
+	 */
+	pHandler.prototype.setData = function(data) {
+		angular.extend(this, data);
+		return this;
+	};
+	return pHandler;
 });
 
 /*
@@ -1654,85 +1569,94 @@ angular.module('pluf')
 'use strict';
 angular.module('pluf')
 
-
 /**
  * @memberof pluf
  * @ngdoc factory
  * @name PMenuItem
- * @description
- * این کلاس یک گزینه از منو را ایجاد می‌کند. هر منو ایتم شامل دو دسته اطلاعات می‌شود که یک دسته
- * برای نمایش و یک دسته برای اجرا است. داده‌هایی که برای نمایش به کار می‌روند محدودیت ندارند و
- * کاربر هر کلید و یا مقداری را می‌تواند برای آنها تعیین کند. اما داده‌های که برای اجرا به کار می‌روند
- * محدود بود و باید حتما مقادیر خاصی برای آنها تعیین شود.
- *
+ * @description یک منو را ایجاد می‌کند
+ * 
+ * این کلاس یک گزینه از منو را ایجاد می‌کند. هر منو ایتم شامل دو دسته اطلاعات
+ * می‌شود که یک دسته برای نمایش و یک دسته برای اجرا است. داده‌هایی که برای نمایش
+ * به کار می‌روند محدودیت ندارند و کاربر هر کلید و یا مقداری را می‌تواند برای
+ * آنها تعیین کند. اما داده‌های که برای اجرا به کار می‌روند محدود بود و باید
+ * حتما مقادیر خاصی برای آنها تعیین شود.
+ * 
  * @tutorial menuitem-command
  */
 .factory('PMenuItem', function($window, $act) {
-  var pMenuItem  = function(data) {
-    this.priority = 0;
-    this.tags = [];
-    if (data) {
-      this.setData(data);
-    }
-  };
-  /**
-   * داده‌های اولیه دستور را تعیین می‌کند.
-   *
-   * @memberof PMenuItem
-   * @param  {object} data ساختار داده اولیه برای ایجاد دستور
-   * @return {pCommand}  خود دستور به عنوان نتیجه برگردانده می‌ود.
-   */
-  pMenuItem.prototype.setData = function(data) {
-   if ('command' in data) {
-     var scope = this;
-     $act.getCommand(data.command).then(function(command) {
-        angular.extend(scope, command);
-        angular.extend(scope, data);
-      });
-   } else {
-      angular.extend(this, data);
-   }
-   return this;
-  };
+	var pMenuItem = function(data) {
+		this.priority = 0;
+		this.tags = [];
+		if (data) {
+			this.setData(data);
+		}
+	};
+	/**
+	 * داده‌های اولیه دستور را تعیین می‌کند.
+	 * 
+	 * @memberof PMenuItem
+	 * @param {object}
+	 *            data ساختار داده اولیه برای ایجاد دستور
+	 * @return {pCommand} خود دستور به عنوان نتیجه برگردانده می‌ود.
+	 */
+	pMenuItem.prototype.setData = function(data) {
+		if ('command' in data) {
+			var scope = this;
+			$act.getCommand(data.command).then(function(command) {
+				angular.extend(scope, command);
+				angular.extend(scope, data);
+			});
+		} else {
+			angular.extend(this, data);
+		}
+		return this;
+	};
 
-  /**
-   * یک برچسب جدید به فهرست برچسب‌های این ایتم اضافه می‌کند. این برچسب‌ها برای دسته بندی
-   * کردن عمل‌ها در لایه نمایش کاربرد دارد.
-   *
-   * @memberof PMenuItem
-   * @param  {string} tag برچسب جدید
-   * @return {PCommand}   خود دستور را به عنوان نتیجه برمی‌گرداند.
-   */
-  pMenuItem.prototype.tag = function(tag){
-    this.tags.push(tag);
-  };
+	/**
+	 * یک برچسب جدید به فهرست برچسب‌های این ایتم اضافه می‌کند. این برچسب‌ها برای
+	 * دسته بندی کردن عمل‌ها در لایه نمایش کاربرد دارد.
+	 * 
+	 * @memberof PMenuItem
+	 * @param {string}
+	 *            tag برچسب جدید
+	 * @return {PCommand} خود دستور را به عنوان نتیجه برمی‌گرداند.
+	 */
+	pMenuItem.prototype.tag = function(tag) {
+		this.tags.push(tag);
+	};
 
-  /**
-   * منو را فعال کرده و برنامه‌های معادل با آن را اجرا می‌کند. بر اساس اینکه توی منو چه داده‌هایی
-   * قرار گرفته باشه، اجرا منو متفاوت هست. این فراخوانی به ترتیب داده‌های زیر را بررسی کرده و
-   * در صورت موجود بودن اجرا می‌کند:
-   *
-   * - command
-   * - actioin
-   * - link
-   *
-   */
-  pMenuItem.prototype.active = function() {
-    if('command' in this){
-      var args = [this.command];
-      if (this.params instanceof Array) {
-        args = args.concat(this.params);
-      }
-      return $act.execute.apply($act, args);
-    } else if ('action' in this) {
-      return this.action();
-    } else if ('link' in this) {
-      $window.location = this.link;
-      return;
-    }
-    throw {status: 404, code:523, message:'Menu item is not supported'};
-  };
-  return pMenuItem;
+	/**
+	 * منو را فعال کرده و برنامه‌های معادل با آن را اجرا می‌کند. بر اساس اینکه
+	 * توی منو چه داده‌هایی قرار گرفته باشه، اجرا منو متفاوت هست. این فراخوانی
+	 * به ترتیب داده‌های زیر را بررسی کرده و در صورت موجود بودن اجرا می‌کند:
+	 * 
+	 * <ul>
+	 * <li>command</li>
+	 * <li>actioin</li>
+	 * <li>link</li>
+	 * </ul>
+	 * 
+	 */
+	pMenuItem.prototype.active = function() {
+		if ('command' in this) {
+			var args = [ this.command ];
+			if (this.params instanceof Array) {
+				args = args.concat(this.params);
+			}
+			return $act.execute.apply($act, args);
+		} else if ('action' in this) {
+			return this.action();
+		} else if ('link' in this) {
+			$window.location = this.link;
+			return;
+		}
+		throw {
+			status : 404,
+			code : 523,
+			message : 'Menu item is not supported'
+		};
+	};
+	return pMenuItem;
 });
 
 /*
@@ -2114,62 +2038,59 @@ angular.module('pluf')
  * @memberof pluf
  * @ngdoc factory
  * @name PaginatorParameter
- * @description
- * بسیاری از داده‌هایی که در سیستم موجود است به صورت صفحه بندی شده در اختیار کاربران قرار
- * می‌گیرد. در این بخش ابزارهایی برای کار با صفحه بندی ارائه شده است.
- *
- *
+ * @description بسیاری از داده‌هایی که در سیستم موجود است به صورت صفحه بندی شده
+ *              در اختیار کاربران قرار می‌گیرد. در این بخش ابزارهایی برای کار با
+ *              صفحه بندی ارائه شده است.
+ * 
+ * 
  * از جمله خصوصیاتی که می‌توان در این ساختار قرار داد عبارتند از:
- *
+ * 
  * @attr {string} _px_q متن مورد جستجو در فیلدهای مختلف
- * @attr {Integer} _px_p  شماره صفحه مورد نظر از فهرست صفحه‌بندی شده
- * @attr {Integer} _px_ps  تعداد آیتم‌های موجود در هر صفحه
- * @attr {string} _px_fk نام خصوصیتی که برای فیلتر کردن مورد استفاده قرار می‌گیرد
- * @attr {string} _px_fv مقداری مورد نظر برای خصوصیتی که بر اساس آن فیلتر انجام می‌شود.
+ * @attr {Integer} _px_p شماره صفحه مورد نظر از فهرست صفحه‌بندی شده
+ * @attr {Integer} _px_ps تعداد آیتم‌های موجود در هر صفحه
+ * @attr {string} _px_fk نام خصوصیتی که برای فیلتر کردن مورد استفاده قرار
+ *       می‌گیرد
+ * @attr {string} _px_fv مقداری مورد نظر برای خصوصیتی که بر اساس آن فیلتر انجام
+ *       می‌شود.
  * @attr {string} _px_sk نام خصوصیتی که فهرست باید بر اساس آن مرتب شود.
- * @attr {string} _px_so ترتیب مرتب‌سازی، اینکه مرتب‌سازی به صورت صعودی باشد یا نزولی
- *
+ * @attr {string} _px_so ترتیب مرتب‌سازی، اینکه مرتب‌سازی به صورت صعودی باشد یا
+ *       نزولی
+ * 
  */
 .factory('PaginatorParameter', function() {
-	var pagParam = function(paginatorParam) {
-		if (paginatorParam) {
-			this.setData(paginatorParam);
-		} else {
-			this.setData({});
-		}
+	var pagParam = function() {
+		// init
+		this.param = {};
 	};
 	pagParam.prototype = {
-		param : {},
-		setData : function(paginatorParam) {
-			// angular.extend(this.param, paginatorParam);
-			this.param = paginatorParam;
-		},
-		setSize : function($size) {
-			this.param._px_c = $size;
+		setSize : function(size) {
+			this.param._px_c = size;
 			return this;
 		},
-		setQuery : function($query) {
-			this.param._px_q = $query;
+		setQuery : function(query) {
+			this.param._px_q = query;
 			return this;
 		},
 		/**
 		 * تعیین صفحه مورد نظر
-		 *
-		 * این فراخوانی صفحه‌ای را تعیین می‌کند که مورد نظر کاربر است. برای نمونه اگر صفحه دوم از
-		 * یک کاوش مد نظر باشد باید مقدار یک به عنوان ورودی این تابع استفاده شود.
-		 *
-		 * اندیس تمام صفحه‌ها از صفر شروع می‌شود. بنابر این صفحه اول اندیس صفر و صفحه دوم
-		 * اندیس یک دارد.
-		 *
-		 * @param  int $page شماره صفحه
-		 * @return PaginatorParameter    خود شئی به عنوان خروجی برگردانده می‌شود.
+		 * 
+		 * این فراخوانی صفحه‌ای را تعیین می‌کند که مورد نظر کاربر است. برای
+		 * نمونه اگر صفحه دوم از یک کاوش مد نظر باشد باید مقدار یک به عنوان
+		 * ورودی این تابع استفاده شود.
+		 * 
+		 * اندیس تمام صفحه‌ها از صفر شروع می‌شود. بنابر این صفحه اول اندیس صفر و
+		 * صفحه دوم اندیس یک دارد.
+		 * 
+		 * @param int
+		 *            $page شماره صفحه
+		 * @return PaginatorParameter خود شئی به عنوان خروجی برگردانده می‌شود.
 		 */
 		setPage : function($page) {
 			this.param._px_p = $page;
 			return this;
 		},
-		nextPage: function(){
-			this.param._px_p +=1;
+		nextPage : function() {
+			this.param._px_p += 1;
 			return this;
 		},
 
@@ -2185,6 +2106,42 @@ angular.module('pluf')
 		},
 		getParameter : function() {
 			return this.param;
+		},
+		/**
+		 * پارامترهای اضافه
+		 * 
+		 * در برخی از کاربردها نیاز به ارسال پارامترهای بیشتری به سرور هست. این
+		 * فراخوانی امکان اضافه کردن پارامترهای اضافه را فراهم می‌کند.
+		 * 
+		 * @memberof PaginatorParameter
+		 * @since 1.0.2
+		 * 
+		 * @param Object
+		 *            value
+		 * @param String
+		 *            key کلید پارامتر مورد نظر
+		 * @return خود موجودیت
+		 */
+		put : function(key, value) {
+			this.param[key] = value;
+			return this;
+		},
+
+		/**
+		 * دسترسی به یک پارامترها خاص
+		 * 
+		 * این فراخوانی برای دسترسی به یک پارامتر خواص در نظر گرفته شده. این
+		 * پارامترها معمولا به صورت اضافه برای سرور ارسال می‌شوند.
+		 * 
+		 * @memberof PaginatorParameter
+		 * @since 1.0.2
+		 * 
+		 * @param String
+		 *            key کلید پارامتر مورد نظر
+		 * @return مقدار معادل با کلید
+		 */
+		get : function(key) {
+			return this.param[key];
 		}
 
 	};
@@ -3269,6 +3226,115 @@ angular.module('pluf')
 	};
 });
 
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @ngdoc service
+ * @name $pluf
+ * @description ابزارهای پایه‌ای
+ */
+.service('$pluf',
+		function(PaginatorPage, $q, $http, $httpParamSerializerJQLike) {
+
+			/**
+			 * 
+			 * @memberof $pluf
+			 * @param {Object}
+			 *            params
+			 * @param {PObjectCache}
+			 *            cache
+			 * @return {function}
+			 */
+			this.createFind = function(params, _cache) {
+				return function(paginatorParameter) {
+					if (paginatorParameter) {
+						params.params = paginatorParameter.getParameter();
+					}
+					return $http(params)//
+					.then(function(res) {
+						var page = new PaginatorPage(res.data);
+						var items = [];
+						for (var i = 0; i < page.counts; i++) {
+							var item = page.items[i];
+							items.push(_cache.restor(item.id, item));
+						}
+						page.items = items;
+						return page;
+					});
+				};
+			};
+
+			/**
+			 * 
+			 * @memberof $pluf
+			 * @param {Object}
+			 *            params
+			 * @param {PObjectCache}
+			 *            cache
+			 * @return {function}
+			 */
+			this.createGet = function(params, _cache) {
+				var urlTemplate = params.url;
+				return function(id) {
+					if (_cache.contains(id)) {
+						var deffer = $q.defer();
+						deffer.resolve(_cache.get(id));
+						return deffer.promise();
+					}
+					params.url = urlTemplate.replace('{id}', id);
+					return $http(params)//
+					.then(function(res) {
+						return _cache.restor(res.data.id, res.data);
+					});
+				};
+			};
+
+			/**
+			 * 
+			 * @memberof $pluf
+			 * @param {Object}
+			 *            params
+			 * @param {PObjectCache}
+			 *            cache
+			 * @return {function}
+			 */
+			this.createNew = function(params, _cache) {
+				params.headers = {
+					'Content-Type' : 'application/x-www-form-urlencoded'
+				};
+				return function(objectData) {
+					params.data = $httpParamSerializerJQLike(objectData);
+					return $http(params)//
+					.then(function(res) {
+						return _cache.restor(res.data.id, res.data);
+					});
+				};
+			};
+		});
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
  * 
@@ -4527,6 +4593,83 @@ angular.module('pluf')
 	 * @return {promise<PFollower>} دنبالگر
 	 */
 	this.follower = function(){};
+});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+/**
+ * 
+ */
+.run(function($usr, $act) {
+	$act//
+	.command({
+		id : 'user.logout',
+		label : 'logout',
+		description : 'logout the user',
+		visible : function() {
+			return !$usr.isAnonymous();
+		},
+		category : 'usr',
+	});
+});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+/**
+ * 
+ */
+.run(function($usr, $act) {
+	$act//
+	.handler({
+		commandId : 'user.logout',
+		handle : function() {
+			return $usr.logout();
+		}
+	});
 });
 
 /*
