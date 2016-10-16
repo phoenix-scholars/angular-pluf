@@ -5449,7 +5449,7 @@ angular.module('pluf')
 .service(
 		'$usr',
 		function($http, $httpParamSerializerJQLike, $q, $act, PUser, PRole,
-				PGroup, PaginatorPage, PException, PObjectCache) {
+				PGroup, PaginatorPage, PException, PObjectCache, $pluf) {
 			/*
 			 * کاربر جاری را تعیین می‌کند. این متغیر به صورت عمومی در اختیار
 			 * کاربران قرار می‌گیرد.
@@ -5588,14 +5588,14 @@ angular.module('pluf')
 					return _su;
 				});
 			};
-			
+
 			/*
 			 * TODO: maso, 1395: دسترسی به موجودیت‌های تکراری است
 			 * 
 			 * درسترسی به تمام موجودیت‌ها بر اساس مدل جدیدی که در سین معرفی شده
-			 * کاملا شبیه به هم هست که تنها چندتا از پارامترهای اون تغییر می‌کنه.
-			 * بنابر این بهتر هست که به جای زدن کدهای تکراری یک فکتوری برای ایجاد
-			 * این کدها ایجاد کنیم و در زمان اجرا کدها رو کپی کنیم.
+			 * کاملا شبیه به هم هست که تنها چندتا از پارامترهای اون تغییر
+			 * می‌کنه. بنابر این بهتر هست که به جای زدن کدهای تکراری یک فکتوری
+			 * برای ایجاد این کدها ایجاد کنیم و در زمان اجرا کدها رو کپی کنیم.
 			 */
 
 			/**
@@ -5611,22 +5611,10 @@ angular.module('pluf')
 			 *            parameter پارامترهای مورد استفاده در صفحه بندی نتایج
 			 * @return {promise(PaginatorPage)} صفحه‌ای از کاربران سیستم.
 			 */
-			this.users = function(p) {
-				return $http({
-					method : 'GET',
-					url : '/api/user/find',
-					params : p.getParameter()
-				}).then(function(res) {
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push(_userCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
+			this.users = $pluf.createFind({
+				method : 'GET',
+				url : '/api/user/find',
+			}, _userCache);
 
 			/**
 			 * اطلاعات یک کاربر جدید را دریافت کرده و آن را به عنوان یک کاربر در
@@ -5645,20 +5633,10 @@ angular.module('pluf')
 			 *            detail خصوصیت‌های کاربر
 			 * @return {promise(PUser)} حساب کاربری ایجاد شده
 			 */
-			this.newUser = function(detail) {
-				return $http({
-					method : 'POST',
-					url : '/api/user/new',
-					data : $httpParamSerializerJQLike(detail),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(result) {
-					var data = result.data;
-					var nu = _userCache.restor(data.id, data);
-					return nu;
-				});
-			};
+			this.newUser = $pluf.createNew({
+				method : 'POST',
+				url : '/api/user/new',
+			}, _userCache);
 
 			/**
 			 * اطلاعات کاربر را با استفاده از شناسه آن بازیابی می‌کند.
@@ -5669,20 +5647,10 @@ angular.module('pluf')
 			 *            id شناسه کاربر مورد نظر
 			 * @return {promise(PUser)} اطلاعات بازیابی شده کاربر
 			 */
-			this.user = function(id) {
-				if (!_userCache.contains(id)) {
-					var deferred = $q.defer();
-					deferred.resolve(_userCache.get(id));
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/user/' + id,
-				}).then(function(result) {
-					var data = result.data;
-					return _userCache.restor(data.id, data);
-				});
-			};
+			this.user = $pluf.createGet({
+				method : 'GET',
+				url : '/api/user/{id}',
+			}, _userCache);
 
 			/**
 			 * فهرست تمام رولهای سیستم را تعیین می‌کند.
@@ -5690,26 +5658,10 @@ angular.module('pluf')
 			 * @param {PaginatorParameter}
 			 * @return promise<PaginatedPage<Prole>>
 			 */
-			this.roles = function(pagParam) {
-				var params = {};
-				if (pagParam) {
-					params = pagParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/role/find',
-					params : params
-				}).then(function(res) {
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push(_roleCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
+			this.roles = $pluf.createFind({
+				method : 'GET',
+				url : '/api/role/find',
+			}, _roleCache);
 
 			/**
 			 * یک رول با شناسه تعیین شده را برمی‌گرداند
@@ -5717,20 +5669,10 @@ angular.module('pluf')
 			 * @parm {integer} شناسه نقش
 			 * @return promise<PRole>
 			 */
-			this.role = function(id) {
-				if (_roleCache.contains(id)) {
-					var deferred = $q.defer();
-					deferred.resolve(_roleCache.get(id));
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/role/' + id,
-				}).then(function(result) {
-					var data = result.data;
-					return _roleCache.restor(data.id, data);
-				});
-			};
+			this.role = $pluf.createGet({
+				method : 'GET',
+				url : '/api/role/{id}',
+			}, _roleCache);
 
 			/**
 			 * یک نقش جدید در سیستم ایجاد می‌کند.
@@ -5739,19 +5681,10 @@ angular.module('pluf')
 			 *            داده‌های مورد نیاز برای ایجاد یک نقش جدید
 			 * @return promise<PRole>
 			 */
-			this.newRole = function(detail) {
-				return $http({
-					method : 'POST',
-					url : '/api/role/new',
-					data : $httpParamSerializerJQLike(detail),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(result) {
-					var data = result.data;
-					return _roleCache.restor(data.id, data);
-				});
-			};
+			this.newRole = $pluf.createNew({
+				method : 'POST',
+				url : '/api/role/new'
+			}, _roleCache);
 
 			/**
 			 * فهرست تمام گروه‌ها را تعیین می‌کند.
@@ -5760,26 +5693,10 @@ angular.module('pluf')
 			 *            پارامترهای صفحه بندی
 			 * @return promise<PaginatedPage<PGroup>> فهرست گروه‌ها
 			 */
-			this.groups = function(pagParam) {
-				var params = {};
-				if (pagParam) {
-					params = pagParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/group/find',
-					params : params
-				}).then(function(res) {
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push(_groupCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
+			this.groups = $pluf.createFind({
+				method : 'GET',
+				url : '/api/group/find',
+			}, _groupCache);
 
 			/**
 			 * اطلاعات یک گروه را بازیابی می‌کند.
@@ -5788,20 +5705,10 @@ angular.module('pluf')
 			 *            شناسه گروه
 			 * @return {promise<PGroup>} گروه بازیابی شده
 			 */
-			this.group = function(id) {
-				if (_groupCache.contains(id)) {
-					var deferred = $q.defer();
-					deferred.resolve(_groupCache.get(id));
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/group/' + id,
-				}).then(function(result) {
-					var data = result.data;
-					return _groupCache.restor(data.id, data);
-				});
-			};
+			this.group = $pluf.createGet({
+				method : 'GET',
+				url : '/api/group/{id}',
+			}, _groupCache);
 
 			/**
 			 * یک گروه جدید در سیستم ایجاد می‌کند.
@@ -5810,18 +5717,9 @@ angular.module('pluf')
 			 *            پارامترهای مورد نیاز برای کاربر
 			 * @return {promise<PGroup>} گروه ایجاد شده
 			 */
-			this.newGroup = function(detail) {
-				return $http({
-					method : 'POST',
-					url : '/api/group/new',
-					data : $httpParamSerializerJQLike(detail),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(result) {
-					var data = result.data;
-					return _groupCache.restor(data.id, data);
-				});
-			};
+			this.newGroup = $pluf.createNew({
+				method : 'POST',
+				url : '/api/group/new'
+			}, _groupCache);
 
 		});
