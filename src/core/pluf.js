@@ -87,6 +87,38 @@ angular.module('pluf')
 
 			/**
 			 * 
+			 */
+			this.createUpdate = function(params) {
+				params.headers = {
+					'Content-Type' : 'application/x-www-form-urlencoded'
+				};
+				return function(objectData) {
+					var scope = this;
+					params.data = $httpParamSerializerJQLike(objectData);
+					return $http(params)//
+					.then(function(res) {
+						scope.setData(res.data);
+						return scope;
+					});
+				};
+			};
+
+			/**
+			 * 
+			 */
+			this.createDelete = function(params) {
+				return function() {
+					var scope = this;
+					return $http(params)//
+					.then(function(res) {
+						scope.setData(res.data);
+						return scope;
+					});
+				};
+			};
+
+			/**
+			 * 
 			 * @memberof $pluf
 			 * @param {Object}
 			 *            params
