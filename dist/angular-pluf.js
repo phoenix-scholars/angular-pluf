@@ -1108,8 +1108,7 @@ angular.module('pluf')
 .service(
 		'$cms',
 		function($http, $httpParamSerializerJQLike, $q, $timeout, PContent,
-				PaginatorPage, PObjectCache) {
-			var postct = 'application/x-www-form-urlencoded';
+				PaginatorPage, PObjectCache, $pluf) {
 			var _cache = new PObjectCache(function(data) {
 				return new PContent(data);
 			});
@@ -1123,18 +1122,10 @@ angular.module('pluf')
 			 *            contet ساختار داده‌ای محتوی برای ایجاد
 			 * @return {promise(PContent)}
 			 */
-			this.newContent = function(detail) {
-				return $http({
-					method : 'POST',
-					url : '/api/cms/new',
-					data : $httpParamSerializerJQLike(detail),
-					headers : {
-						'Content-Type' : postct
-					}
-				}).then(function(res) {
-					return _cache.restor(res.data.id, res.data);
-				});
-			};
+			this.newContent = $pluf.createNew({
+				method : 'POST',
+				url : '/api/cms/new'
+			}, _cache);
 
 			/**
 			 * یک محتوی با شناسه خاص را تعیین می‌کند.
@@ -1144,19 +1135,10 @@ angular.module('pluf')
 			 *            id شناسه محتوی
 			 * @return {promise(PContent)} محتوی معادل
 			 */
-			this.content = function(id) {
-				if (_cache.contains(id)) {
-					var deferred = $q.defer();
-					deferred.resolve(_cache.get(id));
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/cms/' + id,
-				}).then(function(res) {
-					return _cache.restor(id, res.data);
-				});
-			};
+			this.content = $pluf.createGet({
+				method : 'GET',
+				url : '/api/cms/{id}'
+			}, _cache);
 
 			/**
 			 * فهرست تمام محتوی موجود را تعیین می‌کند
@@ -1166,25 +1148,10 @@ angular.module('pluf')
 			 *            param پارامترهای جستجو
 			 * @return {promise(PaginatorPage(PContent))} نتیجه جستجو
 			 */
-			this.contents = function(pagParam) {
-				var param = {};
-				if (pagParam) {
-					param = pagParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/cms/find',
-					params : param
-				}).then(function(res) {
-					var page = new PaginatorPage(res.data);
-					page.items = [];
-					for (var i = 0; i < res.data.counts; i++) {
-						var item = res.data.items[i];
-						page.items.push(_cache.restor(item.id, item));
-					}
-					return page;
-				});
-			};
+			this.contents = $pluf.createFind({
+				method : 'GET',
+				url : '/api/cms/find'
+			}, _cache);
 		});
 
 /*
@@ -3315,6 +3282,38 @@ angular.module('pluf')
 
 			/**
 			 * 
+			 */
+			this.createUpdate = function(params) {
+				params.headers = {
+					'Content-Type' : 'application/x-www-form-urlencoded'
+				};
+				return function(objectData) {
+					var scope = this;
+					params.data = $httpParamSerializerJQLike(objectData);
+					return $http(params)//
+					.then(function(res) {
+						scope.setData(res.data);
+						return scope;
+					});
+				};
+			};
+
+			/**
+			 * 
+			 */
+			this.createDelete = function(params) {
+				return function() {
+					var scope = this;
+					return $http(params)//
+					.then(function(res) {
+						scope.setData(res.data);
+						return scope;
+					});
+				};
+			};
+
+			/**
+			 * 
 			 * @memberof $pluf
 			 * @param {Object}
 			 *            params
@@ -3450,6 +3449,118 @@ angular.module('pluf')
   this.process = function(){};
 });
 
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+/**
+ * دستورها و دستگیره‌ها
+ * 
+ * تمام دستورهای و دستگیره‌هایی که در رابطه با این ماژول وجود دارد را در این
+ * پرونده اضافه شده است. این دستورها برای کاربردهای عمومی به کار می‌رود.
+ */
+.run(function($act) {
+	/**
+	 * اضافه کردن دستورها و دستگیره‌ها
+	 */
+	$act.command({
+		id : 'tenant.lunch',
+		category : 'saas',
+	})
+	// run spa
+	.command({
+		id : 'spa.lunch',
+		category : 'saas',
+	});
+});
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+/**
+ * دستگیره‌ها
+ * 
+ * تمام دستورهای و دستگیره‌هایی که در رابطه با این ماژول وجود دارد را در این
+ * پرونده اضافه شده است. این دستورها برای کاربردهای عمومی به کار می‌رود.
+ */
+.run(function($window, $act, $saas, PException) {
+	/**
+	 * اضافه کردن دستورها و دستگیره‌ها
+	 */
+	$act
+	// Lunch an application
+	.handler({
+		command : 'tenant.lunch',
+		handle : function() {
+			if (arguments.length < 1) {
+				throw new PException('tenant not found');
+			}
+			var tenantId = arguments[0];
+			return $saas.get(tenantId)//
+			.then(function(tenant) {
+				return tenant.defaultApplication();
+			}).then(function(app) {
+				return app.run();
+			});
+		}
+	})
+	// run spa
+	.handler({
+		command : 'spa.lunch',
+		handle : function() {
+			if (arguments.length < 1) {//
+				throw new PException('application not found');
+			}
+			var spaId = arguments[0];
+			return $saas.session()//
+			.then(function(tenant) {
+				return tenant.app(spaId);
+			}).then(function(app) {
+				return app.run();
+			});
+		}
+	});
+});
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
  * 
@@ -4139,305 +4250,116 @@ angular.module('pluf')
 
 angular.module('pluf')
 /**
- * دستورها و دستگیره‌ها
- * 
- * تمام دستورهای و دستگیره‌هایی که در رابطه با این ماژول وجود دارد را در این
- * پرونده اضافه شده است. این دستورها برای کاربردهای عمومی به کار می‌رود.
+ * @ngdoc service
+ * @name $saas
+ * @memberof pluf.saas
+ * @description مدیریت ملک و نرم افزارها را انجام می‌دهد.
  */
-.run(function($act) {
-	/**
-	 * اضافه کردن دستورها و دستگیره‌ها
-	 */
-	$act.command({
-		id : 'tenant.lunch',
-		category : 'saas',
-	})
-	// run spa
-	.command({
-		id : 'spa.lunch',
-		category : 'saas',
+.service('$saas', function($http, PTenant, PSpa, PObjectCache, $pluf) {
+
+	var _tenantCache = new PObjectCache(function(data) {
+		return new PTenant(data);
 	});
-});
-/*
- * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-'use strict';
 
-angular.module('pluf')
-/**
- * دستگیره‌ها
- * 
- * تمام دستورهای و دستگیره‌هایی که در رابطه با این ماژول وجود دارد را در این
- * پرونده اضافه شده است. این دستورها برای کاربردهای عمومی به کار می‌رود.
- */
-.run(function($window, $act, $saas, PException) {
-	/**
-	 * اضافه کردن دستورها و دستگیره‌ها
-	 */
-	$act
-	// Lunch an application
-	.handler({
-		command : 'tenant.lunch',
-		handle : function() {
-			if (arguments.length < 1) {
-				throw new PException('tenant not found');
-			}
-			var tenantId = arguments[0];
-			return $saas.get(tenantId)//
-			.then(function(tenant) {
-				return tenant.defaultApplication();
-			}).then(function(app) {
-				return app.run();
-			});
-		}
-	})
-	// run spa
-	.handler({
-		command : 'spa.lunch',
-		handle : function() {
-			if (arguments.length < 1) {//
-				throw new PException('application not found');
-			}
-			var spaId = arguments[0];
-			return $saas.session()//
-			.then(function(tenant) {
-				return tenant.app(spaId);
-			}).then(function(app) {
-				return app.run();
-			});
-		}
+	var _spaCache = new PObjectCache(function(data) {
+		return new PSpa(data);
 	});
+
+	/**
+	 * نمونه جاری را تعیین می‌کند. به صورت پیش فرض اجرای هر نرم افزار روی یک ملک
+	 * اجرا می‌شود این فراخوانی ملکی را تعیین می‌کند که نرم افزار جاری روی آن
+	 * کار می‌کند.
+	 * 
+	 * @memberof $saas
+	 * @return {permision(PTenant)} ملک جاری را تعیین می‌کند.
+	 */
+	this.session = function() {
+		return $http.get('/api/tenant')//
+		.then(function(res) {
+			return _tenantCache.restor(res.data);
+		});
+	};
+
+	/**
+	 * فهرست تمام ملک‌هایی را که کاربر به آنها دسترسی دارد را تعیین می‌کند.
+	 * 
+	 * @memberof $saas
+	 * @param {PaginatorParameter}
+	 *            paginatorParameter پارامترهای مورد استفاده در صفحه بندی
+	 * @return {promise<PaginatorPage<PTenant>>} فهرست ملک‌ها به صورت صفحه
+	 *         بندی
+	 */
+	this.tenants = $pluf.createFind({
+		method : 'GET',
+		url : '/api/tenant/find',
+	}, _tenantCache);
+
+	/**
+	 * ملک تعیین شده با شناسه را برمی‌گرداند.
+	 * 
+	 * @memberof $saas
+	 * @param {integer}
+	 *            id شناسه ملک مورد نظر
+	 * @return {promise<PTenant>} ملک تعیین شده.
+	 */
+	this.tenant = $pluf.createGet({
+		url : '/api/tenant/{id}',
+		method : 'GET'
+	}, _tenantCache);
+
+	/**
+	 * یک ملک جدید ایجاد می‌کند و ساختار ایجاد شده برای آنرا به عنوان نتیجه
+	 * برمی‌گرداند.
+	 * 
+	 * @memberof $saas
+	 * @param {Struct}
+	 *            tenantData ساختار داده‌ای ملک
+	 * @return {promise<PTenant>} مکل ایجاد شده
+	 */
+	this.newTenant = $pluf.createNew({
+		method : 'POST',
+		url : '/api/tenant/new',
+	}, _tenantCache);
+
+	/**
+	 * فهرست تمام نرم افزارهایی را تعیین می‌کند که برای ملک جاری در دسترس است.
+	 * 
+	 * @memberof $saas
+	 * @param {PaginatorParameter}
+	 *            paginatorParameter پارامترهای مورد استفاده در صفحه بندی
+	 * @return {promise<PaginatorPage<PSpa>>} فهرست نرم افزارها
+	 */
+	this.spas = $pluf.createFind({
+		method : 'GET',
+		url : '/api/spa/find',
+	}, _spaCache);
+
+	/**
+	 * نرم افزار معادل با شناسه ورودی را بازیابی می‌کند.
+	 * 
+	 * @memberof $saas
+	 * @param {integer}
+	 *            id شناسه نرم افزار
+	 * @return {promise<PSpa>} نرم‌افزار معادل
+	 */
+	this.spa = $pluf.createGet({
+		url : '/api/spa/{id}',
+		method : 'GET'
+	}, _spaCache);
+
+	/**
+	 * یک نرم افزار جدید در سیستم ایجاد می‌کند.
+	 * 
+	 * @memberof $saas
+	 * @param {Struct}
+	 *            spa ساختار داده‌ای یک spa
+	 * @return {promise<PSpa} نرم‌افزار معادل ایجاد شده
+	 */
+	this.newSpa = $pluf.createNew({
+		method : 'POST',
+		url : '/api/spa/new'
+	}, _spaCache);
 });
-/*
- * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-'use strict';
-
-angular.module('pluf')
-		/**
-		 * @ngdoc service
-		 * @name $saas
-		 * @memberof pluf.saas
-		 * @description مدیریت ملک و نرم افزارها را انجام می‌دهد.
-		 */
-		.service(
-				'$saas',
-				function($http, $httpParamSerializerJQLike, $q, $window, $act,
-						$usr, PTenant, PSpa, PaginatorParameter, PaginatorPage,
-						PObjectCache) {
-					var contentType = 'application/x-www-form-urlencoded';
-
-					var _tenantCache = new PObjectCache(function(data) {
-						return new PTenant(data);
-					});
-
-					var _spaCache = new PObjectCache(function(data) {
-						return new PSpa(data);
-					});
-
-					/**
-					 * نمونه جاری را تعیین می‌کند. به صورت پیش فرض اجرای هر نرم
-					 * افزار روی یک ملک اجرا می‌شود این فراخوانی ملکی را تعیین
-					 * می‌کند که نرم افزار جاری روی آن کار می‌کند.
-					 * 
-					 * @memberof $saas
-					 * @return {permision(PTenant)} ملک جاری را تعیین می‌کند.
-					 */
-					this.session = function() {
-						return $http.get('/api/tenant')//
-						.then(function(res) {
-							return _tenantCache.restor(res.data);
-						});
-					};
-
-					/**
-					 * فهرست تمام ملک‌هایی را که کاربر به آنها دسترسی دارد را
-					 * تعیین می‌کند.
-					 * 
-					 * @memberof $saas
-					 * @param {PaginatorParameter}
-					 *            paginatorParameter پارامترهای مورد استفاده در
-					 *            صفحه بندی
-					 * @return {promise<PaginatorPage<PTenant>>} فهرست ملک‌ها
-					 *         به صورت صفحه بندی
-					 */
-					this.tenants = function(paginatorParameter) {
-						var param = {};
-						if (paginatorParameter) {
-							param = paginatorParameter.getParameter();
-						}
-						return $http({
-							method : 'GET',
-							url : '/api/tenant/find',
-							params : param
-						}).then(
-								function(res) {
-									var page = new PaginatorPage(res.data);
-									page.items = [];
-									for (var i = 0; i < page.counts; i++) {
-										var item = res.data.items[i];
-										page.items.push(_tenantCache.restor(
-												item.id, item));
-									}
-									return page;
-								});
-					};
-
-					/**
-					 * ملک تعیین شده با شناسه را برمی‌گرداند.
-					 * 
-					 * @memberof $saas
-					 * @param {integer}
-					 *            id شناسه ملک مورد نظر
-					 * @return {promise<PTenant>} ملک تعیین شده.
-					 */
-					this.tenant = function(id) {
-						if (_tenantCache.contains(id)) {
-							var deferred = $q.defer();
-							deferred.resolve(_tenantCache.get(id));
-							return deferred.promise;
-						}
-						return $http.get('/api/tenant/' + id)//
-						.then(function(res) {
-							return _tenantCache.restor(res.data.id, res.data);
-						});
-					};
-
-					/**
-					 * یک ملک جدید ایجاد می‌کند و ساختار ایجاد شده برای آنرا به
-					 * عنوان نتیجه برمی‌گرداند.
-					 * 
-					 * @memberof $saas
-					 * @param {Struct}
-					 *            tenantData ساختار داده‌ای ملک
-					 * @return {promise<PTenant>} مکل ایجاد شده
-					 */
-					this.newTenant = function(t) {
-						return $http({
-							method : 'POST',
-							url : '/api/tenant/new',
-							data : $httpParamSerializerJQLike(t),
-							headers : {
-								'Content-Type' : contentType
-							}
-						})//
-						.then(function(res) {
-							return _tenantCache.restor(res.data.id, res.data);
-						});
-					};
-
-					/**
-					 * فهرست تمام نرم افزارهایی را تعیین می‌کند که برای ملک جاری
-					 * در دسترس است.
-					 * 
-					 * @memberof $saas
-					 * @param {PaginatorParameter}
-					 *            paginatorParameter پارامترهای مورد استفاده در
-					 *            صفحه بندی
-					 * @return {promise<PaginatorPage<PSpa>>} فهرست نرم
-					 *         افزارها
-					 */
-					this.spas = function(paginatorParameter) {
-						var param = {};
-						if (paginatorParameter) {
-							param = paginatorParameter.getParameter();
-						}
-						return $http({
-							method : 'GET',
-							url : '/api/spa/find',
-							params : param
-						})//
-						.then(
-								function(res) {
-									var page = new PaginatorPage(res.data);
-									page.items = [];
-									for (var i = 0; i < page.counts; i++) {
-										var item = res.data.items[i];
-										page.items.push(_spaCache.restore(
-												item.id, item));
-									}
-									return page;
-								});
-					};
-
-					/**
-					 * نرم افزار معادل با شناسه ورودی را بازیابی می‌کند.
-					 * 
-					 * @memberof $saas
-					 * @param {integer}
-					 *            id شناسه نرم افزار
-					 * @return {promise<PSpa>} نرم‌افزار معادل
-					 */
-					this.spa = function(id) {
-						if (_spaCache.contains(id)) {
-							var deferred = $q.defer();
-							deferred.resolve(_spaCache.get(id));
-							return deferred.promise;
-						}
-						return $http.get('/api/spa/' + id)//
-						.then(function(res) {
-							return _spaCache.restor(res.data.id, res.data);
-						});
-					};
-
-					/**
-					 * یک نرم افزار جدید در سیستم ایجاد می‌کند.
-					 * 
-					 * @memberof $saas
-					 * @param {Struct}
-					 *            spa ساختار داده‌ای یک spa
-					 * @return {promise<PSpa} نرم‌افزار معادل ایجاد شده
-					 */
-					this.newSpa = function(detail) {
-						return $http({
-							method : 'POST',
-							url : '/api/spa/new',
-							data : $httpParamSerializerJQLike(detail),
-							headers : {
-								'Content-Type' : contentType
-							}
-						})//
-						.then(function(res) {
-							return _spaCache.restor(res.data.id, res.data);
-						});
-					};
-				});
 
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -4706,156 +4628,156 @@ angular.module('pluf')
  * 
  */
 .factory(
-		'PGroup',
-		function(PObject, $http, $httpParamSerializerJQLike, $q, $injector,
-				PaginatorPage) {
-			/*
-			 * یک نمونه جدید از این موجودیت ایجاد می کند.
-			 */
-			var pGroup = function(data) {
-				if (data) {
-					this.setData(data);
-				}
-			};
+	'PGroup',
+	function(PObject, $http, $httpParamSerializerJQLike, $q, $injector,
+		PaginatorPage) {
+	    /*
+	     * یک نمونه جدید از این موجودیت ایجاد می کند.
+	     */
+	    var pGroup = function(data) {
+		if (data) {
+		    this.setData(data);
+		}
+	    };
 
-			pGroup.prototype = new PObject();
+	    pGroup.prototype = new PObject();
 
-			/**
-			 * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور
-			 * انتقال می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
-			 * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
-			 * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
-			 * 
-			 * @memberof PProfile
-			 * 
-			 * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
-			 */
-			pGroup.prototype.update = function() {
-				if (this.isAnonymous()) {
-					var deferred = $q.defer();
-					deferred.reject();
-					return deferred.promise;
-				}
-				var scope = this;
-				return $http({
-					method : 'POST',
-					url : '/api/group/' + this.id,
-					data : $httpParamSerializerJQLike(scope),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(res) {
-					scope.setData(res.data);
-					return scope;
-				});
-			};
-
-			/**
-			 * پروفایل کاربری را حذف می کند
-			 * 
-			 * @memberof PProfile
-			 * 
-			 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف
-			 *          شده
-			 */
-			pGroup.prototype.remove = function() {
-				var scope = this;
-				return $http({
-					method : 'DELETE',
-					url : '/api/group/' + this.id,
-				}).then(function(data) {
-					scope.setData(data.data);
-					return scope;
-				});
-			};
-
-			/**
-			 * حذف یک رول
-			 * 
-			 * برای حذف نقش باید خود نقش را داشته باشید.
-			 * 
-			 * @param {PRole}
-			 *            نقش مورد نظر
-			 * @return promise پارامتری برای خروجی در نظر گرفته نشده
-			 */
-			pGroup.prototype.removeRole = function(role) {
-				return $http({
-					method : 'DELETE',
-					url : '/api/group/' + this.id + '/role/' + role.id,
-				});
-			};
-
-			/**
-			 * فهرست نقش‌های گروه را تعیین می‌کند
-			 * 
-			 * @param PaginationParameter
-			 * @return promise(PaginatedPage(Role))
-			 */
-			pGroup.prototype.roles = function(paginationParam) {
-				var params = {};
-				if (paginationParam) {
-					params = paginationParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/group/' + this.id + '/role/find',
-					params : params
-				}).then(function(res) {
-					var $usr = $injector.get('$usr');
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push($usr._roleCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
-
-			/**
-			 * کاربر رو حذف می‌کنه
-			 * 
-			 * معادل با حذف نقش کاربر هست.
-			 * 
-			 * @param {PUser}
-			 *            کاربر مورد نظر
-			 */
-			pGroup.prototype.removeUser = function(user) {
-				return $http({
-					method : 'DELETE',
-					url : '/api/group/' + this.id + '/user/' + user.id,
-				});
-			};
-
-			/**
-			 * فهرست کاربران را تعیین می‌کند
-			 * 
-			 */
-			pGroup.prototype.users = function(paginationParam) {
-				var params = {};
-				if (paginationParam) {
-					params = paginationParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/group/' + this.id + '/user/find',
-					params : params
-				}).then(function(res) {
-					var $usr = $injector.get('$usr');
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push($usr._userCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
-
-			return pGroup;
+	    /**
+	     * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور
+	     * انتقال می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
+	     * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
+	     * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
+	     * 
+	     * @memberof PProfile
+	     * 
+	     * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
+	     */
+	    pGroup.prototype.update = function() {
+		if (this.isAnonymous()) {
+		    var deferred = $q.defer();
+		    deferred.reject();
+		    return deferred.promise;
+		}
+		var scope = this;
+		return $http({
+		    method : 'POST',
+		    url : '/api/group/' + this.id,
+		    data : $httpParamSerializerJQLike(scope),
+		    headers : {
+			'Content-Type' : 'application/x-www-form-urlencoded'
+		    }
+		}).then(function(res) {
+		    scope.setData(res.data);
+		    return scope;
 		});
+	    };
+
+	    /**
+	     * پروفایل کاربری را حذف می کند
+	     * 
+	     * @memberof PProfile
+	     * 
+	     * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف
+	     *          شده
+	     */
+	    pGroup.prototype.remove = function() {
+		var scope = this;
+		return $http({
+		    method : 'DELETE',
+		    url : '/api/group/' + this.id,
+		}).then(function(data) {
+		    scope.setData(data.data);
+		    return scope;
+		});
+	    };
+
+	    /**
+	     * حذف یک رول
+	     * 
+	     * برای حذف نقش باید خود نقش را داشته باشید.
+	     * 
+	     * @param {PRole}
+	     *                نقش مورد نظر
+	     * @return promise پارامتری برای خروجی در نظر گرفته نشده
+	     */
+	    pGroup.prototype.removeRole = function(role) {
+		return $http({
+		    method : 'DELETE',
+		    url : '/api/group/' + this.id + '/role/' + role.id,
+		});
+	    };
+
+	    /**
+	     * فهرست نقش‌های گروه را تعیین می‌کند
+	     * 
+	     * @param PaginationParameter
+	     * @return promise(PaginatedPage(Role))
+	     */
+	    pGroup.prototype.roles = function(paginationParam) {
+		var params = {};
+		if (paginationParam) {
+		    params = paginationParam.getParameter();
+		}
+		return $http({
+		    method : 'GET',
+		    url : '/api/group/' + this.id + '/role/find',
+		    params : params
+		}).then(function(res) {
+		    var $usr = $injector.get('$usr');
+		    var page = new PaginatorPage(res.data);
+		    var items = [];
+		    for (var i = 0; i < page.counts; i++) {
+			var item = page.items[i];
+			items.push($usr._roleCache.restor(item.id, item));
+		    }
+		    page.items = items;
+		    return page;
+		});
+	    };
+
+	    /**
+	     * کاربر رو حذف می‌کنه
+	     * 
+	     * معادل با حذف نقش کاربر هست.
+	     * 
+	     * @param {PUser}
+	     *                کاربر مورد نظر
+	     */
+	    pGroup.prototype.removeUser = function(user) {
+		return $http({
+		    method : 'DELETE',
+		    url : '/api/group/' + this.id + '/user/' + user.id,
+		});
+	    };
+
+	    /**
+	     * فهرست کاربران را تعیین می‌کند
+	     * 
+	     */
+	    pGroup.prototype.users = function(paginationParam) {
+		var params = {};
+		if (paginationParam) {
+		    params = paginationParam.getParameter();
+		}
+		return $http({
+		    method : 'GET',
+		    url : '/api/group/' + this.id + '/user/find',
+		    params : params
+		}).then(function(res) {
+		    var $usr = $injector.get('$usr');
+		    var page = new PaginatorPage(res.data);
+		    var items = [];
+		    for (var i = 0; i < page.counts; i++) {
+			var item = page.items[i];
+			items.push($usr._userCache.restor(item.id, item));
+		    }
+		    page.items = items;
+		    return page;
+		});
+	    };
+
+	    return pGroup;
+	});
 
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -4882,20 +4804,19 @@ angular.module('pluf')
 
 angular.module('pluf')
 
-
 /**
  * @ngdoc factory
  * @name PProfile
  * @memberof pluf
  * 
- * @description
- * هر کاربر در هر سیستم یک پروفایل مخصوص به خود دارد که شامل یه سری اطلاعات کلی می‌شود.
- * این اطلاعات برای هر نرم افزار می‌تواند متفاوت باشد برای نمونه شما در سیستم فروش یک پروفایل
- * دارید که شامل شماره تماس است اما در سیستم کتابداری پروفایل شما شامل شماره دانشجویی
- * است.
- *
- * طبعت متغیر این مدل داده‌ای منجر به این شده که این مدل یک مدل کلی به صورت کلید مقدار باشد
- * که شما می‌توانید مقادیر مورد نظر خود را در آن اضافه و کم کنید.
+ * @description هر کاربر در هر سیستم یک پروفایل مخصوص به خود دارد که شامل یه سری
+ *              اطلاعات کلی می‌شود. این اطلاعات برای هر نرم افزار می‌تواند
+ *              متفاوت باشد برای نمونه شما در سیستم فروش یک پروفایل دارید که
+ *              شامل شماره تماس است اما در سیستم کتابداری پروفایل شما شامل شماره
+ *              دانشجویی است.
+ * 
+ * طبعت متغیر این مدل داده‌ای منجر به این شده که این مدل یک مدل کلی به صورت کلید
+ * مقدار باشد که شما می‌توانید مقادیر مورد نظر خود را در آن اضافه و کم کنید.
  * 
  * @attr {Integer} id شناسه
  * @attr {Integer} user شناسه حساب کاربری مربوط به این پروفایل
@@ -4911,70 +4832,71 @@ angular.module('pluf')
  * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد پروفایل
  * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
-.factory('PProfile', function( $http, $httpParamSerializerJQLike, $q, PObject) {
-	/*
-	 * یک نمونه جدید از این موجودیت ایجاد می کند.
-	 */
-	var pProfile = function(data) {
-		if(data){
-			this.setData(data);
-		}
-	};
-	
-	pProfile.prototype = new PObject();
+.factory('PProfile', function($http, $httpParamSerializerJQLike, $q, PObject) {
+    /*
+     * یک نمونه جدید از این موجودیت ایجاد می کند.
+     */
+    var pProfile = function(data) {
+	if (data) {
+	    this.setData(data);
+	}
+    };
 
-	/**
-	 * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور انتقال می‌دهد.
-	 * تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای اعمال شده در این ساختار داده‌ای تنها
-	 * در برنامه کاربر خواهد بود و با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
-	 *
-	 * @memberof PProfile
-	 * 
-	 * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
-	 */
-	pProfile.prototype.update = function() {
-		if (this.user.isAnonymous()) {
-			var deferred = $q.defer();
-			deferred.reject();
-			return deferred.promise;
-		}
-		var scope = this;
-		return $http({
-			method : 'POST',
-			url : '/api/user/'+ this.user.id + '/profile',
-			data : $httpParamSerializerJQLike(scope),
-			headers : {
-				'Content-Type' : 'application/x-www-form-urlencoded'
-			}
-		}).then(function(res) {
-			scope.setData(res.data);
-			return scope;
-		});
-	};
-	
-	/**
-	 * پروفایل کاربری را حذف می کند
-	 * 
-	 * @memberof PProfile
-	 * 
-	 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف شده
-	 */
-	pProfile.prototype.remove = function(){
-		var scope = this;
-		return $http({
-			method : 'DELETE',
-			url : '/api/user/' + this.user + '/profile',
-			data : $httpParamSerializerJQLike(scope),
-			headers : {
-				'Content-Type' : 'application/x-www-form-urlencoded'
-			}
-		}).then(function(data){
-			scope.setData(data.data);
-			return scope;
-		});
-	};
-	
-	return pProfile;
+    pProfile.prototype = new PObject();
+
+    /**
+     * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور انتقال
+     * می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای اعمال شده در
+     * این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و با بارگذاری دوباره
+     * سیستم، به حالت اولیه برگردانده خواهد شد
+     * 
+     * @memberof PProfile
+     * 
+     * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
+     */
+    pProfile.prototype.update = function() {
+	if (this.user.isAnonymous()) {
+	    var deferred = $q.defer();
+	    deferred.reject();
+	    return deferred.promise;
+	}
+	var scope = this;
+	return $http({
+	    method : 'POST',
+	    url : '/api/user/' + this.user.id + '/profile',
+	    data : $httpParamSerializerJQLike(scope),
+	    headers : {
+		'Content-Type' : 'application/x-www-form-urlencoded'
+	    }
+	}).then(function(res) {
+	    scope.setData(res.data);
+	    return scope;
+	});
+    };
+
+    /**
+     * پروفایل کاربری را حذف می کند
+     * 
+     * @memberof PProfile
+     * 
+     * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف شده
+     */
+    pProfile.prototype.remove = function() {
+	var scope = this;
+	return $http({
+	    method : 'DELETE',
+	    url : '/api/user/' + this.user + '/profile',
+	    data : $httpParamSerializerJQLike(scope),
+	    headers : {
+		'Content-Type' : 'application/x-www-form-urlencoded'
+	    }
+	}).then(function(data) {
+	    scope.setData(data.data);
+	    return scope;
+	});
+    };
+
+    return pProfile;
 });
 
 /*
@@ -5031,154 +4953,155 @@ angular.module('pluf')
  * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
 .factory(
-		'PRole',
-		function(PObject, $http, $httpParamSerializerJQLike, $q, $injector,
-				PaginatorPage) {
-			/*
-			 * یک نمونه جدید از این موجودیت ایجاد می کند.
-			 */
-			var pRole = function(data) {
-				if (data) {
-					this.setData(data);
-				}
-			};
+	'PRole',
+	function(PObject, $http, $httpParamSerializerJQLike, $q, $injector,
+		PaginatorPage) {
+	    /*
+	     * یک نمونه جدید از این موجودیت ایجاد می کند.
+	     */
+	    var pRole = function(data) {
+		if (data) {
+		    this.setData(data);
+		}
+	    };
 
-			pRole.prototype = new PObject();
+	    pRole.prototype = new PObject();
 
-			/**
-			 * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور
-			 * انتقال می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
-			 * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
-			 * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
-			 * 
-			 * @memberof PProfile
-			 * 
-			 * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
-			 */
-			pRole.prototype.update = function() {
-				if (this.isAnonymous()) {
-					var deferred = $q.defer();
-					deferred.reject();
-					return deferred.promise;
-				}
-				var scope = this;
-				return $http({
-					method : 'POST',
-					url : '/api/role/' + this.id,
-					data : $httpParamSerializerJQLike(this),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(res) {
-					scope.setData(res.data);
-					return scope;
-				});
-			};
-
-			/**
-			 * پروفایل کاربری را حذف می کند
-			 * 
-			 * @memberof PProfile
-			 * 
-			 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف
-			 *          شده
-			 */
-			pRole.prototype.remove = function() {
-				var scope = this;
-				return $http({
-					method : 'DELETE',
-					url : '/api/role/' + this.id,
-					data : $httpParamSerializerJQLike(scope),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(data) {
-					scope.setData(data.data);
-					return scope;
-				});
-			};
-
-			/**
-			 * کاربر رو حذف می‌کنه
-			 * 
-			 * معادل با حذف نقش کاربر هست.
-			 * 
-			 * @param {PUser}
-			 *            کاربر مورد نظر
-			 */
-			pRole.prototype.removeUser = function(user) {
-				return $http({
-					method : 'DELETE',
-					url : '/api/role/' + this.id + '/user/' + user.id,
-				});
-			};
-
-			/**
-			 * فهرست کاربران را تعیین می‌کند
-			 * 
-			 */
-			pRole.prototype.users = function(paginationParam) {
-				var params = {};
-				if (paginationParam) {
-					params = paginationParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/role/' + this.id + '/user/find',
-					params : params
-				}).then(function(res) {
-					var $usr = $injector.get('$usr');
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push($usr._userCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
-
-			/**
-			 * گروه رو حذف می‌کنه
-			 * 
-			 * این فراخوانی معادل با حذف یک نقش از یک گروه هست.
-			 * 
-			 * 
-			 */
-			pRole.prototype.removeGroup = function(group) {
-				return $http({
-					method : 'DELETE',
-					url : '/api/role/' + this.id + '/group/' + group.id,
-				});
-			};
-
-			/**
-			 * فهرست گوره‌هایی که در این نقش هستند
-			 */
-			pRole.prototype.groups = function(paginationParam) {
-				var params = {};
-				if (paginationParam) {
-					params = paginationParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/role/' + this.id + '/group/find',
-					params : params
-				}).then(function(res) {
-					var $usr = $injector.get('$usr');
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push($usr._groupCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
-			return pRole;
+	    /**
+	     * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور
+	     * انتقال می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
+	     * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
+	     * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
+	     * 
+	     * @memberof PProfile
+	     * 
+	     * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
+	     */
+	    pRole.prototype.update = function() {
+		if (this.isAnonymous()) {
+		    var deferred = $q.defer();
+		    deferred.reject();
+		    return deferred.promise;
+		}
+		var scope = this;
+		return $http({
+		    method : 'POST',
+		    url : '/api/role/' + this.id,
+		    data : $httpParamSerializerJQLike(this),
+		    headers : {
+			'Content-Type' : 'application/x-www-form-urlencoded'
+		    }
+		}).then(function(res) {
+		    scope.setData(res.data);
+		    return scope;
 		});
+	    };
+
+	    /**
+	     * پروفایل کاربری را حذف می کند
+	     * 
+	     * @memberof PProfile
+	     * 
+	     * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف
+	     *          شده
+	     */
+	    pRole.prototype.remove = function() {
+		var scope = this;
+		return $http({
+		    method : 'DELETE',
+		    url : '/api/role/' + this.id,
+		    data : $httpParamSerializerJQLike(scope),
+		    headers : {
+			'Content-Type' : 'application/x-www-form-urlencoded'
+		    }
+		}).then(function(data) {
+		    scope.setData(data.data);
+		    return scope;
+		});
+	    };
+
+	    /**
+	     * کاربر رو حذف می‌کنه
+	     * 
+	     * معادل با حذف نقش کاربر هست.
+	     * 
+	     * @param {PUser}
+	     *                کاربر مورد نظر
+	     */
+	    pRole.prototype.removeUser = function(user) {
+		return $http({
+		    method : 'DELETE',
+		    url : '/api/role/' + this.id + '/user/' + user.id,
+		});
+	    };
+
+	    /**
+	     * فهرست کاربران را تعیین می‌کند
+	     * 
+	     */
+	    pRole.prototype.users = function(paginationParam) {
+		// TODO: mao, 1395: replase with $pluf service
+		var params = {};
+		if (paginationParam) {
+		    params = paginationParam.getParameter();
+		}
+		return $http({
+		    method : 'GET',
+		    url : '/api/role/' + this.id + '/user/find',
+		    params : params
+		}).then(function(res) {
+		    var $usr = $injector.get('$usr');
+		    var page = new PaginatorPage(res.data);
+		    var items = [];
+		    for (var i = 0; i < page.counts; i++) {
+			var item = page.items[i];
+			items.push($usr._userCache.restor(item.id, item));
+		    }
+		    page.items = items;
+		    return page;
+		});
+	    };
+
+	    /**
+	     * گروه رو حذف می‌کنه
+	     * 
+	     * این فراخوانی معادل با حذف یک نقش از یک گروه هست.
+	     * 
+	     * 
+	     */
+	    pRole.prototype.removeGroup = function(group) {
+		return $http({
+		    method : 'DELETE',
+		    url : '/api/role/' + this.id + '/group/' + group.id,
+		});
+	    };
+
+	    /**
+	     * فهرست گوره‌هایی که در این نقش هستند
+	     */
+	    pRole.prototype.groups = function(paginationParam) {
+		var params = {};
+		if (paginationParam) {
+		    params = paginationParam.getParameter();
+		}
+		return $http({
+		    method : 'GET',
+		    url : '/api/role/' + this.id + '/group/find',
+		    params : params
+		}).then(function(res) {
+		    var $usr = $injector.get('$usr');
+		    var page = new PaginatorPage(res.data);
+		    var items = [];
+		    for (var i = 0; i < page.counts; i++) {
+			var item = page.items[i];
+			items.push($usr._groupCache.restor(item.id, item));
+		    }
+		    page.items = items;
+		    return page;
+		});
+	    };
+	    return pRole;
+	});
 
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -5246,205 +5169,205 @@ angular.module('pluf')
  * اعمال خواهد شد.
  */
 .factory(
-		'PUser',
-		function($http, $q, $httpParamSerializerJQLike, PObject, PProfile,
-				$injector, PaginatorPage) {
+	'PUser',
+	function($http, $q, $httpParamSerializerJQLike, PObject, PProfile,
+		$injector, PaginatorPage) {
 
-			var pUser = function(data) {
-				if (data) {
-					this.setData(data);
-					/*
-					 * NOTE: فرض ما این هست که شناسه داره و این شناسه تغییر
-					 * نمی‌کنه
-					 */
-					this.avatar = '/api/user/' + this.id + '/avatar';
-				}
-			};
+	    var pUser = function(data) {
+		if (data) {
+		    this.setData(data);
+		    /*
+		     * NOTE: فرض ما این هست که شناسه داره و این شناسه تغییر
+		     * نمی‌کنه
+		     */
+		    this.avatar = '/api/user/' + this.id + '/avatar';
+		}
+	    };
 
-			pUser.prototype = new PObject();
+	    pUser.prototype = new PObject();
 
-			/**
-			 * اطلاعات حساب کاربری را به‌روزرسانی می‌کند
-			 * 
-			 * تغییراتی که در ساختارهای داده‌ای اعمال شده است را در سرور نیز
-			 * اعمال می‌کند. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
-			 * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
-			 * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد.
-			 * 
-			 * @memberof PUser
-			 * 
-			 * @return {promise(PUser)} ساختار داده‌ای به‌روز شده‌ی حساب کاربری
-			 */
-			pUser.prototype.update = function() {
-				var scope = this;
-				return $http({
-					method : 'POST',
-					url : '/api/user/' + this.id,
-					data : $httpParamSerializerJQLike(scope),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(result) {
-					scope.setData(result.data);
-					return scope;
-				});
-			};
-
-			/**
-			 * حساب کاربری را حذف می‌کند
-			 * 
-			 * @memberof PUser
-			 * 
-			 * @return {promise(PUser)} ساختار داده‌ای حساب کاربری حذف شده
-			 */
-			pUser.prototype.remove = function() {
-				var scope = this;
-				return $http({
-					method : 'DELETE',
-					url : '/api/user/' + this.id,
-				}).then(function(result) {
-					scope.setData(result.data);
-					return scope;
-				});
-			};
-
-			/**
-			 * پروفایل کاربر را تعیین می‌کند.
-			 * 
-			 * @memberof PUser
-			 * 
-			 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری مربوط
-			 *          به این حساب کاربری
-			 */
-			pUser.prototype.profile = function() {
-				var deferred;
-				if (this.isAnonymous()) {
-					deferred = $q.defer();
-					deferred.reject();
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/user/' + this.id + '/profile',
-				}).then(function(res) {
-					return new PProfile(res.data);
-				});
-			};
-
-			/**
-			 * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی
-			 * به صورت هم زمان انجام می‌شود.
-			 * 
-			 * @memberof PUser
-			 * 
-			 * @return {boolean} حالت مدیر بودن کاربر
-			 */
-			pUser.prototype.isAdministrator = function() {
-				return (this.id && this.id > 0 && this.administrator);
-			};
-
-			/**
-			 * تعیین می‌کند که آیا کاربر جاری staff است یا نه. این فراخوانی به
-			 * صورت هم زمان انجام می‌شود.
-			 * 
-			 * @memberof PUser
-			 * 
-			 * @return {boolean} حالت staff بودن کاربر
-			 */
-			pUser.prototype.isStaff = function() {
-				return (this.id && this.id > 0 && this.staff);
-			};
-
-			/**
-			 * حذف یک رول از کاربر
-			 * 
-			 * برای حذف نقش باید خود نقش را داشته باشید.
-			 * 
-			 * @param {PRole}
-			 *            نقش مورد نظر
-			 * @return promise پارامتری برای خروجی در نظر گرفته نشده
-			 */
-			pUser.prototype.removeRole = function(role) {
-				return $http({
-					method : 'DELETE',
-					url : '/api/user/' + this.id + '/role/' + role.id,
-				});
-			};
-
-			/**
-			 * فهرست نقش‌های کاربر را تعیین می‌کند
-			 * 
-			 * @param PaginationParameter
-			 * @return promise(PaginatedPage(Role))
-			 */
-			pUser.prototype.roles = function(paginationParam) {
-				var params = {};
-				if (paginationParam) {
-					params = paginationParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/user/' + this.id + '/role/find',
-					params : params
-				}).then(function(res) {
-					var $usr = $injector.get('$usr');
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push($usr._roleCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
-
-			/**
-			 * رابطه میان گروه و کاربر را حذف می کند.
-			 * 
-			 * پارامتر ورودی باید یک گروه باشد.
-			 * 
-			 * @param {PGroup}
-			 *            گروه مورد نظر
-			 * @return {Promise<PGroup>}
-			 */
-			pUser.prototype.removeGroup = function(group) {
-				return $http({
-					method : 'DELETE',
-					url : '/api/user/' + this.id + '/group/' + group.id,
-				});
-			};
-
-			/**
-			 * فهرست گروه‌هایی را تعیین می‌کند که کاربر در آنها است
-			 * 
-			 * @param {PaginationParameter}
-			 * @return {Promise<PaginatedPage<PGroup>>}
-			 */
-			pUser.prototype.groups = function(paginationParam) {
-				var params = {};
-				if (paginationParam) {
-					params = paginationParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/user/' + this.id + '/group/find',
-					params : params
-				}).then(function(res) {
-					var $usr = $injector.get('$usr');
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push($usr._groupCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
-
-			return pUser;
+	    /**
+	     * اطلاعات حساب کاربری را به‌روزرسانی می‌کند
+	     * 
+	     * تغییراتی که در ساختارهای داده‌ای اعمال شده است را در سرور نیز
+	     * اعمال می‌کند. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
+	     * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
+	     * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد.
+	     * 
+	     * @memberof PUser
+	     * 
+	     * @return {promise(PUser)} ساختار داده‌ای به‌روز شده‌ی حساب کاربری
+	     */
+	    pUser.prototype.update = function() {
+		var scope = this;
+		return $http({
+		    method : 'POST',
+		    url : '/api/user/' + this.id,
+		    data : $httpParamSerializerJQLike(scope),
+		    headers : {
+			'Content-Type' : 'application/x-www-form-urlencoded'
+		    }
+		}).then(function(result) {
+		    scope.setData(result.data);
+		    return scope;
 		});
+	    };
+
+	    /**
+	     * حساب کاربری را حذف می‌کند
+	     * 
+	     * @memberof PUser
+	     * 
+	     * @return {promise(PUser)} ساختار داده‌ای حساب کاربری حذف شده
+	     */
+	    pUser.prototype.remove = function() {
+		var scope = this;
+		return $http({
+		    method : 'DELETE',
+		    url : '/api/user/' + this.id,
+		}).then(function(result) {
+		    scope.setData(result.data);
+		    return scope;
+		});
+	    };
+
+	    /**
+	     * پروفایل کاربر را تعیین می‌کند.
+	     * 
+	     * @memberof PUser
+	     * 
+	     * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری مربوط
+	     *          به این حساب کاربری
+	     */
+	    pUser.prototype.profile = function() {
+		var deferred;
+		if (this.isAnonymous()) {
+		    deferred = $q.defer();
+		    deferred.reject();
+		    return deferred.promise;
+		}
+		return $http({
+		    method : 'GET',
+		    url : '/api/user/' + this.id + '/profile',
+		}).then(function(res) {
+		    return new PProfile(res.data);
+		});
+	    };
+
+	    /**
+	     * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی
+	     * به صورت هم زمان انجام می‌شود.
+	     * 
+	     * @memberof PUser
+	     * 
+	     * @return {boolean} حالت مدیر بودن کاربر
+	     */
+	    pUser.prototype.isAdministrator = function() {
+		return (this.id && this.id > 0 && this.administrator);
+	    };
+
+	    /**
+	     * تعیین می‌کند که آیا کاربر جاری staff است یا نه. این فراخوانی به
+	     * صورت هم زمان انجام می‌شود.
+	     * 
+	     * @memberof PUser
+	     * 
+	     * @return {boolean} حالت staff بودن کاربر
+	     */
+	    pUser.prototype.isStaff = function() {
+		return (this.id && this.id > 0 && this.staff);
+	    };
+
+	    /**
+	     * حذف یک رول از کاربر
+	     * 
+	     * برای حذف نقش باید خود نقش را داشته باشید.
+	     * 
+	     * @param {PRole}
+	     *                نقش مورد نظر
+	     * @return promise پارامتری برای خروجی در نظر گرفته نشده
+	     */
+	    pUser.prototype.removeRole = function(role) {
+		return $http({
+		    method : 'DELETE',
+		    url : '/api/user/' + this.id + '/role/' + role.id,
+		});
+	    };
+
+	    /**
+	     * فهرست نقش‌های کاربر را تعیین می‌کند
+	     * 
+	     * @param PaginationParameter
+	     * @return promise(PaginatedPage(Role))
+	     */
+	    pUser.prototype.roles = function(paginationParam) {
+		var params = {};
+		if (paginationParam) {
+		    params = paginationParam.getParameter();
+		}
+		return $http({
+		    method : 'GET',
+		    url : '/api/user/' + this.id + '/role/find',
+		    params : params
+		}).then(function(res) {
+		    var $usr = $injector.get('$usr');
+		    var page = new PaginatorPage(res.data);
+		    var items = [];
+		    for (var i = 0; i < page.counts; i++) {
+			var item = page.items[i];
+			items.push($usr._roleCache.restor(item.id, item));
+		    }
+		    page.items = items;
+		    return page;
+		});
+	    };
+
+	    /**
+	     * رابطه میان گروه و کاربر را حذف می کند.
+	     * 
+	     * پارامتر ورودی باید یک گروه باشد.
+	     * 
+	     * @param {PGroup}
+	     *                گروه مورد نظر
+	     * @return {Promise<PGroup>}
+	     */
+	    pUser.prototype.removeGroup = function(group) {
+		return $http({
+		    method : 'DELETE',
+		    url : '/api/user/' + this.id + '/group/' + group.id,
+		});
+	    };
+
+	    /**
+	     * فهرست گروه‌هایی را تعیین می‌کند که کاربر در آنها است
+	     * 
+	     * @param {PaginationParameter}
+	     * @return {Promise<PaginatedPage<PGroup>>}
+	     */
+	    pUser.prototype.groups = function(paginationParam) {
+		var params = {};
+		if (paginationParam) {
+		    params = paginationParam.getParameter();
+		}
+		return $http({
+		    method : 'GET',
+		    url : '/api/user/' + this.id + '/group/find',
+		    params : params
+		}).then(function(res) {
+		    var $usr = $injector.get('$usr');
+		    var page = new PaginatorPage(res.data);
+		    var items = [];
+		    for (var i = 0; i < page.counts; i++) {
+			var item = page.items[i];
+			items.push($usr._groupCache.restor(item.id, item));
+		    }
+		    page.items = items;
+		    return page;
+		});
+	    };
+
+	    return pUser;
+	});
 
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -5480,381 +5403,280 @@ angular.module('pluf')
  *              امکاناتی برای ورود و خروج کاربران نیز فراهم کرده است.
  */
 .service(
-		'$usr',
-		function($http, $httpParamSerializerJQLike, $q, $act, PUser, PRole,
-				PGroup, PaginatorPage, PException, PObjectCache) {
-			/*
-			 * کاربر جاری را تعیین می‌کند. این متغیر به صورت عمومی در اختیار
-			 * کاربران قرار می‌گیرد.
-			 */
-			var _su = new PUser();
-			var _userCache = new PObjectCache(function(data) {
-				return new PUser(data);
-			});
+	'$usr',
+	function($http, $httpParamSerializerJQLike, $q, $act, PUser, PRole,
+		PGroup, PaginatorPage, PException, PObjectCache, $pluf) {
+	    /*
+	     * کاربر جاری را تعیین می‌کند. این متغیر به صورت عمومی در اختیار
+	     * کاربران قرار می‌گیرد.
+	     */
+	    var _su = new PUser();
+	    var _userCache = new PObjectCache(function(data) {
+		return new PUser(data);
+	    });
 
-			var _roleCache = new PObjectCache(function(data) {
-				return new PRole(data);
-			});
-			var _groupCache = new PObjectCache(function(data) {
-				return new PGroup(data);
-			});
+	    var _roleCache = new PObjectCache(function(data) {
+		return new PRole(data);
+	    });
+	    var _groupCache = new PObjectCache(function(data) {
+		return new PGroup(data);
+	    });
 
-			this._userCache = _userCache;
-			this._roleCache = _roleCache;
-			this._groupCache = _groupCache;
+	    this._userCache = _userCache;
+	    this._roleCache = _roleCache;
+	    this._groupCache = _groupCache;
 
-			/**
-			 * به صورت همزمان تعیین می‌کند که آیا کاربر جاری شناخته شده است یا
-			 * نه. از این فراخوانی در نمایش و یا جایی که باید به صورت همزمان
-			 * وضعیت کاربر جاری را تعیین کرده استفاده می‌شود.
-			 * 
-			 * @memberof $usr
-			 * @return {Boolean} درستی در صورتی که کاربر جاری گمنام باشد
-			 */
-			this.isAnonymous = function() {
-				return _su.isAnonymous();
-			};
+	    /**
+	     * به صورت همزمان تعیین می‌کند که آیا کاربر جاری شناخته شده است یا
+	     * نه. از این فراخوانی در نمایش و یا جایی که باید به صورت همزمان
+	     * وضعیت کاربر جاری را تعیین کرده استفاده می‌شود.
+	     * 
+	     * @memberof $usr
+	     * @return {Boolean} درستی در صورتی که کاربر جاری گمنام باشد
+	     */
+	    this.isAnonymous = function() {
+		return _su.isAnonymous();
+	    };
 
-			/**
-			 * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی
-			 * نیز یک فراخوانی هم زمان است و در کارهای نمایشی کاربرد دارد.
-			 * 
-			 * @memberof $usr
-			 * 
-			 * @return {Boolean} درستی در صورتی که کاربر جاری مدیر سیستم باشد.
-			 */
-			this.isAdministrator = function() {
-				return _su.isAdministrator();
-			};
+	    /**
+	     * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی
+	     * نیز یک فراخوانی هم زمان است و در کارهای نمایشی کاربرد دارد.
+	     * 
+	     * @memberof $usr
+	     * 
+	     * @return {Boolean} درستی در صورتی که کاربر جاری مدیر سیستم باشد.
+	     */
+	    this.isAdministrator = function() {
+		return _su.isAdministrator();
+	    };
 
-			/**
-			 * کاربری که در نشست تعیین شده است را بازیابی می‌کند. این فراخوانی
-			 * که یک فراخوانی غیر همزان است برای تعیین حالت کاربر در سیستم
-			 * استفاده می‌شود. برای نمونه ممکن است که یک تابع منجر به خروج کاربر
-			 * از سیستم شده باشد، در این حالت این فراخوانی حالت کاربر را بازیابی
-			 * کرده و سیستم را به روز می‌کند.
-			 * 
-			 * @memberof $usr
-			 * 
-			 * @returns {promise(PUser)} اطلاعات کاربر جاری
-			 */
-			this.session = function() {
-				if (!this.isAnonymous()) {
-					var deferred = $q.defer();
-					deferred.resolve(_su);
-					return deferred.promise;
-				}
-				return $http.get('/api/user')//
-				.then(function(result) {
-					if (result.data.id) {
-						var data = result.data;
-						_su = _userCache.restor(data.id, data);
-					}
-					return _su;
-				});
-			};
-
-			/**
-			 * عمل ورود کاربر به سیستم را انجام می‌دهد. برای ورود بسته به اینکه
-			 * از چه سیستمی استفاده می‌شود پارامترهای متفاوتی مورد نیاز است که
-			 * با استفاده از یک ساختار داده‌ای برای این فراخوانی ارسال می‌شود.
-			 * برای نمونه در مدل عادی این فراخوانی نیاز به نام کاربری و گذرواژه
-			 * دارد که به صورت زیر عمل ورود انجام خواهد شد:
-			 * 
-			 * <pre><code>
-			 * $usr.login({
-			 * 	login : 'user name',
-			 * 	password : 'password'
-			 * }).then(function(user) {
-			 * 	//Success
-			 * 	}, function(ex) {
-			 * 		//Fail
-			 * 	});
-			 * </code></pre>
-			 * 
-			 * @memberof $usr
-			 * 
-			 * @param {object}
-			 *            credential پارارمترهای مورد انتظار در احراز اصالت
-			 * @return {promise(PUser)} اطلاعات کاربر جاری
-			 */
-			this.login = function(credit) {
-				if (!this.isAnonymous()) {
-					var deferred = $q.defer();
-					deferred.resolve(_su);
-					return deferred.promise;
-				}
-				return $http({
-					method : 'POST',
-					url : '/api/user/login',
-					data : $httpParamSerializerJQLike(credit),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(result) {
-					var data = result.data;
-					_su = _userCache.restor(data.id, data);
-					return _su;
-				});
-			};
-
-			/**
-			 * این فراخوانی عمل خروج کاربری جاری از سیستم را انجام می‌دهد. با
-			 * این کار تمام داده‌های کاربر جاری از سیستم حذف شده و سیستم به حالت
-			 * اولیه برخواهد گشت.
-			 * 
-			 * @memberof $usr
-			 * 
-			 * @returns {promise(PUser)} کاربر جاری که اکنون لاگ‌اوت شده است
-			 */
-			this.logout = function() {
-				if (this.isAnonymous()) {
-					var deferred = $q.defer();
-					deferred.resolve(_su);
-					return deferred.promise;
-				}
-				return $http({
-					method : 'POST',
-					url : '/api/user/logout',
-				}).then(function(result) {
-					_su = new PUser(result.data);
-					return _su;
-				});
-			};
-			
-			/*
-			 * TODO: maso, 1395: دسترسی به موجودیت‌های تکراری است
-			 * 
-			 * درسترسی به تمام موجودیت‌ها بر اساس مدل جدیدی که در سین معرفی شده
-			 * کاملا شبیه به هم هست که تنها چندتا از پارامترهای اون تغییر می‌کنه.
-			 * بنابر این بهتر هست که به جای زدن کدهای تکراری یک فکتوری برای ایجاد
-			 * این کدها ایجاد کنیم و در زمان اجرا کدها رو کپی کنیم.
-			 */
-
-			/**
-			 * فهرست کاربران را به صورت صفحه بندی شده در اختیار قرار می‌دهد. این
-			 * فهرست برای کاربردهای متفاوتی استفاده می‌شود مثل اضافه کردن به
-			 * کاربران مجاز. دسترسی به فهرست کاربران تنها بر اساس سطوح امنیتی
-			 * تعریف شده در سرور ممکن است و بسته به نوع پیاده سازی سرور متفاوت
-			 * خواهد بود.
-			 * 
-			 * @memberof $usr
-			 * 
-			 * @param {PagintorParameter}
-			 *            parameter پارامترهای مورد استفاده در صفحه بندی نتایج
-			 * @return {promise(PaginatorPage)} صفحه‌ای از کاربران سیستم.
-			 */
-			this.users = function(p) {
-				return $http({
-					method : 'GET',
-					url : '/api/user/find',
-					params : p.getParameter()
-				}).then(function(res) {
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push(_userCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
-
-			/**
-			 * اطلاعات یک کاربر جدید را دریافت کرده و آن را به عنوان یک کاربر در
-			 * سیستم ثبت می‌کند. حالت نهایی کاربر به نوع پیاده سازی سرور بستگی
-			 * دارد. بر برخی از سرورها، به محض اینکه کاربر ثبت نام کرد حالت فعال
-			 * رو داره و می‌تونه وارد سیستم بشه اما در برخی از سیستم‌ها نیاز به
-			 * فرآیند فعال سازی دارد.
-			 * 
-			 * پارامترهای مورد نیاز برای ایجاد کاربر هم متفاوت هست. در برخی
-			 * سیستم‌ها ایمیل، نام کاربری و گذرواژه مهم است و سایر پارامترهای به
-			 * صورت دلخواه خواهد بود.
-			 * 
-			 * @memberof $usr
-			 * 
-			 * @param {object}
-			 *            detail خصوصیت‌های کاربر
-			 * @return {promise(PUser)} حساب کاربری ایجاد شده
-			 */
-			this.newUser = function(detail) {
-				return $http({
-					method : 'POST',
-					url : '/api/user/new',
-					data : $httpParamSerializerJQLike(detail),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(result) {
-					var data = result.data;
-					var nu = _userCache.restor(data.id, data);
-					return nu;
-				});
-			};
-
-			/**
-			 * اطلاعات کاربر را با استفاده از شناسه آن بازیابی می‌کند.
-			 * 
-			 * @memberof $usr
-			 * 
-			 * @param {string}
-			 *            id شناسه کاربر مورد نظر
-			 * @return {promise(PUser)} اطلاعات بازیابی شده کاربر
-			 */
-			this.user = function(id) {
-				if (!_userCache.contains(id)) {
-					var deferred = $q.defer();
-					deferred.resolve(_userCache.get(id));
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/user/' + id,
-				}).then(function(result) {
-					var data = result.data;
-					return _userCache.restor(data.id, data);
-				});
-			};
-
-			/**
-			 * فهرست تمام رولهای سیستم را تعیین می‌کند.
-			 * 
-			 * @param {PaginatorParameter}
-			 * @return promise<PaginatedPage<Prole>>
-			 */
-			this.roles = function(pagParam) {
-				var params = {};
-				if (pagParam) {
-					params = pagParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/role/find',
-					params : params
-				}).then(function(res) {
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push(_roleCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
-
-			/**
-			 * یک رول با شناسه تعیین شده را برمی‌گرداند
-			 * 
-			 * @parm {integer} شناسه نقش
-			 * @return promise<PRole>
-			 */
-			this.role = function(id) {
-				if (_roleCache.contains(id)) {
-					var deferred = $q.defer();
-					deferred.resolve(_roleCache.get(id));
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/role/' + id,
-				}).then(function(result) {
-					var data = result.data;
-					return _roleCache.restor(data.id, data);
-				});
-			};
-
-			/**
-			 * یک نقش جدید در سیستم ایجاد می‌کند.
-			 * 
-			 * @param {Object}
-			 *            داده‌های مورد نیاز برای ایجاد یک نقش جدید
-			 * @return promise<PRole>
-			 */
-			this.newRole = function(detail) {
-				return $http({
-					method : 'POST',
-					url : '/api/role/new',
-					data : $httpParamSerializerJQLike(detail),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(result) {
-					var data = result.data;
-					return _roleCache.restor(data.id, data);
-				});
-			};
-
-			/**
-			 * فهرست تمام گروه‌ها را تعیین می‌کند.
-			 * 
-			 * @param {PaginatorParameter}
-			 *            پارامترهای صفحه بندی
-			 * @return promise<PaginatedPage<PGroup>> فهرست گروه‌ها
-			 */
-			this.groups = function(pagParam) {
-				var params = {};
-				if (pagParam) {
-					params = pagParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/group/find',
-					params : params
-				}).then(function(res) {
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push(_groupCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
-
-			/**
-			 * اطلاعات یک گروه را بازیابی می‌کند.
-			 * 
-			 * @param {integer}
-			 *            شناسه گروه
-			 * @return {promise<PGroup>} گروه بازیابی شده
-			 */
-			this.group = function(id) {
-				if (_groupCache.contains(id)) {
-					var deferred = $q.defer();
-					deferred.resolve(_groupCache.get(id));
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/group/' + id,
-				}).then(function(result) {
-					var data = result.data;
-					return _groupCache.restor(data.id, data);
-				});
-			};
-
-			/**
-			 * یک گروه جدید در سیستم ایجاد می‌کند.
-			 * 
-			 * @param {Object}
-			 *            پارامترهای مورد نیاز برای کاربر
-			 * @return {promise<PGroup>} گروه ایجاد شده
-			 */
-			this.newGroup = function(detail) {
-				return $http({
-					method : 'POST',
-					url : '/api/group/new',
-					data : $httpParamSerializerJQLike(detail),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(result) {
-					var data = result.data;
-					return _groupCache.restor(data.id, data);
-				});
-			};
-
+	    /**
+	     * کاربری که در نشست تعیین شده است را بازیابی می‌کند. این فراخوانی
+	     * که یک فراخوانی غیر همزان است برای تعیین حالت کاربر در سیستم
+	     * استفاده می‌شود. برای نمونه ممکن است که یک تابع منجر به خروج کاربر
+	     * از سیستم شده باشد، در این حالت این فراخوانی حالت کاربر را بازیابی
+	     * کرده و سیستم را به روز می‌کند.
+	     * 
+	     * @memberof $usr
+	     * 
+	     * @returns {promise(PUser)} اطلاعات کاربر جاری
+	     */
+	    this.session = function() {
+		if (!this.isAnonymous()) {
+		    var deferred = $q.defer();
+		    deferred.resolve(_su);
+		    return deferred.promise;
+		}
+		return $http.get('/api/user')//
+		.then(function(result) {
+		    if (result.data.id) {
+			var data = result.data;
+			_su = _userCache.restor(data.id, data);
+		    }
+		    return _su;
 		});
+	    };
+
+	    /**
+	     * عمل ورود کاربر به سیستم را انجام می‌دهد. برای ورود بسته به اینکه
+	     * از چه سیستمی استفاده می‌شود پارامترهای متفاوتی مورد نیاز است که
+	     * با استفاده از یک ساختار داده‌ای برای این فراخوانی ارسال می‌شود.
+	     * برای نمونه در مدل عادی این فراخوانی نیاز به نام کاربری و گذرواژه
+	     * دارد که به صورت زیر عمل ورود انجام خواهد شد:
+	     * 
+	     * <pre><code>
+	     * $usr.login({
+	     *     login : 'user name',
+	     *     password : 'password'
+	     * }).then(function(user) {
+	     *     //Success
+	     *     }, function(ex) {
+	     * 	//Fail
+	     *     });
+	     * </code></pre>
+	     * 
+	     * @memberof $usr
+	     * 
+	     * @param {object}
+	     *                credential پارارمترهای مورد انتظار در احراز اصالت
+	     * @return {promise(PUser)} اطلاعات کاربر جاری
+	     */
+	    this.login = function(credit) {
+		if (!this.isAnonymous()) {
+		    var deferred = $q.defer();
+		    deferred.resolve(_su);
+		    return deferred.promise;
+		}
+		return $http({
+		    method : 'POST',
+		    url : '/api/user/login',
+		    data : $httpParamSerializerJQLike(credit),
+		    headers : {
+			'Content-Type' : 'application/x-www-form-urlencoded'
+		    }
+		}).then(function(result) {
+		    var data = result.data;
+		    _su = _userCache.restor(data.id, data);
+		    return _su;
+		});
+	    };
+
+	    /**
+	     * این فراخوانی عمل خروج کاربری جاری از سیستم را انجام می‌دهد. با
+	     * این کار تمام داده‌های کاربر جاری از سیستم حذف شده و سیستم به حالت
+	     * اولیه برخواهد گشت.
+	     * 
+	     * @memberof $usr
+	     * 
+	     * @returns {promise(PUser)} کاربر جاری که اکنون لاگ‌اوت شده است
+	     */
+	    this.logout = function() {
+		if (this.isAnonymous()) {
+		    var deferred = $q.defer();
+		    deferred.resolve(_su);
+		    return deferred.promise;
+		}
+		return $http({
+		    method : 'POST',
+		    url : '/api/user/logout',
+		}).then(function(result) {
+		    _su = new PUser(result.data);
+		    return _su;
+		});
+	    };
+
+	    /*
+	     * TODO: maso, 1395: دسترسی به موجودیت‌های تکراری است
+	     * 
+	     * درسترسی به تمام موجودیت‌ها بر اساس مدل جدیدی که در سین معرفی شده
+	     * کاملا شبیه به هم هست که تنها چندتا از پارامترهای اون تغییر
+	     * می‌کنه. بنابر این بهتر هست که به جای زدن کدهای تکراری یک فکتوری
+	     * برای ایجاد این کدها ایجاد کنیم و در زمان اجرا کدها رو کپی کنیم.
+	     */
+
+	    /**
+	     * فهرست کاربران را به صورت صفحه بندی شده در اختیار قرار می‌دهد. این
+	     * فهرست برای کاربردهای متفاوتی استفاده می‌شود مثل اضافه کردن به
+	     * کاربران مجاز. دسترسی به فهرست کاربران تنها بر اساس سطوح امنیتی
+	     * تعریف شده در سرور ممکن است و بسته به نوع پیاده سازی سرور متفاوت
+	     * خواهد بود.
+	     * 
+	     * @memberof $usr
+	     * 
+	     * @param {PagintorParameter}
+	     *                parameter پارامترهای مورد استفاده در صفحه بندی
+	     *                نتایج
+	     * @return {promise(PaginatorPage)} صفحه‌ای از کاربران سیستم.
+	     */
+	    this.users = $pluf.createFind({
+		method : 'GET',
+		url : '/api/user/find',
+	    }, _userCache);
+
+	    /**
+	     * اطلاعات یک کاربر جدید را دریافت کرده و آن را به عنوان یک کاربر در
+	     * سیستم ثبت می‌کند. حالت نهایی کاربر به نوع پیاده سازی سرور بستگی
+	     * دارد. بر برخی از سرورها، به محض اینکه کاربر ثبت نام کرد حالت فعال
+	     * رو داره و می‌تونه وارد سیستم بشه اما در برخی از سیستم‌ها نیاز به
+	     * فرآیند فعال سازی دارد.
+	     * 
+	     * پارامترهای مورد نیاز برای ایجاد کاربر هم متفاوت هست. در برخی
+	     * سیستم‌ها ایمیل، نام کاربری و گذرواژه مهم است و سایر پارامترهای به
+	     * صورت دلخواه خواهد بود.
+	     * 
+	     * @memberof $usr
+	     * 
+	     * @param {object}
+	     *                detail خصوصیت‌های کاربر
+	     * @return {promise(PUser)} حساب کاربری ایجاد شده
+	     */
+	    this.newUser = $pluf.createNew({
+		method : 'POST',
+		url : '/api/user/new',
+	    }, _userCache);
+
+	    /**
+	     * اطلاعات کاربر را با استفاده از شناسه آن بازیابی می‌کند.
+	     * 
+	     * @memberof $usr
+	     * 
+	     * @param {string}
+	     *                id شناسه کاربر مورد نظر
+	     * @return {promise(PUser)} اطلاعات بازیابی شده کاربر
+	     */
+	    this.user = $pluf.createGet({
+		method : 'GET',
+		url : '/api/user/{id}',
+	    }, _userCache);
+
+	    /**
+	     * فهرست تمام رولهای سیستم را تعیین می‌کند.
+	     * 
+	     * @param {PaginatorParameter}
+	     * @return promise<PaginatedPage<Prole>>
+	     */
+	    this.roles = $pluf.createFind({
+		method : 'GET',
+		url : '/api/role/find',
+	    }, _roleCache);
+
+	    /**
+	     * یک رول با شناسه تعیین شده را برمی‌گرداند
+	     * 
+	     * @parm {integer} شناسه نقش
+	     * @return promise<PRole>
+	     */
+	    this.role = $pluf.createGet({
+		method : 'GET',
+		url : '/api/role/{id}',
+	    }, _roleCache);
+
+	    /**
+	     * یک نقش جدید در سیستم ایجاد می‌کند.
+	     * 
+	     * @param {Object}
+	     *                داده‌های مورد نیاز برای ایجاد یک نقش جدید
+	     * @return promise<PRole>
+	     */
+	    this.newRole = $pluf.createNew({
+		method : 'POST',
+		url : '/api/role/new'
+	    }, _roleCache);
+
+	    /**
+	     * فهرست تمام گروه‌ها را تعیین می‌کند.
+	     * 
+	     * @param {PaginatorParameter}
+	     *                پارامترهای صفحه بندی
+	     * @return promise<PaginatedPage<PGroup>> فهرست گروه‌ها
+	     */
+	    this.groups = $pluf.createFind({
+		method : 'GET',
+		url : '/api/group/find',
+	    }, _groupCache);
+
+	    /**
+	     * اطلاعات یک گروه را بازیابی می‌کند.
+	     * 
+	     * @param {integer}
+	     *                شناسه گروه
+	     * @return {promise<PGroup>} گروه بازیابی شده
+	     */
+	    this.group = $pluf.createGet({
+		method : 'GET',
+		url : '/api/group/{id}',
+	    }, _groupCache);
+
+	    /**
+	     * یک گروه جدید در سیستم ایجاد می‌کند.
+	     * 
+	     * @param {Object}
+	     *                پارامترهای مورد نیاز برای کاربر
+	     * @return {promise<PGroup>} گروه ایجاد شده
+	     */
+	    this.newGroup = $pluf.createNew({
+		method : 'POST',
+		url : '/api/group/new'
+	    }, _groupCache);
+
+	});

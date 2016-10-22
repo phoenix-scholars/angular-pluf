@@ -64,202 +64,202 @@ angular.module('pluf')
  * اعمال خواهد شد.
  */
 .factory(
-		'PUser',
-		function($http, $q, $httpParamSerializerJQLike, PObject, PProfile,
-				$injector, PaginatorPage) {
+	'PUser',
+	function($http, $q, $httpParamSerializerJQLike, PObject, PProfile,
+		$injector, PaginatorPage) {
 
-			var pUser = function(data) {
-				if (data) {
-					this.setData(data);
-					/*
-					 * NOTE: فرض ما این هست که شناسه داره و این شناسه تغییر
-					 * نمی‌کنه
-					 */
-					this.avatar = '/api/user/' + this.id + '/avatar';
-				}
-			};
+	    var pUser = function(data) {
+		if (data) {
+		    this.setData(data);
+		    /*
+		     * NOTE: فرض ما این هست که شناسه داره و این شناسه تغییر
+		     * نمی‌کنه
+		     */
+		    this.avatar = '/api/user/' + this.id + '/avatar';
+		}
+	    };
 
-			pUser.prototype = new PObject();
+	    pUser.prototype = new PObject();
 
-			/**
-			 * اطلاعات حساب کاربری را به‌روزرسانی می‌کند
-			 * 
-			 * تغییراتی که در ساختارهای داده‌ای اعمال شده است را در سرور نیز
-			 * اعمال می‌کند. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
-			 * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
-			 * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد.
-			 * 
-			 * @memberof PUser
-			 * 
-			 * @return {promise(PUser)} ساختار داده‌ای به‌روز شده‌ی حساب کاربری
-			 */
-			pUser.prototype.update = function() {
-				var scope = this;
-				return $http({
-					method : 'POST',
-					url : '/api/user/' + this.id,
-					data : $httpParamSerializerJQLike(scope),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(result) {
-					scope.setData(result.data);
-					return scope;
-				});
-			};
-
-			/**
-			 * حساب کاربری را حذف می‌کند
-			 * 
-			 * @memberof PUser
-			 * 
-			 * @return {promise(PUser)} ساختار داده‌ای حساب کاربری حذف شده
-			 */
-			pUser.prototype.remove = function() {
-				var scope = this;
-				return $http({
-					method : 'DELETE',
-					url : '/api/user/' + this.id,
-				}).then(function(result) {
-					scope.setData(result.data);
-					return scope;
-				});
-			};
-
-			/**
-			 * پروفایل کاربر را تعیین می‌کند.
-			 * 
-			 * @memberof PUser
-			 * 
-			 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری مربوط
-			 *          به این حساب کاربری
-			 */
-			pUser.prototype.profile = function() {
-				var deferred;
-				if (this.isAnonymous()) {
-					deferred = $q.defer();
-					deferred.reject();
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/user/' + this.id + '/profile',
-				}).then(function(res) {
-					return new PProfile(res.data);
-				});
-			};
-
-			/**
-			 * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی
-			 * به صورت هم زمان انجام می‌شود.
-			 * 
-			 * @memberof PUser
-			 * 
-			 * @return {boolean} حالت مدیر بودن کاربر
-			 */
-			pUser.prototype.isAdministrator = function() {
-				return (this.id && this.id > 0 && this.administrator);
-			};
-
-			/**
-			 * تعیین می‌کند که آیا کاربر جاری staff است یا نه. این فراخوانی به
-			 * صورت هم زمان انجام می‌شود.
-			 * 
-			 * @memberof PUser
-			 * 
-			 * @return {boolean} حالت staff بودن کاربر
-			 */
-			pUser.prototype.isStaff = function() {
-				return (this.id && this.id > 0 && this.staff);
-			};
-
-			/**
-			 * حذف یک رول از کاربر
-			 * 
-			 * برای حذف نقش باید خود نقش را داشته باشید.
-			 * 
-			 * @param {PRole}
-			 *            نقش مورد نظر
-			 * @return promise پارامتری برای خروجی در نظر گرفته نشده
-			 */
-			pUser.prototype.removeRole = function(role) {
-				return $http({
-					method : 'DELETE',
-					url : '/api/user/' + this.id + '/role/' + role.id,
-				});
-			};
-
-			/**
-			 * فهرست نقش‌های کاربر را تعیین می‌کند
-			 * 
-			 * @param PaginationParameter
-			 * @return promise(PaginatedPage(Role))
-			 */
-			pUser.prototype.roles = function(paginationParam) {
-				var params = {};
-				if (paginationParam) {
-					params = paginationParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/user/' + this.id + '/role/find',
-					params : params
-				}).then(function(res) {
-					var $usr = $injector.get('$usr');
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push($usr._roleCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
-
-			/**
-			 * رابطه میان گروه و کاربر را حذف می کند.
-			 * 
-			 * پارامتر ورودی باید یک گروه باشد.
-			 * 
-			 * @param {PGroup}
-			 *            گروه مورد نظر
-			 * @return {Promise<PGroup>}
-			 */
-			pUser.prototype.removeGroup = function(group) {
-				return $http({
-					method : 'DELETE',
-					url : '/api/user/' + this.id + '/group/' + group.id,
-				});
-			};
-
-			/**
-			 * فهرست گروه‌هایی را تعیین می‌کند که کاربر در آنها است
-			 * 
-			 * @param {PaginationParameter}
-			 * @return {Promise<PaginatedPage<PGroup>>}
-			 */
-			pUser.prototype.groups = function(paginationParam) {
-				var params = {};
-				if (paginationParam) {
-					params = paginationParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/user/' + this.id + '/group/find',
-					params : params
-				}).then(function(res) {
-					var $usr = $injector.get('$usr');
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push($usr._groupCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
-
-			return pUser;
+	    /**
+	     * اطلاعات حساب کاربری را به‌روزرسانی می‌کند
+	     * 
+	     * تغییراتی که در ساختارهای داده‌ای اعمال شده است را در سرور نیز
+	     * اعمال می‌کند. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
+	     * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
+	     * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد.
+	     * 
+	     * @memberof PUser
+	     * 
+	     * @return {promise(PUser)} ساختار داده‌ای به‌روز شده‌ی حساب کاربری
+	     */
+	    pUser.prototype.update = function() {
+		var scope = this;
+		return $http({
+		    method : 'POST',
+		    url : '/api/user/' + this.id,
+		    data : $httpParamSerializerJQLike(scope),
+		    headers : {
+			'Content-Type' : 'application/x-www-form-urlencoded'
+		    }
+		}).then(function(result) {
+		    scope.setData(result.data);
+		    return scope;
 		});
+	    };
+
+	    /**
+	     * حساب کاربری را حذف می‌کند
+	     * 
+	     * @memberof PUser
+	     * 
+	     * @return {promise(PUser)} ساختار داده‌ای حساب کاربری حذف شده
+	     */
+	    pUser.prototype.remove = function() {
+		var scope = this;
+		return $http({
+		    method : 'DELETE',
+		    url : '/api/user/' + this.id,
+		}).then(function(result) {
+		    scope.setData(result.data);
+		    return scope;
+		});
+	    };
+
+	    /**
+	     * پروفایل کاربر را تعیین می‌کند.
+	     * 
+	     * @memberof PUser
+	     * 
+	     * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری مربوط
+	     *          به این حساب کاربری
+	     */
+	    pUser.prototype.profile = function() {
+		var deferred;
+		if (this.isAnonymous()) {
+		    deferred = $q.defer();
+		    deferred.reject();
+		    return deferred.promise;
+		}
+		return $http({
+		    method : 'GET',
+		    url : '/api/user/' + this.id + '/profile',
+		}).then(function(res) {
+		    return new PProfile(res.data);
+		});
+	    };
+
+	    /**
+	     * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی
+	     * به صورت هم زمان انجام می‌شود.
+	     * 
+	     * @memberof PUser
+	     * 
+	     * @return {boolean} حالت مدیر بودن کاربر
+	     */
+	    pUser.prototype.isAdministrator = function() {
+		return (this.id && this.id > 0 && this.administrator);
+	    };
+
+	    /**
+	     * تعیین می‌کند که آیا کاربر جاری staff است یا نه. این فراخوانی به
+	     * صورت هم زمان انجام می‌شود.
+	     * 
+	     * @memberof PUser
+	     * 
+	     * @return {boolean} حالت staff بودن کاربر
+	     */
+	    pUser.prototype.isStaff = function() {
+		return (this.id && this.id > 0 && this.staff);
+	    };
+
+	    /**
+	     * حذف یک رول از کاربر
+	     * 
+	     * برای حذف نقش باید خود نقش را داشته باشید.
+	     * 
+	     * @param {PRole}
+	     *                نقش مورد نظر
+	     * @return promise پارامتری برای خروجی در نظر گرفته نشده
+	     */
+	    pUser.prototype.removeRole = function(role) {
+		return $http({
+		    method : 'DELETE',
+		    url : '/api/user/' + this.id + '/role/' + role.id,
+		});
+	    };
+
+	    /**
+	     * فهرست نقش‌های کاربر را تعیین می‌کند
+	     * 
+	     * @param PaginationParameter
+	     * @return promise(PaginatedPage(Role))
+	     */
+	    pUser.prototype.roles = function(paginationParam) {
+		var params = {};
+		if (paginationParam) {
+		    params = paginationParam.getParameter();
+		}
+		return $http({
+		    method : 'GET',
+		    url : '/api/user/' + this.id + '/role/find',
+		    params : params
+		}).then(function(res) {
+		    var $usr = $injector.get('$usr');
+		    var page = new PaginatorPage(res.data);
+		    var items = [];
+		    for (var i = 0; i < page.counts; i++) {
+			var item = page.items[i];
+			items.push($usr._roleCache.restor(item.id, item));
+		    }
+		    page.items = items;
+		    return page;
+		});
+	    };
+
+	    /**
+	     * رابطه میان گروه و کاربر را حذف می کند.
+	     * 
+	     * پارامتر ورودی باید یک گروه باشد.
+	     * 
+	     * @param {PGroup}
+	     *                گروه مورد نظر
+	     * @return {Promise<PGroup>}
+	     */
+	    pUser.prototype.removeGroup = function(group) {
+		return $http({
+		    method : 'DELETE',
+		    url : '/api/user/' + this.id + '/group/' + group.id,
+		});
+	    };
+
+	    /**
+	     * فهرست گروه‌هایی را تعیین می‌کند که کاربر در آنها است
+	     * 
+	     * @param {PaginationParameter}
+	     * @return {Promise<PaginatedPage<PGroup>>}
+	     */
+	    pUser.prototype.groups = function(paginationParam) {
+		var params = {};
+		if (paginationParam) {
+		    params = paginationParam.getParameter();
+		}
+		return $http({
+		    method : 'GET',
+		    url : '/api/user/' + this.id + '/group/find',
+		    params : params
+		}).then(function(res) {
+		    var $usr = $injector.get('$usr');
+		    var page = new PaginatorPage(res.data);
+		    var items = [];
+		    for (var i = 0; i < page.counts; i++) {
+			var item = page.items[i];
+			items.push($usr._groupCache.restor(item.id, item));
+		    }
+		    page.items = items;
+		    return page;
+		});
+	    };
+
+	    return pUser;
+	});

@@ -52,151 +52,152 @@ angular.module('pluf')
  * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
 .factory(
-		'PRole',
-		function(PObject, $http, $httpParamSerializerJQLike, $q, $injector,
-				PaginatorPage) {
-			/*
-			 * یک نمونه جدید از این موجودیت ایجاد می کند.
-			 */
-			var pRole = function(data) {
-				if (data) {
-					this.setData(data);
-				}
-			};
+	'PRole',
+	function(PObject, $http, $httpParamSerializerJQLike, $q, $injector,
+		PaginatorPage) {
+	    /*
+	     * یک نمونه جدید از این موجودیت ایجاد می کند.
+	     */
+	    var pRole = function(data) {
+		if (data) {
+		    this.setData(data);
+		}
+	    };
 
-			pRole.prototype = new PObject();
+	    pRole.prototype = new PObject();
 
-			/**
-			 * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور
-			 * انتقال می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
-			 * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
-			 * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
-			 * 
-			 * @memberof PProfile
-			 * 
-			 * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
-			 */
-			pRole.prototype.update = function() {
-				if (this.isAnonymous()) {
-					var deferred = $q.defer();
-					deferred.reject();
-					return deferred.promise;
-				}
-				var scope = this;
-				return $http({
-					method : 'POST',
-					url : '/api/role/' + this.id,
-					data : $httpParamSerializerJQLike(this),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(res) {
-					scope.setData(res.data);
-					return scope;
-				});
-			};
-
-			/**
-			 * پروفایل کاربری را حذف می کند
-			 * 
-			 * @memberof PProfile
-			 * 
-			 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف
-			 *          شده
-			 */
-			pRole.prototype.remove = function() {
-				var scope = this;
-				return $http({
-					method : 'DELETE',
-					url : '/api/role/' + this.id,
-					data : $httpParamSerializerJQLike(scope),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(data) {
-					scope.setData(data.data);
-					return scope;
-				});
-			};
-
-			/**
-			 * کاربر رو حذف می‌کنه
-			 * 
-			 * معادل با حذف نقش کاربر هست.
-			 * 
-			 * @param {PUser}
-			 *            کاربر مورد نظر
-			 */
-			pRole.prototype.removeUser = function(user) {
-				return $http({
-					method : 'DELETE',
-					url : '/api/role/' + this.id + '/user/' + user.id,
-				});
-			};
-
-			/**
-			 * فهرست کاربران را تعیین می‌کند
-			 * 
-			 */
-			pRole.prototype.users = function(paginationParam) {
-				var params = {};
-				if (paginationParam) {
-					params = paginationParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/role/' + this.id + '/user/find',
-					params : params
-				}).then(function(res) {
-					var $usr = $injector.get('$usr');
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push($usr._userCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
-
-			/**
-			 * گروه رو حذف می‌کنه
-			 * 
-			 * این فراخوانی معادل با حذف یک نقش از یک گروه هست.
-			 * 
-			 * 
-			 */
-			pRole.prototype.removeGroup = function(group) {
-				return $http({
-					method : 'DELETE',
-					url : '/api/role/' + this.id + '/group/' + group.id,
-				});
-			};
-
-			/**
-			 * فهرست گوره‌هایی که در این نقش هستند
-			 */
-			pRole.prototype.groups = function(paginationParam) {
-				var params = {};
-				if (paginationParam) {
-					params = paginationParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/role/' + this.id + '/group/find',
-					params : params
-				}).then(function(res) {
-					var $usr = $injector.get('$usr');
-					var page = new PaginatorPage(res.data);
-					var items = [];
-					for (var i = 0; i < page.counts; i++) {
-						var item = page.items[i];
-						items.push($usr._groupCache(item.id, item));
-					}
-					page.items = items;
-					return page;
-				});
-			};
-			return pRole;
+	    /**
+	     * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور
+	     * انتقال می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
+	     * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
+	     * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
+	     * 
+	     * @memberof PProfile
+	     * 
+	     * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
+	     */
+	    pRole.prototype.update = function() {
+		if (this.isAnonymous()) {
+		    var deferred = $q.defer();
+		    deferred.reject();
+		    return deferred.promise;
+		}
+		var scope = this;
+		return $http({
+		    method : 'POST',
+		    url : '/api/role/' + this.id,
+		    data : $httpParamSerializerJQLike(this),
+		    headers : {
+			'Content-Type' : 'application/x-www-form-urlencoded'
+		    }
+		}).then(function(res) {
+		    scope.setData(res.data);
+		    return scope;
 		});
+	    };
+
+	    /**
+	     * پروفایل کاربری را حذف می کند
+	     * 
+	     * @memberof PProfile
+	     * 
+	     * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف
+	     *          شده
+	     */
+	    pRole.prototype.remove = function() {
+		var scope = this;
+		return $http({
+		    method : 'DELETE',
+		    url : '/api/role/' + this.id,
+		    data : $httpParamSerializerJQLike(scope),
+		    headers : {
+			'Content-Type' : 'application/x-www-form-urlencoded'
+		    }
+		}).then(function(data) {
+		    scope.setData(data.data);
+		    return scope;
+		});
+	    };
+
+	    /**
+	     * کاربر رو حذف می‌کنه
+	     * 
+	     * معادل با حذف نقش کاربر هست.
+	     * 
+	     * @param {PUser}
+	     *                کاربر مورد نظر
+	     */
+	    pRole.prototype.removeUser = function(user) {
+		return $http({
+		    method : 'DELETE',
+		    url : '/api/role/' + this.id + '/user/' + user.id,
+		});
+	    };
+
+	    /**
+	     * فهرست کاربران را تعیین می‌کند
+	     * 
+	     */
+	    pRole.prototype.users = function(paginationParam) {
+		// TODO: mao, 1395: replase with $pluf service
+		var params = {};
+		if (paginationParam) {
+		    params = paginationParam.getParameter();
+		}
+		return $http({
+		    method : 'GET',
+		    url : '/api/role/' + this.id + '/user/find',
+		    params : params
+		}).then(function(res) {
+		    var $usr = $injector.get('$usr');
+		    var page = new PaginatorPage(res.data);
+		    var items = [];
+		    for (var i = 0; i < page.counts; i++) {
+			var item = page.items[i];
+			items.push($usr._userCache.restor(item.id, item));
+		    }
+		    page.items = items;
+		    return page;
+		});
+	    };
+
+	    /**
+	     * گروه رو حذف می‌کنه
+	     * 
+	     * این فراخوانی معادل با حذف یک نقش از یک گروه هست.
+	     * 
+	     * 
+	     */
+	    pRole.prototype.removeGroup = function(group) {
+		return $http({
+		    method : 'DELETE',
+		    url : '/api/role/' + this.id + '/group/' + group.id,
+		});
+	    };
+
+	    /**
+	     * فهرست گوره‌هایی که در این نقش هستند
+	     */
+	    pRole.prototype.groups = function(paginationParam) {
+		var params = {};
+		if (paginationParam) {
+		    params = paginationParam.getParameter();
+		}
+		return $http({
+		    method : 'GET',
+		    url : '/api/role/' + this.id + '/group/find',
+		    params : params
+		}).then(function(res) {
+		    var $usr = $injector.get('$usr');
+		    var page = new PaginatorPage(res.data);
+		    var items = [];
+		    for (var i = 0; i < page.counts; i++) {
+			var item = page.items[i];
+			items.push($usr._groupCache.restor(item.id, item));
+		    }
+		    page.items = items;
+		    return page;
+		});
+	    };
+	    return pRole;
+	});

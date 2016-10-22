@@ -36,8 +36,7 @@ angular.module('pluf')
 .service(
 		'$cms',
 		function($http, $httpParamSerializerJQLike, $q, $timeout, PContent,
-				PaginatorPage, PObjectCache) {
-			var postct = 'application/x-www-form-urlencoded';
+				PaginatorPage, PObjectCache, $pluf) {
 			var _cache = new PObjectCache(function(data) {
 				return new PContent(data);
 			});
@@ -51,18 +50,10 @@ angular.module('pluf')
 			 *            contet ساختار داده‌ای محتوی برای ایجاد
 			 * @return {promise(PContent)}
 			 */
-			this.newContent = function(detail) {
-				return $http({
-					method : 'POST',
-					url : '/api/cms/new',
-					data : $httpParamSerializerJQLike(detail),
-					headers : {
-						'Content-Type' : postct
-					}
-				}).then(function(res) {
-					return _cache.restor(res.data.id, res.data);
-				});
-			};
+			this.newContent = $pluf.createNew({
+				method : 'POST',
+				url : '/api/cms/new'
+			}, _cache);
 
 			/**
 			 * یک محتوی با شناسه خاص را تعیین می‌کند.
@@ -72,19 +63,10 @@ angular.module('pluf')
 			 *            id شناسه محتوی
 			 * @return {promise(PContent)} محتوی معادل
 			 */
-			this.content = function(id) {
-				if (_cache.contains(id)) {
-					var deferred = $q.defer();
-					deferred.resolve(_cache.get(id));
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/cms/' + id,
-				}).then(function(res) {
-					return _cache.restor(id, res.data);
-				});
-			};
+			this.content = $pluf.createGet({
+				method : 'GET',
+				url : '/api/cms/{id}'
+			}, _cache);
 
 			/**
 			 * فهرست تمام محتوی موجود را تعیین می‌کند
@@ -94,23 +76,8 @@ angular.module('pluf')
 			 *            param پارامترهای جستجو
 			 * @return {promise(PaginatorPage(PContent))} نتیجه جستجو
 			 */
-			this.contents = function(pagParam) {
-				var param = {};
-				if (pagParam) {
-					param = pagParam.getParameter();
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/cms/find',
-					params : param
-				}).then(function(res) {
-					var page = new PaginatorPage(res.data);
-					page.items = [];
-					for (var i = 0; i < res.data.counts; i++) {
-						var item = res.data.items[i];
-						page.items.push(_cache.restor(item.id, item));
-					}
-					return page;
-				});
-			};
+			this.contents = $pluf.createFind({
+				method : 'GET',
+				url : '/api/cms/find'
+			}, _cache);
 		});
