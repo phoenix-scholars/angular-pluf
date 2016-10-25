@@ -84,6 +84,12 @@ angular.module('pluf')
 	}
 	return new this.PGroup(data);
     });
+    var _messageCache = new PObjectFactory(function(data) {
+	if (!this.PMessage) {
+	    this.PProfile = $injector.get('PMessage');
+	}
+	return new this.PMessage(data);
+    });
 
     var pUser = function(data) {
 	if (data) {
@@ -217,6 +223,15 @@ angular.module('pluf')
 	method : 'GET',
 	url : '/api/user/:id/group/find',
     }, _groupCache);
+
+
+    /**
+     * 
+     */
+    pUser.prototype.messages = $pluf.createFind({
+	method : 'GET',
+	url : '/api/user/:id/message/find',
+    }, _messageCache);
 
     return pUser;
 });
