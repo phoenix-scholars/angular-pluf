@@ -30,112 +30,121 @@ angular.module('pluf')
  * @description ابزارهای پایه‌ای
  */
 .service('$pluf',
-		function(PaginatorPage, $q, $http, $httpParamSerializerJQLike) {
+	function(PaginatorPage, $q, $http, $httpParamSerializerJQLike) {
 
-			/**
-			 * 
-			 * @memberof $pluf
-			 * @param {Object}
-			 *            params
-			 * @param {PObjectCache}
-			 *            cache
-			 * @return {function}
-			 */
-			this.createFind = function(params, _cache) {
-				return function(paginatorParameter) {
-					if (paginatorParameter) {
-						params.params = paginatorParameter.getParameter();
-					}
-					return $http(params)//
-					.then(function(res) {
-						var page = new PaginatorPage(res.data);
-						var items = [];
-						for (var i = 0; i < page.counts; i++) {
-							var item = page.items[i];
-							items.push(_cache.restor(item.id, item));
-						}
-						page.items = items;
-						return page;
-					});
-				};
-			};
+	    /**
+	     * 
+	     * @memberof $pluf
+	     * @param {Object}
+	     *                params
+	     * @param {PObjectCache}
+	     *                cache
+	     * @return {function}
+	     */
+	    this.createFind = function(params, _cache) {
+		return function(paginatorParameter) {
+		    if (paginatorParameter) {
+			params.params = paginatorParameter.getParameter();
+		    }
+		    return $http(params)//
+		    .then(function(res) {
+			var page = new PaginatorPage(res.data);
+			var items = [];
+			for (var i = 0; i < page.counts; i++) {
+			    var item = page.items[i];
+			    items.push(_cache.restor(item.id, item));
+			}
+			page.items = items;
+			return page;
+		    });
+		};
+	    };
 
-			/**
-			 * 
-			 * @memberof $pluf
-			 * @param {Object}
-			 *            params
-			 * @param {PObjectCache}
-			 *            cache
-			 * @return {function}
-			 */
-			this.createGet = function(params, _cache) {
-				var urlTemplate = params.url;
-				return function(id) {
-					if (_cache.contains(id)) {
-						var deferred = $q.defer();
-						deferred.resolve(_cache.get(id));
-						return deferred.promise;
-					}
-					params.url = urlTemplate.replace('{id}', id);
-					return $http(params)//
-					.then(function(res) {
-						return _cache.restor(res.data.id, res.data);
-					});
-				};
-			};
+	    /**
+	     * 
+	     * @memberof $pluf
+	     * @param {Object}
+	     *                params
+	     * @param {PObjectCache}
+	     *                cache
+	     * @return {function}
+	     */
+	    this.createGet = function(params, _cache) {
+		var urlTemplate = params.url;
+		return function(id) {
+		    if (_cache.contains(id)) {
+			var deferred = $q.defer();
+			deferred.resolve(_cache.get(id));
+			return deferred.promise;
+		    }
+		    params.url = urlTemplate.replace('{id}', id);
+		    return $http(params)//
+		    .then(function(res) {
+			return _cache.restor(res.data.id, res.data);
+		    });
+		};
+	    };
 
-			/**
-			 * 
-			 */
-			this.createUpdate = function(params) {
-				params.headers = {
-					'Content-Type' : 'application/x-www-form-urlencoded'
-				};
-				return function(objectData) {
-					var scope = this;
-					params.data = $httpParamSerializerJQLike(objectData);
-					return $http(params)//
-					.then(function(res) {
-						scope.setData(res.data);
-						return scope;
-					});
-				};
-			};
+	    /**
+	     * 
+	     */
+	    this.createUpdate = function(params) {
+		params.headers = {
+		    'Content-Type' : 'application/x-www-form-urlencoded'
+		};
+		return function(objectData) {
+		    var scope = this;
+		    params.data = $httpParamSerializerJQLike(objectData);
+		    return $http(params)//
+		    .then(function(res) {
+			scope.setData(res.data);
+			return scope;
+		    });
+		};
+	    };
 
-			/**
-			 * 
-			 */
-			this.createDelete = function(params) {
-				return function() {
-					var scope = this;
-					return $http(params)//
-					.then(function(res) {
-						scope.setData(res.data);
-						return scope;
-					});
-				};
-			};
+	    /**
+	     * 
+	     */
+	    this.createDelete = function(params) {
+		return function() {
+		    var scope = this;
+		    return $http(params)//
+		    .then(function(res) {
+			scope.setData(res.data);
+			return scope;
+		    });
+		};
+	    };
 
-			/**
-			 * 
-			 * @memberof $pluf
-			 * @param {Object}
-			 *            params
-			 * @param {PObjectCache}
-			 *            cache
-			 * @return {function}
-			 */
-			this.createNew = function(params, _cache) {
-				params.headers = {
-					'Content-Type' : 'application/x-www-form-urlencoded'
-				};
-				return function(objectData) {
-					params.data = $httpParamSerializerJQLike(objectData);
-					return $http(params)//
-					.then(function(res) {
-						return _cache.restor(res.data.id, res.data);
-					});
-				};
-			};
-		});
+	    /**
+	     * 
+	     * @memberof $pluf
+	     * @param {Object}
+	     *                params
+	     * @param {PObjectCache}
+	     *                cache
+	     * @return {function}
+	     */
+	    this.createNew = function(params, _cache) {
+		params.headers = {
+		    'Content-Type' : 'application/x-www-form-urlencoded'
+		};
+		return function(objectData) {
+		    params.data = $httpParamSerializerJQLike(objectData);
+		    return $http(params)//
+		    .then(function(res) {
+			return _cache.restor(res.data.id, res.data);
+		    });
+		};
+	    };
+
+//	    this.inherit = function(object) {
+//		function F() {
+//		    // Empty object
+//		}
+//		F.prototype = object.prototype;
+//		return new F;
+//	    };
+
+	});
