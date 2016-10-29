@@ -171,7 +171,7 @@ angular.module('pluf')
 		    method : 'POST',
 		    url : '/api/user/logout',
 		}).then(function(result) {
-		    _su = new PUser(result.data);
+		    _su = new PUser({});
 		    return _su;
 		});
 	    };
