@@ -170,7 +170,7 @@ angular.module('pluf')
 		return $http({
 		    method : 'POST',
 		    url : '/api/user/logout',
-		}).then(function(result) {
+		}).then(function() {
 		    _su = new PUser({});
 		    return _su;
 		});
