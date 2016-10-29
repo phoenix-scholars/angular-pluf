@@ -196,6 +196,14 @@ angular.module('pluf')
 	method : 'GET',
 	url : '/api/user/:id/role/find',
     }, _roleCache);
+    
+    /**
+     * Crate a new role 
+     */
+    pUser.prototype.newRole = $pluf.createNew({
+	method : 'POST',
+	url : '/api/user/:id/role/new'
+    }, _roleCache);
 
     /**
      * رابطه میان گروه و کاربر را حذف می کند.
@@ -224,6 +232,10 @@ angular.module('pluf')
 	url : '/api/user/:id/group/find',
     }, _groupCache);
 
+    pUser.prototype.newGroup = $pluf.createNew({
+	method : 'POST',
+	url : '/api/user/:id/group/new'
+    }, _roleCache);
 
     /**
      * 
