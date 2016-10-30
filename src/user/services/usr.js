@@ -34,12 +34,13 @@ angular.module('pluf')
 .service(
 	'$usr',
 	function($http, $httpParamSerializerJQLike, $q, $act, PUser, PRole,
-		PGroup, PaginatorPage, PException, PObjectCache, $pluf) {
+		PGroup, PaginatorPage, PException, PObjectCache, PMessage, $pluf) {
 	    /*
 	     * کاربر جاری را تعیین می‌کند. این متغیر به صورت عمومی در اختیار
 	     * کاربران قرار می‌گیرد.
 	     */
 	    var _su = new PUser();
+	    
 	    var _userCache = new PObjectCache(function(data) {
 		return new PUser(data);
 	    });
@@ -47,10 +48,11 @@ angular.module('pluf')
 	    var _roleCache = new PObjectCache(function(data) {
 		return new PRole(data);
 	    });
+	    
 	    var _groupCache = new PObjectCache(function(data) {
 		return new PGroup(data);
 	    });
-
+	    
 	    this._userCache = _userCache;
 	    this._roleCache = _roleCache;
 	    this._groupCache = _groupCache;
@@ -168,8 +170,8 @@ angular.module('pluf')
 		return $http({
 		    method : 'POST',
 		    url : '/api/user/logout',
-		}).then(function(result) {
-		    _su = new PUser(result.data);
+		}).then(function() {
+		    _su = new PUser({});
 		    return _su;
 		});
 	    };
@@ -307,5 +309,4 @@ angular.module('pluf')
 		method : 'POST',
 		url : '/api/group/new'
 	    }, _groupCache);
-
 	});
