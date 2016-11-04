@@ -43,15 +43,15 @@ angular.module('pluf')
 
     pMonitor.prototype = new PObject();
 
-    pMonitor._cache = new PObjectFactory(function(data) {
-	pMonitor.setData(data);
-	return pMonitor;
-    });
+//    pMonitor._cache = new PObjectFactory(function(data) {
+//	pMonitor.setData(data);
+//	return pMonitor;
+//    });
 
-    pMonitor.prototype.refresh = $pluf.createGet({
+    pMonitor.prototype.refresh = $pluf.createUpdate({
 	method : 'GET',
 	url : '/api/monitor/:bean/:property',
-    }, pMonitor._cache);
+    });
 
     pMonitor.prototype.setBean = function(bean) {
 	this.bean = bean;
