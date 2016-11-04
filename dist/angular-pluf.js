@@ -3531,9 +3531,27 @@ angular.module('pluf')
      */
     var _monitors = [];
 
+    var _interval = 3000;
+    
     var _cache = new PObjectFactory(function(data) {
 	return new this.PMonitor(data);
     });
+    
+    this.reaload = function(){
+	if(_monitors.length == 0){
+	    $timeout(this.reaload, _interval);
+	    return;
+	}
+	var promises = [];
+	for(var i = 0; i < _monitors.length; i++){
+	    var monitor = _monitors[i];
+	    promises.push(monitor.reload());
+	}
+	return $q.all(promises)//
+	.finally(function(){
+	    $timeout(this.reaload, _interval);
+	});
+    };
 
     /**
      * مانیتور معادل را تعیین می‌کند
@@ -3595,6 +3613,8 @@ angular.module('pluf')
 	}, 1);
 	return def.promise;
     };
+    
+    this.reaload();
 
 });
 
