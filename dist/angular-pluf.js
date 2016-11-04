@@ -3537,19 +3537,19 @@ angular.module('pluf')
 	return new this.PMonitor(data);
     });
     
-    this.reaload = function(){
+    function reaload(){
 	if(_monitors.length == 0){
-	    $timeout(this.reaload, _interval);
+	    $timeout(reaload, _interval);
 	    return;
 	}
 	var promises = [];
 	for(var i = 0; i < _monitors.length; i++){
 	    var monitor = _monitors[i];
-	    promises.push(monitor.reload());
+	    promises.push(monitor.refresh());
 	}
 	return $q.all(promises)//
 	.finally(function(){
-	    $timeout(this.reaload, _interval);
+	    $timeout(reaload, _interval);
 	});
     };
 
@@ -3576,16 +3576,21 @@ angular.module('pluf')
     this.monitor = function(bean, property) {
 	var def = $q.defer();
 	$timeout(function() {
-	    var id = property + '@' + bean;
-	    if (id in _monitors) {
-		def.resolve(_monitors[id]);
+	    var monitor = null;
+	    angular.forEach(_monitors, function(element) {
+		if (element.bean === bean && element.property == property) {
+		    monitor = element;
+		}
+	    });
+	    if(monitor){
+		def.resolve(monitor);
 		return;
 	    }
-	    var monitor = new PMonitor();
+	    monitor = new PMonitor();
 	    monitor//
 	    .setBean(bean)//
 	    .setProperty(property);
-	    _monitors[id] = monitor;
+	    _monitors.push(monitor);
 	    def.resolve(monitor);
 	}, 1);
 	return def.promise;
@@ -3614,7 +3619,7 @@ angular.module('pluf')
 	return def.promise;
     };
     
-    this.reaload();
+    reaload();
 
 });
 
@@ -5638,13 +5643,19 @@ angular.module('pluf')
 .service(
 	'$usr',
 	function($http, $httpParamSerializerJQLike, $q, $act, PUser, PRole,
-		PGroup, PaginatorPage, PException, PObjectCache, PMessage, $pluf) {
+		PGroup, PaginatorPage, PException, PObjectCache, PMessage,
+		$pluf, $rootScope) {
 	    /*
 	     * کاربر جاری را تعیین می‌کند. این متغیر به صورت عمومی در اختیار
 	     * کاربران قرار می‌گیرد.
 	     */
 	    var _su = new PUser();
-	    
+
+	    function setUser(user) {
+		_su = user;
+		$rootScope.$emit('$userChange', user);
+	    }
+
 	    var _userCache = new PObjectCache(function(data) {
 		return new PUser(data);
 	    });
@@ -5652,11 +5663,11 @@ angular.module('pluf')
 	    var _roleCache = new PObjectCache(function(data) {
 		return new PRole(data);
 	    });
-	    
+
 	    var _groupCache = new PObjectCache(function(data) {
 		return new PGroup(data);
 	    });
-	    
+
 	    this._userCache = _userCache;
 	    this._roleCache = _roleCache;
 	    this._groupCache = _groupCache;
@@ -5706,7 +5717,7 @@ angular.module('pluf')
 		.then(function(result) {
 		    if (result.data.id) {
 			var data = result.data;
-			_su = _userCache.restor(data.id, data);
+			setUser(_userCache.restor(data.id, data));
 		    }
 		    return _su;
 		});
@@ -5751,7 +5762,7 @@ angular.module('pluf')
 		    }
 		}).then(function(result) {
 		    var data = result.data;
-		    _su = _userCache.restor(data.id, data);
+		    setUser(_userCache.restor(data.id, data));
 		    return _su;
 		});
 	    };
@@ -5775,7 +5786,7 @@ angular.module('pluf')
 		    method : 'POST',
 		    url : '/api/user/logout',
 		}).then(function() {
-		    _su = new PUser({});
+		    setUser(new PUser({}));
 		    return _su;
 		});
 	    };

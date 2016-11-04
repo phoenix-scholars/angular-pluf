@@ -50,9 +50,9 @@ angular.module('pluf')
 	return new this.PMonitor(data);
     });
     
-    this.reaload = function(){
+    function reaload(){
 	if(_monitors.length == 0){
-	    $timeout(this.reaload, _interval);
+	    $timeout(reaload, _interval);
 	    return;
 	}
 	var promises = [];
@@ -62,7 +62,7 @@ angular.module('pluf')
 	}
 	return $q.all(promises)//
 	.finally(function(){
-	    $timeout(this.reaload, _interval);
+	    $timeout(reaload, _interval);
 	});
     };
 
@@ -89,16 +89,21 @@ angular.module('pluf')
     this.monitor = function(bean, property) {
 	var def = $q.defer();
 	$timeout(function() {
-	    var id = property + '@' + bean;
-	    if (id in _monitors) {
-		def.resolve(_monitors[id]);
+	    var monitor = null;
+	    angular.forEach(_monitors, function(element) {
+		if (element.bean === bean && element.property == property) {
+		    monitor = element;
+		}
+	    });
+	    if(monitor){
+		def.resolve(monitor);
 		return;
 	    }
-	    var monitor = new PMonitor();
+	    monitor = new PMonitor();
 	    monitor//
 	    .setBean(bean)//
 	    .setProperty(property);
-	    _monitors[id] = monitor;
+	    _monitors.push(monitor);
 	    def.resolve(monitor);
 	}, 1);
 	return def.promise;
@@ -127,6 +132,6 @@ angular.module('pluf')
 	return def.promise;
     };
     
-    this.reaload();
+    reaload();
 
 });
