@@ -60,7 +60,7 @@ angular.module('pluf')
      * 
      * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف شده
      */
-    pMessage.prototype.remove = $pluf.createDelete({
+    pMessage.prototype.delete = $pluf.createDelete({
 	method : 'DELETE',
 	url : '/api/message/:id'
     });
