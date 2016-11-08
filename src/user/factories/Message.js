@@ -38,18 +38,8 @@ angular.module('pluf')
  * مقدار باشد که شما می‌توانید مقادیر مورد نظر خود را در آن اضافه و کم کنید.
  * 
  * @attr {Integer} id شناسه
- * @attr {Integer} user شناسه حساب کاربری مربوط به این پروفایل
- * @attr {Boolean} validate وضعیت اعتبار پروفایل
- * @attr {String} country کشور
- * @attr {String} city شهر
- * @attr {String} address آدرس
- * @attr {String} postal_code کد پستی
- * @attr {String} phone_number شماره تلفن
- * @attr {String} mobile_number شماره موبایل
- * @attr {String} national_id کد ملی
- * @attr {String} shaba شماره شبای بانکی
+ * @attr {String} message پیام
  * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد پروفایل
- * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
 .factory('pMessage', function(PObject) {
     /*
@@ -72,7 +62,7 @@ angular.module('pluf')
      */
     pMessage.prototype.remove = $pluf.createDelete({
 	method : 'DELETE',
-	url : '/api/user/:user/message/:id'
+	url : '/api/message/:id'
     });
 
     return pMessage;

@@ -4993,18 +4993,8 @@ angular.module('pluf')
  * مقدار باشد که شما می‌توانید مقادیر مورد نظر خود را در آن اضافه و کم کنید.
  * 
  * @attr {Integer} id شناسه
- * @attr {Integer} user شناسه حساب کاربری مربوط به این پروفایل
- * @attr {Boolean} validate وضعیت اعتبار پروفایل
- * @attr {String} country کشور
- * @attr {String} city شهر
- * @attr {String} address آدرس
- * @attr {String} postal_code کد پستی
- * @attr {String} phone_number شماره تلفن
- * @attr {String} mobile_number شماره موبایل
- * @attr {String} national_id کد ملی
- * @attr {String} shaba شماره شبای بانکی
+ * @attr {String} message پیام
  * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد پروفایل
- * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
 .factory('pMessage', function(PObject) {
     /*
@@ -5027,7 +5017,7 @@ angular.module('pluf')
      */
     pMessage.prototype.remove = $pluf.createDelete({
 	method : 'DELETE',
-	url : '/api/user/:user/message/:id'
+	url : '/api/message/:id'
     });
 
     return pMessage;
@@ -5643,7 +5633,7 @@ angular.module('pluf')
 .service(
 	'$usr',
 	function($http, $httpParamSerializerJQLike, $q, $act, PUser, PRole,
-		PGroup, PaginatorPage, PException, PObjectCache, PMessage,
+		PGroup, PaginatorPage, PException, PObjectCache, PObjectFactory, PMessage,
 		$pluf, $rootScope) {
 	    /*
 	     * کاربر جاری را تعیین می‌کند. این متغیر به صورت عمومی در اختیار
@@ -5666,6 +5656,10 @@ angular.module('pluf')
 
 	    var _groupCache = new PObjectCache(function(data) {
 		return new PGroup(data);
+	    });
+	    
+	    var _messageCache = new PObjectFactory(function(data) {
+		return new PMessage(data);
 	    });
 
 	    this._userCache = _userCache;
@@ -5924,4 +5918,29 @@ angular.module('pluf')
 		method : 'POST',
 		url : '/api/group/new'
 	    }, _groupCache);
+
+	    /**
+	     * فهرست تمام پیام‌های کاربر
+	     * 
+	     * این پیام‌ها توسط سیستم ایجاد می‌شوند و حاوی اطلاعاتی برای کاربر
+	     * هستند. ساختار داده‌ای این پیام‌ها ساده و تنها شامل یک متن و تاریخ
+	     * می‌شود.
+	     * 
+	     * @param {PaginatorParameter}
+	     *                پارامترهای صفحه بندی
+	     * @return {promise<PaginatedPage<Message>>} فهرست پیام‌ها
+	     */
+	    this.messages = $pluf.createFind({
+		method : 'GET',
+		url : '/api/message/find',
+	    }, _messageCache);
+	    
+	    /**
+	     * پیام تعیین شده را بازیابی می کند.
+	     * 
+	     */
+	    this.message = $pluf.createGet({
+		method : 'GET',
+		url : '/api/message/{id}',
+	    }, _messageCache);
 	});
