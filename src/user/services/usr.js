@@ -34,7 +34,7 @@ angular.module('pluf')
 .service(
 	'$usr',
 	function($http, $httpParamSerializerJQLike, $q, $act, PUser, PRole,
-		PGroup, PaginatorPage, PException, PObjectCache, PObjectFactory, PMessage,
+		PGroup, PaginatorPage, PException, PObjectCache, PObjectFactory, PUserMessage,
 		$pluf, $rootScope) {
 	    /*
 	     * کاربر جاری را تعیین می‌کند. این متغیر به صورت عمومی در اختیار
@@ -60,7 +60,7 @@ angular.module('pluf')
 	    });
 	    
 	    var _messageCache = new PObjectFactory(function(data) {
-		return new PMessage(data);
+		return new PUserMessage(data);
 	    });
 
 	    this._userCache = _userCache;

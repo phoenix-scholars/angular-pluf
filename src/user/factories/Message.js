@@ -41,17 +41,17 @@ angular.module('pluf')
  * @attr {String} message پیام
  * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد پروفایل
  */
-.factory('pMessage', function(PObject) {
+.factory('PUserMessage', function($pluf, PObject) {
     /*
      * یک نمونه جدید از این موجودیت ایجاد می کند.
      */
-    var pMessage = function(data) {
+    var pUserMessage = function(data) {
 	if (data) {
 	    this.setData(data);
 	}
     };
 
-    pMessage.prototype = new PObject();
+    pUserMessage.prototype = new PObject();
 
     /**
      * پروفایل کاربری را حذف می کند
@@ -60,10 +60,10 @@ angular.module('pluf')
      * 
      * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف شده
      */
-    pMessage.prototype.delete = $pluf.createDelete({
+    pUserMessage.prototype.delete = $pluf.createDelete({
 	method : 'DELETE',
 	url : '/api/message/:id'
     });
 
-    return pMessage;
+    return pUserMessage;
 });
