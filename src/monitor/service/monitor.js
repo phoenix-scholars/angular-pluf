@@ -51,6 +51,7 @@ angular.module('pluf')
     });
     
     function reaload(){
+	// XXX: maso, 1395: handle monitor interval
 	if(_monitors.length == 0){
 	    $timeout(reaload, _interval);
 	    return;

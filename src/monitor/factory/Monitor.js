@@ -31,36 +31,51 @@ angular.module('pluf')
  * @description
  * 
  */
-.factory('PMonitor', function(PObject, $pluf, PObjectFactory) {
+.factory('PMonitor', function(PObject, $rootScope, $http, PObjectFactory) {
     /*
      * یک نمونه جدید از این موجودیت ایجاد می کند.
      */
     var pMonitor = function(data) {
 	if (data) {
 	    this.setData(data);
+	    this.path = '/api/monitor/' + this.bean + '/' + this.property;
 	}
     };
 
     pMonitor.prototype = new PObject();
 
-//    pMonitor._cache = new PObjectFactory(function(data) {
-//	pMonitor.setData(data);
-//	return pMonitor;
-//    });
+    // pMonitor._cache = new PObjectFactory(function(data) {
+    // pMonitor.setData(data);
+    // return pMonitor;
+    // });
 
-    pMonitor.prototype.refresh = $pluf.createUpdate({
-	method : 'GET',
-	url : '/api/monitor/:bean/:property',
-    });
+    pMonitor.prototype.refresh = function() {
+	var scope = this;
+	return $http.get(this.path)//
+	.then(function(res) {
+	    // XXX: maso, 1395: handle tablular and scalar types
+	    if (res.data.value !== scope.value) {
+		$rootScope.$emit(scope.path, scope.value, res.data.value);
+	    }
+	    scope.setData(res.data);
+	    return scope;
+	});
+    };
 
     pMonitor.prototype.setBean = function(bean) {
 	this.bean = bean;
+	this.path = '/api/monitor/' + this.bean + '/' + this.property;
 	return this;
     }
 
     pMonitor.prototype.setProperty = function(property) {
 	this.property = property;
+	this.path = '/api/monitor/' + this.bean + '/' + this.property;
 	return this;
+    }
+
+    pMonitor.prototype.watch = function(callback) {
+	return $rootScope.$on(this.path, callback);
     }
 
     return pMonitor;
