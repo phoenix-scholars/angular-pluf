@@ -34,7 +34,7 @@ angular.module('pluf')
 .service(
 	'$usr',
 	function($http, $httpParamSerializerJQLike, $q, $act, PUser, PRole,
-		PGroup, PaginatorPage, PException, PObjectCache, PMessage,
+		PGroup, PaginatorPage, PException, PObjectCache, PObjectFactory, PUserMessage,
 		$pluf, $rootScope) {
 	    /*
 	     * کاربر جاری را تعیین می‌کند. این متغیر به صورت عمومی در اختیار
@@ -57,6 +57,10 @@ angular.module('pluf')
 
 	    var _groupCache = new PObjectCache(function(data) {
 		return new PGroup(data);
+	    });
+	    
+	    var _messageCache = new PObjectFactory(function(data) {
+		return new PUserMessage(data);
 	    });
 
 	    this._userCache = _userCache;
@@ -315,4 +319,29 @@ angular.module('pluf')
 		method : 'POST',
 		url : '/api/group/new'
 	    }, _groupCache);
+
+	    /**
+	     * فهرست تمام پیام‌های کاربر
+	     * 
+	     * این پیام‌ها توسط سیستم ایجاد می‌شوند و حاوی اطلاعاتی برای کاربر
+	     * هستند. ساختار داده‌ای این پیام‌ها ساده و تنها شامل یک متن و تاریخ
+	     * می‌شود.
+	     * 
+	     * @param {PaginatorParameter}
+	     *                پارامترهای صفحه بندی
+	     * @return {promise<PaginatedPage<Message>>} فهرست پیام‌ها
+	     */
+	    this.messages = $pluf.createFind({
+		method : 'GET',
+		url : '/api/message/find',
+	    }, _messageCache);
+	    
+	    /**
+	     * پیام تعیین شده را بازیابی می کند.
+	     * 
+	     */
+	    this.message = $pluf.createGet({
+		method : 'GET',
+		url : '/api/message/{id}',
+	    }, _messageCache);
 	});

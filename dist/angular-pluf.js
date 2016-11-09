@@ -3450,36 +3450,51 @@ angular.module('pluf')
  * @description
  * 
  */
-.factory('PMonitor', function(PObject, $pluf, PObjectFactory) {
+.factory('PMonitor', function(PObject, $rootScope, $http, PObjectFactory) {
     /*
      * یک نمونه جدید از این موجودیت ایجاد می کند.
      */
     var pMonitor = function(data) {
 	if (data) {
 	    this.setData(data);
+	    this.path = '/api/monitor/' + this.bean + '/' + this.property;
 	}
     };
 
     pMonitor.prototype = new PObject();
 
-//    pMonitor._cache = new PObjectFactory(function(data) {
-//	pMonitor.setData(data);
-//	return pMonitor;
-//    });
+    // pMonitor._cache = new PObjectFactory(function(data) {
+    // pMonitor.setData(data);
+    // return pMonitor;
+    // });
 
-    pMonitor.prototype.refresh = $pluf.createUpdate({
-	method : 'GET',
-	url : '/api/monitor/:bean/:property',
-    });
+    pMonitor.prototype.refresh = function() {
+	var scope = this;
+	return $http.get(this.path)//
+	.then(function(res) {
+	    // XXX: maso, 1395: handle tablular and scalar types
+	    if (res.data.value !== scope.value) {
+		$rootScope.$emit(scope.path, scope.value, res.data.value);
+	    }
+	    scope.setData(res.data);
+	    return scope;
+	});
+    };
 
     pMonitor.prototype.setBean = function(bean) {
 	this.bean = bean;
+	this.path = '/api/monitor/' + this.bean + '/' + this.property;
 	return this;
     }
 
     pMonitor.prototype.setProperty = function(property) {
 	this.property = property;
+	this.path = '/api/monitor/' + this.bean + '/' + this.property;
 	return this;
+    }
+
+    pMonitor.prototype.watch = function(callback) {
+	return $rootScope.$on(this.path, callback);
     }
 
     return pMonitor;
@@ -3531,13 +3546,15 @@ angular.module('pluf')
      */
     var _monitors = [];
 
-    var _interval = 3000;
+    // XXX: maso, 1395: فعلا زیاد در نظر گرفتم تا ساختار سرور نهایی بشه
+    var _interval = 300000;
     
     var _cache = new PObjectFactory(function(data) {
 	return new this.PMonitor(data);
     });
     
     function reaload(){
+	// XXX: maso, 1395: handle monitor interval
 	if(_monitors.length == 0){
 	    $timeout(reaload, _interval);
 	    return;
@@ -4431,108 +4448,118 @@ angular.module('pluf')
  */
 .service('$saas', function($http, PTenant, PSpa, PObjectCache, $pluf) {
 
-	var _tenantCache = new PObjectCache(function(data) {
-		return new PTenant(data);
+    var _tenantCache = new PObjectCache(function(data) {
+	return new PTenant(data);
+    });
+
+    var _spaCache = new PObjectCache(function(data) {
+	return new PSpa(data);
+    });
+
+    /**
+     * نمونه جاری را تعیین می‌کند. به صورت پیش فرض اجرای هر نرم افزار روی یک ملک
+     * اجرا می‌شود این فراخوانی ملکی را تعیین می‌کند که نرم افزار جاری روی آن
+     * کار می‌کند.
+     * 
+     * @memberof $saas
+     * @return {permision(PTenant)} ملک جاری را تعیین می‌کند.
+     */
+    this.session = function() {
+	return $http.get('/api/tenant')//
+	.then(function(res) {
+	    return _tenantCache.restor(res.data);
 	});
+    };
 
-	var _spaCache = new PObjectCache(function(data) {
-		return new PSpa(data);
+    /**
+     * فهرست تمام ملک‌هایی را که کاربر به آنها دسترسی دارد را تعیین می‌کند.
+     * 
+     * @memberof $saas
+     * @param {PaginatorParameter}
+     *                paginatorParameter پارامترهای مورد استفاده در صفحه بندی
+     * @return {promise<PaginatorPage<PTenant>>} فهرست ملک‌ها به صورت صفحه
+     *         بندی
+     */
+    this.tenants = $pluf.createFind({
+	method : 'GET',
+	url : '/api/tenant/find',
+    }, _tenantCache);
+
+    /**
+     * ملک تعیین شده با شناسه را برمی‌گرداند.
+     * 
+     * @memberof $saas
+     * @param {integer}
+     *                id شناسه ملک مورد نظر
+     * @return {promise<PTenant>} ملک تعیین شده.
+     */
+    this.tenant = $pluf.createGet({
+	url : '/api/tenant/{id}',
+	method : 'GET'
+    }, _tenantCache);
+
+    /**
+     * یک ملک جدید ایجاد می‌کند و ساختار ایجاد شده برای آنرا به عنوان نتیجه
+     * برمی‌گرداند.
+     * 
+     * @memberof $saas
+     * @param {Struct}
+     *                tenantData ساختار داده‌ای ملک
+     * @return {promise<PTenant>} مکل ایجاد شده
+     */
+    this.newTenant = $pluf.createNew({
+	method : 'POST',
+	url : '/api/tenant/new',
+    }, _tenantCache);
+
+    /**
+     * فهرست تمام نرم افزارهایی را تعیین می‌کند که برای ملک جاری در دسترس است.
+     * 
+     * @memberof $saas
+     * @param {PaginatorParameter}
+     *                paginatorParameter پارامترهای مورد استفاده در صفحه بندی
+     * @return {promise<PaginatorPage<PSpa>>} فهرست نرم افزارها
+     */
+    this.spas = $pluf.createFind({
+	method : 'GET',
+	url : '/api/spa/find',
+    }, _spaCache);
+
+    /**
+     * نرم افزار معادل با شناسه ورودی را بازیابی می‌کند.
+     * 
+     * @memberof $saas
+     * @param {integer}
+     *                id شناسه نرم افزار
+     * @return {promise<PSpa>} نرم‌افزار معادل
+     */
+    this.spa = $pluf.createGet({
+	url : '/api/spa/{id}',
+	method : 'GET'
+    }, _spaCache);
+
+    /**
+     * یک نرم افزار جدید در سیستم ایجاد می‌کند.
+     * 
+     * @memberof $saas
+     * @param {Struct}
+     *                spa ساختار داده‌ای یک spa
+     * @return {promise<PSpa} نرم‌افزار معادل ایجاد شده
+     */
+    this.newSpa = function(file) {
+	var fd = new FormData();
+	fd.append('file', file);
+	return $http.post('/api/spa/new', fd, {
+	    transformRequest : angular.identity,
+	    headers : {
+		'Content-Type' : undefined
+	    }
+	})//
+	.then(function(res) {
+	    return new PSpa(res.data);
 	});
+    };
 
-	/**
-	 * نمونه جاری را تعیین می‌کند. به صورت پیش فرض اجرای هر نرم افزار روی یک ملک
-	 * اجرا می‌شود این فراخوانی ملکی را تعیین می‌کند که نرم افزار جاری روی آن
-	 * کار می‌کند.
-	 * 
-	 * @memberof $saas
-	 * @return {permision(PTenant)} ملک جاری را تعیین می‌کند.
-	 */
-	this.session = function() {
-		return $http.get('/api/tenant')//
-		.then(function(res) {
-			return _tenantCache.restor(res.data);
-		});
-	};
-
-	/**
-	 * فهرست تمام ملک‌هایی را که کاربر به آنها دسترسی دارد را تعیین می‌کند.
-	 * 
-	 * @memberof $saas
-	 * @param {PaginatorParameter}
-	 *            paginatorParameter پارامترهای مورد استفاده در صفحه بندی
-	 * @return {promise<PaginatorPage<PTenant>>} فهرست ملک‌ها به صورت صفحه
-	 *         بندی
-	 */
-	this.tenants = $pluf.createFind({
-		method : 'GET',
-		url : '/api/tenant/find',
-	}, _tenantCache);
-
-	/**
-	 * ملک تعیین شده با شناسه را برمی‌گرداند.
-	 * 
-	 * @memberof $saas
-	 * @param {integer}
-	 *            id شناسه ملک مورد نظر
-	 * @return {promise<PTenant>} ملک تعیین شده.
-	 */
-	this.tenant = $pluf.createGet({
-		url : '/api/tenant/{id}',
-		method : 'GET'
-	}, _tenantCache);
-
-	/**
-	 * یک ملک جدید ایجاد می‌کند و ساختار ایجاد شده برای آنرا به عنوان نتیجه
-	 * برمی‌گرداند.
-	 * 
-	 * @memberof $saas
-	 * @param {Struct}
-	 *            tenantData ساختار داده‌ای ملک
-	 * @return {promise<PTenant>} مکل ایجاد شده
-	 */
-	this.newTenant = $pluf.createNew({
-		method : 'POST',
-		url : '/api/tenant/new',
-	}, _tenantCache);
-
-	/**
-	 * فهرست تمام نرم افزارهایی را تعیین می‌کند که برای ملک جاری در دسترس است.
-	 * 
-	 * @memberof $saas
-	 * @param {PaginatorParameter}
-	 *            paginatorParameter پارامترهای مورد استفاده در صفحه بندی
-	 * @return {promise<PaginatorPage<PSpa>>} فهرست نرم افزارها
-	 */
-	this.spas = $pluf.createFind({
-		method : 'GET',
-		url : '/api/spa/find',
-	}, _spaCache);
-
-	/**
-	 * نرم افزار معادل با شناسه ورودی را بازیابی می‌کند.
-	 * 
-	 * @memberof $saas
-	 * @param {integer}
-	 *            id شناسه نرم افزار
-	 * @return {promise<PSpa>} نرم‌افزار معادل
-	 */
-	this.spa = $pluf.createGet({
-		url : '/api/spa/{id}',
-		method : 'GET'
-	}, _spaCache);
-
-	/**
-	 * یک نرم افزار جدید در سیستم ایجاد می‌کند.
-	 * 
-	 * @memberof $saas
-	 * @param {Struct}
-	 *            spa ساختار داده‌ای یک spa
-	 * @return {promise<PSpa} نرم‌افزار معادل ایجاد شده
-	 */
-	this.newSpa = $pluf.createNew({
-		method : 'POST',
-		url : '/api/spa/new'
-	}, _spaCache);
 });
 
 /*
@@ -4993,30 +5020,20 @@ angular.module('pluf')
  * مقدار باشد که شما می‌توانید مقادیر مورد نظر خود را در آن اضافه و کم کنید.
  * 
  * @attr {Integer} id شناسه
- * @attr {Integer} user شناسه حساب کاربری مربوط به این پروفایل
- * @attr {Boolean} validate وضعیت اعتبار پروفایل
- * @attr {String} country کشور
- * @attr {String} city شهر
- * @attr {String} address آدرس
- * @attr {String} postal_code کد پستی
- * @attr {String} phone_number شماره تلفن
- * @attr {String} mobile_number شماره موبایل
- * @attr {String} national_id کد ملی
- * @attr {String} shaba شماره شبای بانکی
+ * @attr {String} message پیام
  * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد پروفایل
- * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
-.factory('pMessage', function(PObject) {
+.factory('PUserMessage', function($pluf, PObject) {
     /*
      * یک نمونه جدید از این موجودیت ایجاد می کند.
      */
-    var pMessage = function(data) {
+    var pUserMessage = function(data) {
 	if (data) {
 	    this.setData(data);
 	}
     };
 
-    pMessage.prototype = new PObject();
+    pUserMessage.prototype = new PObject();
 
     /**
      * پروفایل کاربری را حذف می کند
@@ -5025,12 +5042,12 @@ angular.module('pluf')
      * 
      * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف شده
      */
-    pMessage.prototype.remove = $pluf.createDelete({
+    pUserMessage.prototype.delete = $pluf.createDelete({
 	method : 'DELETE',
-	url : '/api/user/:user/message/:id'
+	url : '/api/message/:id'
     });
 
-    return pMessage;
+    return pUserMessage;
 });
 
 /*
@@ -5643,7 +5660,7 @@ angular.module('pluf')
 .service(
 	'$usr',
 	function($http, $httpParamSerializerJQLike, $q, $act, PUser, PRole,
-		PGroup, PaginatorPage, PException, PObjectCache, PMessage,
+		PGroup, PaginatorPage, PException, PObjectCache, PObjectFactory, PUserMessage,
 		$pluf, $rootScope) {
 	    /*
 	     * کاربر جاری را تعیین می‌کند. این متغیر به صورت عمومی در اختیار
@@ -5666,6 +5683,10 @@ angular.module('pluf')
 
 	    var _groupCache = new PObjectCache(function(data) {
 		return new PGroup(data);
+	    });
+	    
+	    var _messageCache = new PObjectFactory(function(data) {
+		return new PUserMessage(data);
 	    });
 
 	    this._userCache = _userCache;
@@ -5924,4 +5945,29 @@ angular.module('pluf')
 		method : 'POST',
 		url : '/api/group/new'
 	    }, _groupCache);
+
+	    /**
+	     * فهرست تمام پیام‌های کاربر
+	     * 
+	     * این پیام‌ها توسط سیستم ایجاد می‌شوند و حاوی اطلاعاتی برای کاربر
+	     * هستند. ساختار داده‌ای این پیام‌ها ساده و تنها شامل یک متن و تاریخ
+	     * می‌شود.
+	     * 
+	     * @param {PaginatorParameter}
+	     *                پارامترهای صفحه بندی
+	     * @return {promise<PaginatedPage<Message>>} فهرست پیام‌ها
+	     */
+	    this.messages = $pluf.createFind({
+		method : 'GET',
+		url : '/api/message/find',
+	    }, _messageCache);
+	    
+	    /**
+	     * پیام تعیین شده را بازیابی می کند.
+	     * 
+	     */
+	    this.message = $pluf.createGet({
+		method : 'GET',
+		url : '/api/message/{id}',
+	    }, _messageCache);
 	});

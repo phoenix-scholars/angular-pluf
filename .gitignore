@@ -7,7 +7,6 @@
 # Products
 /doc/jsdoc/
 /.tmp
-/dist
 
 # NodeJS
 /node_modules/
