@@ -45,7 +45,7 @@ angular.module('pluf')
     var _monitors = [];
 
     // XXX: maso, 1395: فعلا زیاد در نظر گرفتم تا ساختار سرور نهایی بشه
-    var _interval = 300000;
+    var _interval = 60000;
     
     var _cache = new PObjectFactory(function(data) {
 	return new this.PMonitor(data);
