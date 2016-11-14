@@ -69,14 +69,14 @@ describe('SasS module: PSpa', function() {
 		var spa = new PSpa({
 			id : 1
 		});
-		expect(angular.isFunction(spa.remove)).toBe(true);
+		expect(angular.isFunction(spa.delete)).toBe(true);
 	});
 
 	it('should call /api/spa/{id} to remove', function(done) {
 		var spa = new PSpa({
 			id : 1
 		});
-		spa.remove()//
+		spa.delete()//
 		.then(function(page) {
 			expect(page).not.toBeNull();
 			done();

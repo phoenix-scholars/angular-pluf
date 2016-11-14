@@ -128,7 +128,7 @@ angular.module('pluf')
      * 
      * @return {promise(PUser)} ساختار داده‌ای حساب کاربری حذف شده
      */
-    pUser.prototype.remove = $pluf.createDelete({
+    pUser.prototype.delete = $pluf.createDelete({
 	method : 'DELETE',
 	url : '/api/user/:id'
     });
