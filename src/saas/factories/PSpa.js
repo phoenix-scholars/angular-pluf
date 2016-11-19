@@ -64,9 +64,15 @@ angular.module('pluf')
      * اجرای نرم افزار.
      * 
      * @memberof PSpa
+     * @param {Boolean} newTab تعیین می‌کنه که آیا نرم افزار توی یک برگه جدید باز بشه
      */
-    pSpa.prototype.run = function() {
-	$window.location = $window.location.origin + '/' + this.name + '/';
+    pSpa.prototype.run = function(newTab) {
+	var location = $window.location.origin + '/' + this.name + '/';
+	if(newTab){
+	    $window.open(location, '_blank');
+	} else {
+	    $window.location = location;
+	}
     };
 
     return pSpa;
