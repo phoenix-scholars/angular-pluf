@@ -121,6 +121,12 @@ angular.module('pluf')
 	url : '/api/user/:id',
     });
 
+    // TODO: maso, document: پارامتر ورودی ساختاری با داده گذرواژه
+    pUser.prototype.newPassword = $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/user/:id/password',
+    });
+
     /**
      * حساب کاربری را حذف می‌کند
      * 
