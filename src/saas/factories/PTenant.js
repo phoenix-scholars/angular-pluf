@@ -56,6 +56,20 @@ angular.module('pluf')
 	method : 'POST',
 	url : '/api/tenant/:id',
     });
+    
+    /**
+     * تعیین نرم افزار پیش‌فرض
+     * 
+     * نرم افزار پیش‌فرض برای سیستم را تعیین می‌کند.
+     * 
+     * @memberof PTenant
+     * @param {PSpa} spa
+     * @return {promise{tenant}}
+     */
+    pTenant.prototype.defaultSpa = function(spa){
+	this.spa = spa.id;
+	return this.update();
+    }
 
     return pTenant;
 });

@@ -49,7 +49,7 @@ angular.module('pluf')
     this.session = function() {
 	return $http.get('/api/tenant')//
 	.then(function(res) {
-	    return _tenantCache.restor(res.data);
+	    return _tenantCache.restor(res.data.id, res.data);
 	});
     };
 
