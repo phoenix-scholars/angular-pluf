@@ -3923,6 +3923,20 @@ angular.module('pluf')
 	method : 'POST',
 	url : '/api/tenant/:id',
     });
+    
+    /**
+     * تعیین نرم افزار پیش‌فرض
+     * 
+     * نرم افزار پیش‌فرض برای سیستم را تعیین می‌کند.
+     * 
+     * @memberof PTenant
+     * @param {PSpa} spa
+     * @return {promise{tenant}}
+     */
+    pTenant.prototype.defaultSpa = function(spa){
+	this.spa = spa.id;
+	return this.update();
+    }
 
     return pTenant;
 });
@@ -3978,7 +3992,7 @@ angular.module('pluf')
     this.session = function() {
 	return $http.get('/api/tenant')//
 	.then(function(res) {
-	    return _tenantCache.restor(res.data);
+	    return _tenantCache.restor(res.data.id, res.data);
 	});
     };
 
