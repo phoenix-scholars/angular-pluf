@@ -5028,6 +5028,24 @@ angular.module('pluf')
 	url : '/api/user/:id',
     });
 
+    // TODO: maso, document: پارامتر ورودی ساختاری با داده گذرواژه
+    pUser.prototype.newPassword = $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/user/:id/password',
+    });
+    
+    // TODO: maso, document
+    pUser.prototype.newAvatar = function(file){
+	var fd = new FormData();
+	fd.append('file', file);
+	return $http.post('/api/user/'+this.id+'/avatar', fd, {
+	    transformRequest : angular.identity,
+	    headers : {
+		'Content-Type' : undefined
+	    }
+	});
+    };
+
     /**
      * حساب کاربری را حذف می‌کند
      * 
