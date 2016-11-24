@@ -22,20 +22,19 @@
 'use strict';
 
 angular.module('pluf')
+
 /**
- * @ngdoc factory
- * @memberof pluf.saas
- * @name PSpaDetail
- * @description
- * هر نسخه می‌تواند از یک نوع نرم افزار خاص نصب شده استفاده کند. البته نرم
- * افزارها باید تنها از خدمات ارائه شده در نسخه نصبی استفاده کنند. هر نرم افزار
- * می‌تواند شامل تنظیم‌های متفاتی باشد.
+ * @ngdoc filter
+ * @name wbunsafe
+ * @memberof pluf
+ * @function
+ * @description # unsafe Filter in the digidociMainApp.
  */
-.factory('PSpaDetail',
-function($http, $q, $window, PObject) {
-	var pSpaDetail = function() {
-		PObject.apply(this, arguments);
+.filter('pfromNow', function() {
+	return function(inputDate) {
+            var date = moment//
+            	.utc(inputDate)//
+            	.local();
+            return date.fromNow();
 	};
-	pSpaDetail.prototype = new PObject();
-	return pSpaDetail;
 });

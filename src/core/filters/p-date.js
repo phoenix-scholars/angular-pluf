@@ -22,19 +22,19 @@
 'use strict';
 
 angular.module('pluf')
+
 /**
- * @ngdoc factory
- * @memberof pluf.saas
- * @name PTenantSetting
- * @description
- * تنظیم‌های یک ملک را تعیین می‌کند.
- *
+ * @ngdoc filter
+ * @name wbunsafe
+ * @memberof pluf
+ * @function
+ * @description # unsafe Filter in the digidociMainApp.
  */
-.factory('PTenantSetting',
-function($http, $q, $window, PObject) {
-	var pTenantSetting = function() {
-		PObject.apply(this, arguments);
+.filter('pdate', function() {
+	return function(inputDate, format) {
+            var date = moment//
+            	.utc(inputDate)//
+            	.local();
+            return date.format(format);
 	};
-	pTenantSetting.prototype = new PObject();
-	return pTenantSetting;
 });

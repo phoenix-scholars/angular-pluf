@@ -69,14 +69,14 @@ describe('SasS module: PTenant', function() {
 		var tenant = new PTenant({
 			id : 1
 		});
-		expect(angular.isFunction(tenant.remove)).toBe(true);
+		expect(angular.isFunction(tenant.delete)).toBe(true);
 	});
 	
 	it('should call /api/tenant/{id} to remove', function(done) {
 		var tenant = new PTenant({
 			id : 1
 		});
-		tenant.remove()//
+		tenant.delete()//
 		.then(function(page) {
 			expect(page).not.toBeNull();
 			done();

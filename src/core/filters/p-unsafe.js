@@ -22,18 +22,16 @@
 'use strict';
 
 angular.module('pluf')
+
 /**
- * @ngdoc factory
- * @memberof pluf.saas
- * @name PTenantGroup
- * @description
- * تنظیم‌های یک ملک را تعیین می‌کند.
- *
+ * @ngdoc filter
+ * @name wbunsafe
+ * @memberof pluf
+ * @function
+ * @description # unsafe Filter in the digidociMainApp.
  */
-.factory('PTenantGroup', function($http, $q, $window, PObject) {
-	var pTenantGroup = function() {
-		PObject.apply(this, arguments);
+.filter('punsafe', function($sce) {
+	return function(val) {
+		return $sce.trustAsHtml(val);
 	};
-	pTenantGroup.prototype = new PObject();
-	return pTenantGroup;
 });

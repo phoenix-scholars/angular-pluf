@@ -2847,6 +2847,126 @@ angular.module('pluf')
 
 angular.module('pluf')
 
+/**
+ * @ngdoc filter
+ * @name wbunsafe
+ * @memberof pluf
+ * @function
+ * @description # unsafe Filter in the digidociMainApp.
+ */
+.filter('pdate', function() {
+	return function(inputDate, format) {
+            var date = moment//
+            	.utc(inputDate)//
+            	.local();
+            return date.format(format);
+	};
+});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @ngdoc filter
+ * @name wbunsafe
+ * @memberof pluf
+ * @function
+ * @description # unsafe Filter in the digidociMainApp.
+ */
+.filter('pfromNow', function() {
+	return function(inputDate) {
+            var date = moment//
+            	.utc(inputDate)//
+            	.local();
+            return date.fromNow();
+	};
+});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @ngdoc filter
+ * @name wbunsafe
+ * @memberof pluf
+ * @function
+ * @description # unsafe Filter in the digidociMainApp.
+ */
+.filter('punsafe', function($sce) {
+	return function(val) {
+		return $sce.trustAsHtml(val);
+	};
+});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
 
 /**
  * @memberof pluf
@@ -3547,7 +3667,7 @@ angular.module('pluf')
     var _monitors = [];
 
     // XXX: maso, 1395: فعلا زیاد در نظر گرفتم تا ساختار سرور نهایی بشه
-    var _interval = 300000;
+    var _interval = 60000;
     
     var _cache = new PObjectFactory(function(data) {
 	return new this.PMonitor(data);
@@ -3779,455 +3899,16 @@ angular.module('pluf')
 /**
  * @ngdoc factory
  * @memberof pluf.saas
- * @name PSpa
- * @description
- * اطلاعات یک نرم افزار را تعیین می‌کند.
- *
- * @attr {integer} id
- * @attr {string} name
- *
- */
-.factory('PSpa', function($http, $q, $window, PSpaDetail, PObject) {
-
-	var pSpa = function() {
-		PObject.apply(this, arguments);
-	};
-
-	pSpa.prototype = new PObject();
-
-	/**
-	 * ملک پیش فرض را تعیین می‌کند. به صورتی پیش فرض یک نرم افزار به ملک خاصی تعلق ندارد
-	 * اما برای سادگی توسعه اگر فهرست نرم افزارهای یک ملک را بگیرید ملک پیش فرض آن نیز
-	 * تعیین می‌شود.
-	 *
-	 * @memberof PSpa
-	 * @param  {PTenant} tenant ملک پیش فرض
-	 * @return {PSpa}  خود نرم افزار
-	 */
-	pSpa.prototype.setTenant = function(tenant) {
-		this._tenant = tenant;
-		return this;
-	};
-
-	/**
-	 * اطلاعات نرم افزار را دوباره بازیابی می‌کند. زمانی که یک نرم افزار به روز شده باشد با این
-	 * فراخوانی اطلاعات جدید آن بارگذاری می‌شود.
-	 *
-	 * @memberof PSpa
-	 * @return {PSpa} خود نرم افزار
-	 */
-	pSpa.prototype.reload = function(){};
-
-	/**
-	 * نرم افزار را به روز رسانی می‌کنند.
-	 *
-	 * @memberof PSpa
-	 * @return {promise<PSpa>} نرم افزار به روز شده
-	 */
-	pSpa.prototype.update = function(){};
-
-	/**
-	 * نرم افزار را حذف می‌کند.
-	 *
-	 * @return {PSpa} نرم افزار حذف شده
-	 */
-	pSpa.prototype.delete = function(){};
-
-	/**
-	 * جزئیات یک نرم افزار را تعیین می‌کند. این جزئیات شامل اطلاعاتی مثل نویسندگان، ادرس تارنما
-	 * و سایر مواردی می شود که توسعه دهنده در اختیار ما قرار می‌دهد.
-	 *
-	 * @memberof PSpa
-	 * @return {PSpaDetail} جزئیات نرم افزار
-	 */
-	pSpa.prototype.detail = function() {
-		if (this._detail) {
-			var def = $q.defer();
-			def.resolve(this._detail);
-			return def.promise;
-		}
-		var scope = this;
-		return $http({
-			method: 'GET',
-			url: '/api/saas/spa/' + this.id + '/detail',
-		}).then(function(res) {
-			scope._detail = new PSpaDetail(res.data);
-			return scope._detail;
-		});
-	};
-
-	/**
-	 * اجرای نرم افزار.
-	 *
-	 * @memberof PSpa
-	 */
-	pSpa.prototype.run = function() {
-		$window.location = $window.location.origin + '/' + this._tenant.id + '/' + this.id;
-	};
-
-	return pSpa;
-});
-
-/*
- * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-'use strict';
-
-angular.module('pluf')
-/**
- * @ngdoc factory
- * @memberof pluf.saas
- * @name PSpaDetail
- * @description
- * هر نسخه می‌تواند از یک نوع نرم افزار خاص نصب شده استفاده کند. البته نرم
- * افزارها باید تنها از خدمات ارائه شده در نسخه نصبی استفاده کنند. هر نرم افزار
- * می‌تواند شامل تنظیم‌های متفاتی باشد.
- */
-.factory('PSpaDetail',
-function($http, $q, $window, PObject) {
-	var pSpaDetail = function() {
-		PObject.apply(this, arguments);
-	};
-	pSpaDetail.prototype = new PObject();
-	return pSpaDetail;
-});
-
-/*
- * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-'use strict';
-
-angular.module('pluf')
-/**
- * @ngdoc factory
- * @memberof pluf.saas
- * @name PTenant
- * @description
- *  ساختار داده‌ای یک ملک را تعیین می‌کنه
- */
-.factory('PTenant', function(
-	$http, $httpParamSerializerJQLike, $window, $q,
-	PObject, PException, PProfile, PaginatorParameter, PaginatorPage,
-	PSpa) {
-	var pTenant = function() {
-		PObject.apply(this, arguments);
-	};
-	pTenant.prototype = new PObject();
-
-	pTenant.prototype._spa = [];
-	pTenant.prototype._retSpa = function(spaData) {
-		var t;
-		if (spaData.id in this._spa) {
-			t = this._spa[spaData.id];
-			t.setData(spaData);
-			return t;
-		}
-		t = new PSpa(spaData).setTenant(this);
-		this._spa[t.id] = t;
-		return t;
-	};
-
-	/**
-	 * یک ملک را حذف می‌کند
-	 *
-	 * @memberof PTenant
-	 * @return {promise<PTenant>} ملک حذف شده
-	 */
-	pTenant.prototype.delete = function(){
-		//TODO:
-	};
-
-	/**
-	 * اطلاعات ملک را به روز می‌کند
-	 *
-	 * @memberof PTenant
-	 * @return {promise<PTenant>} خود ملک
-	 */
-	pTenant.prototype.update = function() {
-		var scope = this;
-		return $http({
-			method: 'POST',
-			url: '/api/saas/' + this.id,
-			data: $httpParamSerializerJQLike(this),
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			}
-		}).then(function(res) {
-			scope.setData(res.data);
-			return scope;
-		});
-	};
-
-	/**
-	 * تنظیم‌های یک ملک را تعیین می‌کند. این تنظیم‌ها توسط سیستم ایجاد شده است و تنها مدیریت
-	 * سیستم قادر به تغییر آنها خواهد بود.
-	 *
-	 * @memberof PTenant
-	 * @return {promise<PTenantSetting>} تنظیم‌های ملک
-	 */
-	pTenant.prototype.setting = function(){};
-
-	/**
-	 * تنظیم‌های ملک را تعیین می‌کند.
-	 *
-	 * @memberof PTenant
-	 * @return {promise<PTenantSetting>} تنظیم‌های ملک
-	 */
-	pTenant.prototype.config = function(){};
-
-	// XXX: maso, 1395: مدل تعیین سطح دسترسی‌ها تعیین بشه
-	pTenant.prototype.members = function() {
-		if (this.isAnonymous() || this.memberLoaded()) {
-			var deferred = $q.defer();
-			if (this.isAnonymous()) {
-				deferred.reject('authentication requried');
-			}	else {
-				deferred.resolve(this._member);
-			}
-			return deferred.promise;
-		}
-		var scope = this;
-		return $http({
-			method: 'GET',
-			url: '/api/saas/app/' + this.id + '/member/list'
-		}).then(function(res) {
-			scope.$member.setData(res.data);
-			return scope.$member;
-		}, function(data) {
-			throw new PException(data);
-		});
-	};
-
-	/**
-	 * گروه‌های موجود در ملک را تعیین می‌کند.
-	 *
-	 * @memberof PTenant
-	 * @return {promise<PaginatorPage<PTenantGroup>>} گروه‌های یک ملک
-	 */
-	pTenant.prototype.groups = function(){};
-
-	/**
-	 * اطلاعات گروه موجود در ملک را تعیین می‌کند.
-	 *
-	 * @memberof PTenant
-	 * @return {promise<PTenantGroup>} اطلاعات گروه
-	 */
-	pTenant.prototype.group = function(){};
-
-	/**
-	 * فهرست دسترسی‌ها را تعیین می‌کند. دسترسی افراد به داده‌ها و  نرم افزارها بر اساس نقش آنها
-	 * در ملک تعیین می‌شود. تمام نقش‌ها و دسترسی‌ها نیز با استفاده از ساختار دسترسی تعریف
-	 * می‌شود. این فراخوانی تمام دسترسی‌هایی که در این ملک تعریف شده است را تعیین می‌کند.
-	 *
-	 * @memberof PTenant
-	 * @return {promise<PaginatorPage<PTenantAccess>>} فهرست صفحه بندی شده دسترسی‌ها
-	 */
-	pTenant.prototype.accesses = function(){};
-
-	/**
-	 * یک دسترسی خاص را تعیین می‌کند.
-	 *
-	 * @memberof PTenant
-	 * @return {promise<PTenantAccess>} دسترسی تعیین شده
-	 */
-	pTenant.prototype.access = function(){};
-
-	/**
-	 * یک دسترسی جدید در ملک ایجاد می‌کند.
-	 *
-	 * @memberof PTenant
-	 * @return {promise<PTenantAccess>} دسترسی معادل را تعیین می‌کند
-	 */
-	pTenant.prototype.newAccess = function(){};
-
-	/**
-	 * فهرست تمام نرم افزارهایی را تعیین می‌کند که در این ملک قابل دسترسی است.
-	 *
-	 * @memberof PTenant
-	 * @param  {PaginatorPage} $params خصوصیت‌های صفحه بندی
-	 * @return {promise<PaginatorPage<PSpa>>} فهرست نرم افزارها به صورت صفحه بندی شده گ
-	 */
-	pTenant.prototype.spas = function($params) {
-		if (!$params) {
-			$params = new PaginatorParameter();
-		}
-		var scope = this;
-		return $http({
-			method: 'GET',
-			url: '/api/' + this.id + '/saas/spa/find',
-			params: $params.getParameter(),
-		}).then(function(res) {
-			var page = new PaginatorPage(res.data);
-			var items = [];
-			for (var i = 0; i < page.counts; i++) {
-				var t = scope.ret(page.items[i]);
-				items.push(t);
-			}
-			page.items = items;
-			return page;
-		}, function(data) {
-			throw new PException(data);
-		});
-	};
-
-	/*
-	 * TODO: Hadi, 1395-04-18: 
-	 * به نظر می‌رسه با توجه به قوانینی که در مورد ملک‌ها و spa ها داریم
-	 * این متد نباید اینجا باشه و باید حذف بشه
-	 */
-	/**
-	 * یک نرم افزار را تعیین می‌کند.
-	 *
-	 * @memberof PTenant
-	 * @param  {integer} spaId شناسه نرم‌افزار
-	 * @return {promise<PSpa>} نرم افزار مورد نظر
-	 */
-	pTenant.prototype.spa = function(spaId) {
-		var scope = this;
-		return $http({
-			method: 'GET',
-			url: '/api/saas/spa/' + spaId,
-		}).then(function(res) {
-			return scope._regSpa(res.data);
-		});
-	};
-
-	/**
-	 * یک نرم افزار جدید را برای ملک تعیین می‌کند.
-	 *
-	 * @memberof PTenant
-	 * @return {promise<PSpa>} نرم‌افزار ایجاد شده
-	 */
-	pTenant.prototype.newSpa = function(){};
-
-
-	/**
-	 * ملک را اجرا و به آن تغییر مسیر می‌دهد.
-	 *
-	 * @memberof PTenant
-	 */
-	pTenant.prototype.goto = function() {
-		// XXX: maso, 1394: Check domain, subdomain and id
-		$window.location = $window.location.origin + '/' + this.id;
-	};
-	return pTenant;
-});
-
-/*
- * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-'use strict';
-
-angular.module('pluf')
-/**
- * @ngdoc factory
- * @memberof pluf.saas
- * @name PTenantGroup
- * @description
- * تنظیم‌های یک ملک را تعیین می‌کند.
- *
- */
-.factory('PTenantGroup', function($http, $q, $window, PObject) {
-	var pTenantGroup = function() {
-		PObject.apply(this, arguments);
-	};
-	pTenantGroup.prototype = new PObject();
-	return pTenantGroup;
-});
-
-/*
- * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-'use strict';
-
-angular.module('pluf')
-/**
- * @ngdoc factory
- * @memberof pluf.saas
  * @name PTenantSetting
- * @description
- * تنظیم‌های یک ملک را تعیین می‌کند.
- *
+ * @description تنظیم‌های یک ملک را تعیین می‌کند.
+ * 
  */
-.factory('PTenantSetting',
-function($http, $q, $window, PObject) {
-	var pTenantSetting = function() {
-		PObject.apply(this, arguments);
-	};
-	pTenantSetting.prototype = new PObject();
-	return pTenantSetting;
+.factory('PSetting', function($http, $q, $window, PObject) {
+    var pSetting = function() {
+	PObject.apply(this, arguments);
+    };
+    pSetting.prototype = new PObject();
+    return pSetting;
 });
 
 /*
@@ -4264,79 +3945,51 @@ angular.module('pluf')
  * @attr {string} name
  * 
  */
-.factory('PSpa',
-		function($http, $httpParamSerializerJQLike, $q, $window, PObject) {
+.factory('PSpa', function($pluf, $window, PObject) {
 
-			var pSpa = function() {
-				PObject.apply(this, arguments);
-			};
+    var pSpa = function() {
+	PObject.apply(this, arguments);
+    };
+    pSpa.prototype = new PObject();
 
-			pSpa.prototype = new PObject();
+    /**
+     * نرم افزار را به روز رسانی می‌کنند.
+     * 
+     * @memberof PSpa
+     * @return {promise<PSpa>} نرم افزار به روز شده
+     */
+    pSpa.prototype.update = $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/spa/:id',
+    });
 
-			/**
-			 * ملک پیش فرض را تعیین می‌کند. به صورتی پیش فرض یک نرم افزار به ملک
-			 * خاصی تعلق ندارد اما برای سادگی توسعه اگر فهرست نرم افزارهای یک
-			 * ملک را بگیرید ملک پیش فرض آن نیز تعیین می‌شود.
-			 * 
-			 * @memberof PSpa
-			 * @param {PTenant}
-			 *            tenant ملک پیش فرض
-			 * @return {PSpa} خود نرم افزار
-			 */
-			pSpa.prototype.setTenant = function(tenant) {
-				this._tenant = tenant;
-				return this;
-			};
+    /**
+     * نرم افزار را حذف می‌کند.
+     * 
+     * @return {PSpa} نرم افزار حذف شده
+     */
+    pSpa.prototype.delete = $pluf.createDelete({
+	method : 'DELETE',
+	url : '/api/spa/:id'
+    });
 
-			/**
-			 * اطلاعات نرم افزار را دوباره بازیابی می‌کند. زمانی که یک نرم افزار
-			 * به روز شده باشد با این فراخوانی اطلاعات جدید آن بارگذاری می‌شود.
-			 * 
-			 * @memberof PSpa
-			 * @return {PSpa} خود نرم افزار
-			 */
-			pSpa.prototype.reload = function() {
-			};
+    /**
+     * اجرای نرم افزار.
+     * 
+     * @memberof PSpa
+     * @param {Boolean} newTab تعیین می‌کنه که آیا نرم افزار توی یک برگه جدید باز بشه
+     */
+    pSpa.prototype.run = function(newTab) {
+	var location = $window.location.origin + '/' + this.name + '/';
+	if(newTab){
+	    $window.open(location, '_blank');
+	} else {
+	    $window.location = location;
+	}
+    };
 
-			/**
-			 * نرم افزار را به روز رسانی می‌کنند.
-			 * 
-			 * @memberof PSpa
-			 * @return {promise<PSpa>} نرم افزار به روز شده
-			 */
-			pSpa.prototype.update = function() {
-				var scope = this;
-				return $http({
-					method : 'POST',
-					url : '/api/spa/' + this.id,
-					data : $httpParamSerializerJQLike(this),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(res) {
-					scope.setData(res.data);
-					return scope;
-				});
-			};
-
-			/**
-			 * نرم افزار را حذف می‌کند.
-			 * 
-			 * @return {PSpa} نرم افزار حذف شده
-			 */
-			pSpa.prototype.remove = function() {
-				var scope = this;
-				return $http({
-					method : 'DELETE',
-					url : '/api/spa/' + this.id,
-				}).then(function(res) {
-					scope.setData(res.data);
-					return scope;
-				});
-			};
-
-			return pSpa;
-		});
+    return pSpa;
+});
 
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -4368,53 +4021,51 @@ angular.module('pluf')
  * @name PTenant
  * @description ساختار داده‌ای یک ملک را تعیین می‌کنه
  */
-.factory('PTenant',
-		function($http, $httpParamSerializerJQLike, $window, $q, PObject) {
-			var pTenant = function() {
-				PObject.apply(this, arguments);
-			};
-			pTenant.prototype = new PObject();
+.factory('PTenant', function($pluf, PObject) {
 
-			/**
-			 * یک ملک را حذف می‌کند
-			 * 
-			 * @memberof PTenant
-			 * @return {promise<PTenant>} ملک حذف شده
-			 */
-			pTenant.prototype.remove = function() {
-				var scope = this;
-				return $http({
-					method : 'DELETE',
-					url : '/api/tenant/' + this.id,
-				}).then(function(res) {
-					scope.setData(res.data);
-					return scope;
-				});
-			};
+    var pTenant = function() {
+	PObject.apply(this, arguments);
+    };
+    pTenant.prototype = new PObject();
 
-			/**
-			 * اطلاعات ملک را به روز می‌کند
-			 * 
-			 * @memberof PTenant
-			 * @return {promise<PTenant>} خود ملک
-			 */
-			pTenant.prototype.update = function() {
-				var scope = this;
-				return $http({
-					method : 'POST',
-					url : '/api/tenant/' + this.id,
-					data : $httpParamSerializerJQLike(this),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(res) {
-					scope.setData(res.data);
-					return scope;
-				});
-			};
+    /**
+     * یک ملک را حذف می‌کند
+     * 
+     * @memberof PTenant
+     * @return {promise<PTenant>} ملک حذف شده
+     */
+    pTenant.prototype.delete = $pluf.createDelete({
+	method : 'DELETE',
+	url : '/api/tenant/:id'
+    });
 
-			return pTenant;
-		});
+    /**
+     * اطلاعات ملک را به روز می‌کند
+     * 
+     * @memberof PTenant
+     * @return {promise<PTenant>} خود ملک
+     */
+    pTenant.prototype.update =  $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/tenant/:id',
+    });
+    
+    /**
+     * تعیین نرم افزار پیش‌فرض
+     * 
+     * نرم افزار پیش‌فرض برای سیستم را تعیین می‌کند.
+     * 
+     * @memberof PTenant
+     * @param {PSpa} spa
+     * @return {promise{tenant}}
+     */
+    pTenant.prototype.defaultSpa = function(spa){
+	this.spa = spa.id;
+	return this.update();
+    }
+
+    return pTenant;
+});
 
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -4467,7 +4118,7 @@ angular.module('pluf')
     this.session = function() {
 	return $http.get('/api/tenant')//
 	.then(function(res) {
-	    return _tenantCache.restor(res.data);
+	    return _tenantCache.restor(res.data.id, res.data);
 	});
     };
 
@@ -5497,6 +5148,24 @@ angular.module('pluf')
 	url : '/api/user/:id',
     });
 
+    // TODO: maso, document: پارامتر ورودی ساختاری با داده گذرواژه
+    pUser.prototype.newPassword = $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/user/:id/password',
+    });
+    
+    // TODO: maso, document
+    pUser.prototype.newAvatar = function(file){
+	var fd = new FormData();
+	fd.append('file', file);
+	return $http.post('/api/user/'+this.id+'/avatar', fd, {
+	    transformRequest : angular.identity,
+	    headers : {
+		'Content-Type' : undefined
+	    }
+	});
+    };
+
     /**
      * حساب کاربری را حذف می‌کند
      * 
@@ -5504,7 +5173,7 @@ angular.module('pluf')
      * 
      * @return {promise(PUser)} ساختار داده‌ای حساب کاربری حذف شده
      */
-    pUser.prototype.remove = $pluf.createDelete({
+    pUser.prototype.delete = $pluf.createDelete({
 	method : 'DELETE',
 	url : '/api/user/:id'
     });
