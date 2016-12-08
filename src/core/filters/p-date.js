@@ -32,9 +32,13 @@ angular.module('pluf')
  */
 .filter('pdate', function() {
 	return function(inputDate, format) {
-            var date = moment//
-            	.utc(inputDate)//
-            	.local();
-            return date.format(format);
+	    try{
+                var date = moment//
+                	.utc(inputDate)//
+                	.local();
+                return date.format(format);
+	    } catch(ex){
+		return '-' + ex.message;
+	    }
 	};
 });
