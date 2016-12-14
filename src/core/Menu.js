@@ -86,6 +86,17 @@ angular.module('pluf')
     this.items.push(h);
     return this;
   };
+
+  /**
+   * تمام منوهایی موجود را حذف می‌کند
+   * 
+   * @memberof PMenu
+   */
+  pMenu.prototype.clear = function(){
+      this.items.splice(0);
+      return this;
+  };
+  
   /**
    * یک برچسب جدید به منو اضافه می‌کند. مهم‌ترین کاربرد این برچسب‌ها فهرست کردن و نمایش دسته
    * بندی شده منوها است.
