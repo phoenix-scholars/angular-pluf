@@ -4785,7 +4785,7 @@ angular.module('pluf')
      * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
      */
     pProfile.prototype.update = function() {
-	if (this.user.isAnonymous()) {
+	if (!(this.user && this.user > 0)) {
 	    var deferred = $q.defer();
 	    deferred.reject();
 	    return deferred.promise;
@@ -4793,7 +4793,7 @@ angular.module('pluf')
 	var scope = this;
 	return $http({
 	    method : 'POST',
-	    url : '/api/user/' + this.user.id + '/profile',
+	    url : '/api/user/' + this.user + '/profile',
 	    data : $httpParamSerializerJQLike(scope),
 	    headers : {
 		'Content-Type' : 'application/x-www-form-urlencoded'
@@ -5196,6 +5196,18 @@ angular.module('pluf')
      */
     pUser.prototype.isAdministrator = function() {
 	return (this.id && this.id > 0 && this.administrator);
+    };
+    
+    /**
+     * تعیین می‌کند که آیا کاربر جاری یک کاربر ثبت شده است یا نه. این فراخوانی
+     * به صورت هم زمان انجام می‌شود.
+     * 
+     * @memberof PUser
+     * 
+     * @return {boolean} 
+     */
+    pUser.prototype.isAnonymous = function() {
+	return !(this.id && this.id > 0);
     };
 
     /**

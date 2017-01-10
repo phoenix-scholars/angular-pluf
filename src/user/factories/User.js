@@ -172,7 +172,7 @@ angular.module('pluf')
      * @return {boolean} 
      */
     pUser.prototype.isAnonymous = function() {
-	return (this.id && this.id > 0);
+	return !(this.id && this.id > 0);
     };
 
     /**
