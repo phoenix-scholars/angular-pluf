@@ -57,210 +57,143 @@ angular.module('pluf')
  * A receipt is accessable with secure_id.
  * 
  */
-.service(
-		'$bank',
-		function($http, $q, PaginatorPage, PBank, PGate, PReceipt,$httpParamSerializerJQLike, PObjectCache) {
-			
-			var _banksCache = new PObjectCache(function(data) {
-				return new PBank(data);
-			});
-			
-			var _gateCache = new PObjectCache(function(data) {
-				return new PBank(data);
-			});
-			var _receiptCache = new PObjectCache(function(data) {
-				return new PBank(data);
-			});
-			
+.service( '$bank', function($pluf, PBank, PGate, PReceipt, PObjectCache) {
 
-			// TODO: maso, 1395: add to PObject
-			function _paginatorParams(paginatorParam) {
-				if (angular.isUndefined(paginatorParam) || !angular.isFunction(paginatorParam.getParameter)) {
-					return {};
-				}
-				return paginatorParam.getParameter();
-			}
-			
+    var _banksCache = new PObjectCache(function(data) {
+	return new PBank(data);
+    });
 
-			
-			/**
-			 * Creates new receipt
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PReceipt>
-			 * createdreceipt
-			 * 
-			 */
-			this.createReceipt = function(receipt) {
-				return $http({
-					method: 'POST',
-					url: '/api/bank/receipt/new',
-					data : $httpParamSerializerJQLike(receipt),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(res){
-					return _receiptCache.restor(res.data.id, res.data);
-				});
-			};
+    var _gateCache = new PObjectCache(function(data) {
+	return new PGate(data);
+    });
 
-			/**
-			 * Gets receipt detail by secure id
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PReceipt>
-			 * createdreceipt
-			 * 
-			 */
-			this.receipt = function(id) {
-				if(_receiptCache.contains(id)){
-					var deferred = $q.defer();
-					deferred.resolve(_receiptCache.get(id));
-					return deferred.promise;
-				}
-				return $http.get('/api/bank/receipt/'+id)//
-				.then(function(res){
-					return _receiptCache.restor(res.data.id, res.data);
-				});
-			};
+    var _receiptCache = new PObjectCache(function(data) {
+	return new PReceipt(data);
+    });
 
-			/**
-			 * Lists all receipts
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PaginatorPage<PReceipt>>
-			 * createdreceipt
-			 * 
-			 */
-			this.receipts = function(paginatorParam) {
-				return $http({
-					method : 'GET',
-					url : '/api/bank/receipt/find',
-					params : _paginatorParams(paginatorParam)
-				}).then(
-						function(res) {
-							var data = res.data;
-							var page = new PaginatorPage(data);
-							page.items = [];
-							for (var i = 0; i < data.counts; i++) {
-								var item = data.items[i];
-								page.items.push(_receiptCache.resotr(
-										item.id, item));
-							}
-							return page;
-						});
-			};
+    /**
+     * Creates new receipt
+     * 
+     * @memberof $bank
+     * @return Promise<PReceipt>
+     * createdreceipt
+     * 
+     */
+    this.newReceipt = $pluf.createNew({
+	method : 'POST',
+	url : '/api/bank/receipt/new'
+    }, _receiptCache);
 
-			/**
-			 * Creates new gate
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PGate> created gate
-			 */
-			this.createGate = function(gate) {
-				return $http({
-					method: 'POST',
-					url: '/api/bank/backend/new',
-					data : $httpParamSerializerJQLike(gate),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(res){
-					return _gateCache.restor(res.data.id, res.data);
-				});
-			};
+    /**
+     * Gets receipt detail by secure id
+     * 
+     * @memberof $bank
+     * @return Promise<PReceipt>
+     * createdreceipt
+     * 
+     */
+    this.receipt = $pluf.createGet({
+	method : 'GET',
+	url : '/api/bank/receipt/{id}',
+    }, _receiptCache);
 
-			/**
-			 * Gets a gate
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PGate> a gate
-			 */
-			this.gate = function(id) {
-				if(_gateCache.contains(id)){
-					var deferred = $q.defer();
-					deferred.resolve(_gateCache.get(id));
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/bank/backend/'+id,
-				}).then(function(res){
-					return _gateCache.restor(res.data.id, res.data);
-				});
-			};
+    /**
+     * Lists all receipts
+     * 
+     * @memberof $bank
+     * @return Promise<PaginatorPage<PReceipt>>
+     * createdreceipt
+     * 
+     */
+    this.receipts = $pluf.createFind({
+	method : 'GET',
+	url : '/api/bank/receipt/find',
+    }, _receiptCache);
 
-			/**
-			 * Lists all gates
-			 * 
-			 * @memberof $bank
-			 * @param paginatorParam
-			 * @return Promise<PaginatorPage<PGate>> gates list
-			 */
-			this.gates = function(paginatorParam) {
-				return $http({
-					method : 'GET',
-					url : '/api/bank/backend/find',
-					params : _paginatorParams(paginatorParam)
-				}).then(
-						function(res) {
-							var data = res.data;
-							var page = new PaginatorPage(data);
-							page.items = [];
-							for (var i = 0; i < data.counts; i++) {
-								var item = data.items[i];
-								page.items.push(_gateCache.restor(
-										item.id, item));
-							}
-							return page;
-						});
-			};
+    /**
+     * Creates new gate
+     * 
+     * @memberof $bank
+     * @return Promise<PGate> created gate
+     */
+    this.newGate = $pluf.createNew({
+	method : 'POST',
+	url : '/api/bank/backend/new'
+    }, _gateCache);
+    
+    /**
+     * Gets list of required properties
+     * 
+     * The best way to get a bank property is:
+     * <pre><code>
+     * 	var bank;
+     * 	...
+     * 	$bank.getProperty(bank)//
+     * 	.then(function(proeprty){
+     * 		// TODO: deil with property
+     * 	});
+     * </code></pre>
+     * 
+     * In the other hand, the following type is correct too: 
+     * <pre><code>
+     * 	var bank;
+     * 	...
+     * 	$bank.getProperty({type: bank.type})//
+     * 	.then(function(proeprty){
+     * 		// TODO: deil with property
+     * 	});
+     * </code></pre>
+     * 
+     * @memberof $bank
+     * @return Promise<Property>
+     */
+    this.gateProperty = $pluf.get({
+	url : '/api/bank/backend/new'
+    });
 
-			/**
-			 * Gets bank detail
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PBank>
-			 */
-			this.bank = function(type) {
-				if(_banksCache.contains(type)){
-					var deferred = $q.defer();
-					deferred.resolve(_banksCache.get(type));
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/bank/engine/'+type,
-				}).then(function(res){
-					return _banksCache.restor(res.data.type, res.data);
-				});
-			};
-			
-			/**
-			 * Gets bank list
-			 * 
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PaginatorPage<PGate>> gates list
-			 */
-			this.banks = function(paginatorParam) {
-				return $http({
-					method : 'GET',
-					url : '/api/bank/engine/find',
-					params : _paginatorParams(paginatorParam)
-				})//
-				.then(
-						function(res) {
-							var data = res.data;
-							var page = new PaginatorPage(data);
-							page.items = [];
-							for (var i = 0; i < data.counts; i++) {
-								var item = data.items[i];
-								page.items.push(_banksCache.restor(
-										item.type, item));
-							}
-							return page;
-						});
-			};
+    /**
+     * Gets a gate
+     * 
+     * @memberof $bank
+     * @return Promise<PGate> a gate
+     */
+    this.gate = $pluf.createGet({
+	method : 'GET',
+	url : '/api/bank/backend/{id}',
+    }, _gateCache);
 
-		});
+    /**
+     * Lists all gates
+     * 
+     * @memberof $bank
+     * @param paginatorParam
+     * @return Promise<PaginatorPage<PGate>> gates list
+     */
+    this.gates = $pluf.createFind({
+	method : 'GET',
+	url : '/api/bank/backend/find',
+    }, _gateCache);
+
+    /**
+     * Gets bank detail
+     * 
+     * @memberof $bank
+     * @return Promise<PBank>
+     */
+    this.bank = $pluf.createGet({
+	method : 'GET',
+	url : '/api/bank/engine/{id}',
+    }, _banksCache);
+
+    /**
+     * Gets bank list
+     * 
+     * 
+     * @memberof $bank
+     * @return Promise<PaginatorPage<PGate>> gates list
+     */
+    this.banks = $pluf.createFind({
+	method : 'GET',
+	url : '/api/bank/engine/find',
+    }, _banksCache);
+});
