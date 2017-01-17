@@ -54,6 +54,33 @@ angular.module('pluf')
 				method : 'POST',
 				url : '/api/cms/new'
 			}, _cache);
+			
+			/**
+			 * این فراخوانی یک ساختار داده‌ای جدید ایجاد می‌کند.
+			 * 
+			 * @memberof $cms
+			 * @param {PContent}
+			 *            contet ساختار داده‌ای محتوی برای ایجاد
+			 * @return {promise(PContent)}
+			 */
+			this.newFileContent = function(objectData, file) {
+				var formData = new FormData();
+				for(var key in objectData){
+					if(objectData[key]){
+						formData.append(key, objectData[key]);
+					}
+				}
+				formData.append('file', file);
+				return $http.post('/api/cms/new', formData, {
+					transformRequest : angular.identity,
+					headers : {
+						'Content-Type' : undefined
+					}
+				})//
+				.then(function(res) {
+					return _cache.restor(res.data.id, res.data);
+				});
+			};
 
 			/**
 			 * یک محتوی با شناسه خاص را تعیین می‌کند.
