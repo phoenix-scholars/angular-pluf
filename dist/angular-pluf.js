@@ -3633,6 +3633,12 @@ angular.module('pluf')
 	    }
 	    scope.setData(res.data);
 	    return scope;
+	}, function(){
+		if(scope.value){
+			$rootScope.$emit(scope.path, scope.value, false);
+		}
+		scope.setData(false);
+		return scope;
 	});
     };
 
