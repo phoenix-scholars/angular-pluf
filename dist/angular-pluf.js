@@ -1013,6 +1013,33 @@ angular.module('pluf')
 				method : 'POST',
 				url : '/api/cms/new'
 			}, _cache);
+			
+			/**
+			 * این فراخوانی یک ساختار داده‌ای جدید ایجاد می‌کند.
+			 * 
+			 * @memberof $cms
+			 * @param {PContent}
+			 *            contet ساختار داده‌ای محتوی برای ایجاد
+			 * @return {promise(PContent)}
+			 */
+			this.newFileContent = function(objectData, file) {
+				var formData = new FormData();
+				for(var key in objectData){
+					if(objectData[key]){
+						formData.append(key, objectData[key]);
+					}
+				}
+				formData.append('file', file);
+				return $http.post('/api/cms/new', formData, {
+					transformRequest : angular.identity,
+					headers : {
+						'Content-Type' : undefined
+					}
+				})//
+				.then(function(res) {
+					return _cache.restor(res.data.id, res.data);
+				});
+			};
 
 			/**
 			 * یک محتوی با شناسه خاص را تعیین می‌کند.
@@ -3589,6 +3616,12 @@ angular.module('pluf')
 	    }
 	    scope.setData(res.data);
 	    return scope;
+	}, function(){
+		if(scope.value){
+			$rootScope.$emit(scope.path, scope.value, false);
+		}
+		scope.setData(false);
+		return scope;
 	});
     };
 
@@ -4090,117 +4123,117 @@ angular.module('pluf')
  */
 .service('$saas', function($http, PTenant, PSpa, PObjectCache, $pluf) {
 
-    var _tenantCache = new PObjectCache(function(data) {
-	return new PTenant(data);
-    });
-
-    var _spaCache = new PObjectCache(function(data) {
-	return new PSpa(data);
-    });
-
-    /**
-     * نمونه جاری را تعیین می‌کند. به صورت پیش فرض اجرای هر نرم افزار روی یک ملک
-     * اجرا می‌شود این فراخوانی ملکی را تعیین می‌کند که نرم افزار جاری روی آن
-     * کار می‌کند.
-     * 
-     * @memberof $saas
-     * @return {permision(PTenant)} ملک جاری را تعیین می‌کند.
-     */
-    this.session = function() {
-	return $http.get('/api/tenant')//
-	.then(function(res) {
-	    return _tenantCache.restor(res.data.id, res.data);
+	var _tenantCache = new PObjectCache(function(data) {
+		return new PTenant(data);
 	});
-    };
 
-    /**
-     * فهرست تمام ملک‌هایی را که کاربر به آنها دسترسی دارد را تعیین می‌کند.
-     * 
-     * @memberof $saas
-     * @param {PaginatorParameter}
-     *                paginatorParameter پارامترهای مورد استفاده در صفحه بندی
-     * @return {promise<PaginatorPage<PTenant>>} فهرست ملک‌ها به صورت صفحه
-     *         بندی
-     */
-    this.tenants = $pluf.createFind({
-	method : 'GET',
-	url : '/api/tenant/find',
-    }, _tenantCache);
-
-    /**
-     * ملک تعیین شده با شناسه را برمی‌گرداند.
-     * 
-     * @memberof $saas
-     * @param {integer}
-     *                id شناسه ملک مورد نظر
-     * @return {promise<PTenant>} ملک تعیین شده.
-     */
-    this.tenant = $pluf.createGet({
-	url : '/api/tenant/{id}',
-	method : 'GET'
-    }, _tenantCache);
-
-    /**
-     * یک ملک جدید ایجاد می‌کند و ساختار ایجاد شده برای آنرا به عنوان نتیجه
-     * برمی‌گرداند.
-     * 
-     * @memberof $saas
-     * @param {Struct}
-     *                tenantData ساختار داده‌ای ملک
-     * @return {promise<PTenant>} مکل ایجاد شده
-     */
-    this.newTenant = $pluf.createNew({
-	method : 'POST',
-	url : '/api/tenant/new',
-    }, _tenantCache);
-
-    /**
-     * فهرست تمام نرم افزارهایی را تعیین می‌کند که برای ملک جاری در دسترس است.
-     * 
-     * @memberof $saas
-     * @param {PaginatorParameter}
-     *                paginatorParameter پارامترهای مورد استفاده در صفحه بندی
-     * @return {promise<PaginatorPage<PSpa>>} فهرست نرم افزارها
-     */
-    this.spas = $pluf.createFind({
-	method : 'GET',
-	url : '/api/spa/find',
-    }, _spaCache);
-
-    /**
-     * نرم افزار معادل با شناسه ورودی را بازیابی می‌کند.
-     * 
-     * @memberof $saas
-     * @param {integer}
-     *                id شناسه نرم افزار
-     * @return {promise<PSpa>} نرم‌افزار معادل
-     */
-    this.spa = $pluf.createGet({
-	url : '/api/spa/{id}',
-	method : 'GET'
-    }, _spaCache);
-
-    /**
-     * یک نرم افزار جدید در سیستم ایجاد می‌کند.
-     * 
-     * @memberof $saas
-     * @param {Struct}
-     *                spa ساختار داده‌ای یک spa
-     * @return {promise<PSpa} نرم‌افزار معادل ایجاد شده
-     */
-    this.newSpa = function(file) {
-	var fd = new FormData();
-	fd.append('file', file);
-	return $http.post('/api/spa/new', fd, {
-	    transformRequest : angular.identity,
-	    headers : {
-		'Content-Type' : undefined
-	    }
-	})//
-	.then(function(res) {
-	    return new PSpa(res.data);
+	var _spaCache = new PObjectCache(function(data) {
+		return new PSpa(data);
 	});
-    };
+
+	/**
+	 * نمونه جاری را تعیین می‌کند. به صورت پیش فرض اجرای هر نرم افزار روی یک ملک
+	 * اجرا می‌شود این فراخوانی ملکی را تعیین می‌کند که نرم افزار جاری روی آن
+	 * کار می‌کند.
+	 * 
+	 * @memberof $saas
+	 * @return {permision(PTenant)} ملک جاری را تعیین می‌کند.
+	 */
+	this.session = function() {
+		return $http.get('/api/tenant')//
+		.then(function(res) {
+			return _tenantCache.restor(res.data.id, res.data);
+		});
+	};
+
+	/**
+	 * فهرست تمام ملک‌هایی را که کاربر به آنها دسترسی دارد را تعیین می‌کند.
+	 * 
+	 * @memberof $saas
+	 * @param {PaginatorParameter}
+	 *            paginatorParameter پارامترهای مورد استفاده در صفحه بندی
+	 * @return {promise<PaginatorPage<PTenant>>} فهرست ملک‌ها به صورت صفحه
+	 *         بندی
+	 */
+	this.tenants = $pluf.createFind({
+		method : 'GET',
+		url : '/api/tenant/find',
+	}, _tenantCache);
+
+	/**
+	 * ملک تعیین شده با شناسه را برمی‌گرداند.
+	 * 
+	 * @memberof $saas
+	 * @param {integer}
+	 *            id شناسه ملک مورد نظر
+	 * @return {promise<PTenant>} ملک تعیین شده.
+	 */
+	this.tenant = $pluf.createGet({
+		url : '/api/tenant/{id}',
+		method : 'GET'
+	}, _tenantCache);
+
+	/**
+	 * یک ملک جدید ایجاد می‌کند و ساختار ایجاد شده برای آنرا به عنوان نتیجه
+	 * برمی‌گرداند.
+	 * 
+	 * @memberof $saas
+	 * @param {Struct}
+	 *            tenantData ساختار داده‌ای ملک
+	 * @return {promise<PTenant>} مکل ایجاد شده
+	 */
+	this.newTenant = $pluf.createNew({
+		method : 'POST',
+		url : '/api/tenant/new',
+	}, _tenantCache);
+
+	/**
+	 * فهرست تمام نرم افزارهایی را تعیین می‌کند که برای ملک جاری در دسترس است.
+	 * 
+	 * @memberof $saas
+	 * @param {PaginatorParameter}
+	 *            paginatorParameter پارامترهای مورد استفاده در صفحه بندی
+	 * @return {promise<PaginatorPage<PSpa>>} فهرست نرم افزارها
+	 */
+	this.spas = $pluf.createFind({
+		method : 'GET',
+		url : '/api/spa/find',
+	}, _spaCache);
+
+	/**
+	 * نرم افزار معادل با شناسه ورودی را بازیابی می‌کند.
+	 * 
+	 * @memberof $saas
+	 * @param {integer}
+	 *            id شناسه نرم افزار
+	 * @return {promise<PSpa>} نرم‌افزار معادل
+	 */
+	this.spa = $pluf.createGet({
+		url : '/api/spa/{id}',
+		method : 'GET'
+	}, _spaCache);
+
+	/**
+	 * یک نرم افزار جدید در سیستم ایجاد می‌کند.
+	 * 
+	 * @memberof $saas
+	 * @param {Struct}
+	 *            spa ساختار داده‌ای یک spa
+	 * @return {promise<PSpa} نرم‌افزار معادل ایجاد شده
+	 */
+	this.newSpa = function(file) {
+		var fd = new FormData();
+		fd.append('file', file);
+		return $http.post('/api/spa/new', fd, {
+			transformRequest : angular.identity,
+			headers : {
+				'Content-Type' : undefined
+			}
+		})//
+		.then(function(res) {
+			return new PSpa(res.data);
+		});
+	};
 
 });
 
@@ -4768,7 +4801,7 @@ angular.module('pluf')
      * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
      */
     pProfile.prototype.update = function() {
-	if (this.user.isAnonymous()) {
+	if (!(this.user && this.user > 0)) {
 	    var deferred = $q.defer();
 	    deferred.reject();
 	    return deferred.promise;
@@ -4776,7 +4809,7 @@ angular.module('pluf')
 	var scope = this;
 	return $http({
 	    method : 'POST',
-	    url : '/api/user/' + this.user.id + '/profile',
+	    url : '/api/user/' + this.user + '/profile',
 	    data : $httpParamSerializerJQLike(scope),
 	    headers : {
 		'Content-Type' : 'application/x-www-form-urlencoded'
@@ -5179,6 +5212,18 @@ angular.module('pluf')
      */
     pUser.prototype.isAdministrator = function() {
 	return (this.id && this.id > 0 && this.administrator);
+    };
+    
+    /**
+     * تعیین می‌کند که آیا کاربر جاری یک کاربر ثبت شده است یا نه. این فراخوانی
+     * به صورت هم زمان انجام می‌شود.
+     * 
+     * @memberof PUser
+     * 
+     * @return {boolean} 
+     */
+    pUser.prototype.isAnonymous = function() {
+	return !(this.id && this.id > 0);
     };
 
     /**
