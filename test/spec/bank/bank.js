@@ -119,7 +119,7 @@ describe('Bank module: $bank', function() {
 	 **************************************************************************/
 	it('should implements gate API', function() {
 		// gate api
-		expect(angular.isFunction($bank.createGate)).toBe(true);
+		expect(angular.isFunction($bank.newGate)).toBe(true);
 		expect(angular.isFunction($bank.gate)).toBe(true);
 		expect(angular.isFunction($bank.gates)).toBe(true);
 	});
@@ -182,7 +182,7 @@ describe('Bank module: $bank', function() {
 	it('create gate', function(done) {
 		var bakendId = 'myId';
 		var bakendParam = {};
-		$bank.createGate(bakendParam).then(function(gate) {
+		$bank.newGate(bakendParam).then(function(gate) {
 			expect(gate).not.toBeNull();
 			done();
 		});
@@ -208,7 +208,7 @@ describe('Bank module: $bank', function() {
 	it('should implements receipt API', function() {
 		// receipt functions
 		expect(angular.isFunction($bank.receipt)).toBe(true);
-		expect(angular.isFunction($bank.createReceipt)).toBe(true);
+		expect(angular.isFunction($bank.newReceipt)).toBe(true);
 		expect(angular.isFunction($bank.receipts)).toBe(true);
 	});
 	it('find receipts with params', function(done) {
@@ -270,7 +270,7 @@ describe('Bank module: $bank', function() {
 	it('create receipt', function(done) {
 		var receiptId = 'myId';
 		var receiptParam = {};
-		$bank.createReceipt(receiptParam).then(function(receipt) {
+		$bank.newReceipt(receiptParam).then(function(receipt) {
 			expect(receipt).not.toBeNull();
 			done();
 		});

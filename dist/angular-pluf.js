@@ -66,50 +66,34 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PBank', function(PObject, $http, $httpParamSerializerJQLike) {
+.factory('PBank', function(PObject, $pluf) {
 
-	/*
-	 * Creates new instance
-	 */
-	var pBank = function() {
-		PObject.apply(this, arguments);
-	};
-	// Extends it from PObject
-	pBank.prototype = new PObject();
+    /*
+     * Creates new instance
+     */
+    var pBank = function() {
+	PObject.apply(this, arguments);
+    };
+    // Extends it from PObject
+    pBank.prototype = new PObject();
 
-	/**
-	 * Updates bank
-	 */
-	pBank.prototype.update = function() {
-		var scope = this;
-		return $http({
-			method : 'POST',
-			url : '/api/bank/engine/' + scope.id,
-			data : $httpParamSerializerJQLike(scope),
-			headers : {
-				'Content-Type' : 'application/x-www-form-urlencoded'
-			}
-		}).then(function(result) {
-			scope.setData(result.data);
-			return scope;
-		});
-	};
+    /**
+     * Updates bank
+     */
+    pBank.prototype.update = $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/bank/engine/:id'
+    });
 
-	/**
-	 * remove bank
-	 */
-	pBank.prototype.remove = function() {
-		var scope = this;
-		return $http({
-			method : 'DELETE',
-			url : '/api/bank/engine/' + this.id,
-		}).then(function(result) {
-			scope.setData(result.data);
-			return scope;
-		});
-	};
-	//
-	return pBank;
+    /**
+     * remove bank
+     */
+    pBank.prototype.remove = $pluf.createDelete({
+	method: 'DELETE',
+	url : '/api/bank/engine/:id',
+    });
+    //
+    return pBank;
 });
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -144,44 +128,29 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PGate', function(PObject, $http, $httpParamSerializerJQLike) {
+.factory('PGate', function(PObject, $pluf) {
 
-	/*
-	 * Creates new instance
-	 */
-	var pGate = function() {
-		PObject.apply(this, arguments);
-	};
-	// Extends it from PObject
-	pGate.prototype = new PObject();
+    /*
+     * Creates new instance
+     */
+    var pGate = function() {
+	PObject.apply(this, arguments);
+    };
+    // Extends it from PObject
+    pGate.prototype = new PObject();
 
-	pGate.prototype.update = function() {
-		var scope = this;
-		return $http({
-			method : 'POST',
-			url : '/api/bank/backend/' + this.id,
-			data : $httpParamSerializerJQLike(this),
-			headers : {
-				'Content-Type' : 'application/x-www-form-urlencoded'
-			}
-		}).then(function(res) {
-			scope.setData(res.data);
-			return scope;
-		});
-	};
+    pGate.prototype.update = $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/bank/backend/:id'
+    });
 
-	pGate.prototype.remove = function() {
-		var scope = this;
-		return $http({
-			method : 'DELETE',
-			url : '/api/bank/backend/' + this.id,
-		}).then(function(res) {
-			scope.setData(res.data);
-			scope.id = null;
-			return scope;
-		});
-	};
-	return pGate;
+    pGate.prototype.remove = $pluf.createDelete({
+	method: 'DELETE',
+	url : '/api/bank/backend/:id',
+    });
+
+    pGate.prototype.delete = pGate.prototype.remove;
+    return pGate;
 });
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -216,44 +185,29 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PReceipt', function(PObject, $http, $httpParamSerializerJQLike) {
+.factory('PReceipt', function(PObject, $pluf) {
 
-	/*
-	 * Creates new instance
-	 */
-	var pReceipt = function() {
-		PObject.apply(this, arguments);
-	};
-	// Extends it from PObject
-	pReceipt.prototype = new PObject();
+    /*
+     * Creates new instance
+     */
+    var pReceipt = function() {
+	PObject.apply(this, arguments);
+    };
+    // Extends it from PObject
+    pReceipt.prototype = new PObject();
 
-	pReceipt.prototype.update = function() {
-		var scope = this;
-		return $http({
-			method : 'POST',
-			url : '/api/bank/receipt/' + this.id,
-			data : $httpParamSerializerJQLike(this),
-			headers : {
-				'Content-Type' : 'application/x-www-form-urlencoded'
-			}
-		}).then(function(res) {
-			scope.setData(res.data);
-			return scope;
-		});
-	};
+    pReceipt.prototype.update = $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/bank/receipt/:id'
+    });
 
-	pReceipt.prototype.remove = function() {
-		var scope = this;
-		return $http({
-			method : 'DELETE',
-			url : '/api/bank/receipt/' + this.id,
-		}).then(function(res) {
-			scope.setData(res.data);
-			scope.id = null;
-			return scope;
-		});
-	};
-	return pReceipt;
+    pReceipt.prototype.remove = $pluf.createDelete({
+	method: 'DELETE',
+	url : '/api/bank/receipt/:id',
+    });
+
+    pReceipt.prototype.delete = pReceipt.prototype.remove;
+    return pReceipt;
 });
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -314,213 +268,146 @@ angular.module('pluf')
  * A receipt is accessable with secure_id.
  * 
  */
-.service(
-		'$bank',
-		function($http, $q, PaginatorPage, PBank, PGate, PReceipt,$httpParamSerializerJQLike, PObjectCache) {
-			
-			var _banksCache = new PObjectCache(function(data) {
-				return new PBank(data);
-			});
-			
-			var _gateCache = new PObjectCache(function(data) {
-				return new PBank(data);
-			});
-			var _receiptCache = new PObjectCache(function(data) {
-				return new PBank(data);
-			});
-			
+.service( '$bank', function($pluf, PBank, PGate, PReceipt, PObjectCache) {
 
-			// TODO: maso, 1395: add to PObject
-			function _paginatorParams(paginatorParam) {
-				if (angular.isUndefined(paginatorParam) || !angular.isFunction(paginatorParam.getParameter)) {
-					return {};
-				}
-				return paginatorParam.getParameter();
-			}
-			
+    var _banksCache = new PObjectCache(function(data) {
+	return new PBank(data);
+    });
 
-			
-			/**
-			 * Creates new receipt
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PReceipt>
-			 * createdreceipt
-			 * 
-			 */
-			this.createReceipt = function(receipt) {
-				return $http({
-					method: 'POST',
-					url: '/api/bank/receipt/new',
-					data : $httpParamSerializerJQLike(receipt),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(res){
-					return _receiptCache.restor(res.data.id, res.data);
-				});
-			};
+    var _gateCache = new PObjectCache(function(data) {
+	return new PGate(data);
+    });
 
-			/**
-			 * Gets receipt detail by secure id
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PReceipt>
-			 * createdreceipt
-			 * 
-			 */
-			this.receipt = function(id) {
-				if(_receiptCache.contains(id)){
-					var deferred = $q.defer();
-					deferred.resolve(_receiptCache.get(id));
-					return deferred.promise;
-				}
-				return $http.get('/api/bank/receipt/'+id)//
-				.then(function(res){
-					return _receiptCache.restor(res.data.id, res.data);
-				});
-			};
+    var _receiptCache = new PObjectCache(function(data) {
+	return new PReceipt(data);
+    });
 
-			/**
-			 * Lists all receipts
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PaginatorPage<PReceipt>>
-			 * createdreceipt
-			 * 
-			 */
-			this.receipts = function(paginatorParam) {
-				return $http({
-					method : 'GET',
-					url : '/api/bank/receipt/find',
-					params : _paginatorParams(paginatorParam)
-				}).then(
-						function(res) {
-							var data = res.data;
-							var page = new PaginatorPage(data);
-							page.items = [];
-							for (var i = 0; i < data.counts; i++) {
-								var item = data.items[i];
-								page.items.push(_receiptCache.resotr(
-										item.id, item));
-							}
-							return page;
-						});
-			};
+    /**
+     * Creates new receipt
+     * 
+     * @memberof $bank
+     * @return Promise<PReceipt>
+     * createdreceipt
+     * 
+     */
+    this.newReceipt = $pluf.createNew({
+	method : 'POST',
+	url : '/api/bank/receipt/new'
+    }, _receiptCache);
 
-			/**
-			 * Creates new gate
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PGate> created gate
-			 */
-			this.createGate = function(gate) {
-				return $http({
-					method: 'POST',
-					url: '/api/bank/backend/new',
-					data : $httpParamSerializerJQLike(gate),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(res){
-					return _gateCache.restor(res.data.id, res.data);
-				});
-			};
+    /**
+     * Gets receipt detail by secure id
+     * 
+     * @memberof $bank
+     * @return Promise<PReceipt>
+     * createdreceipt
+     * 
+     */
+    this.receipt = $pluf.createGet({
+	method : 'GET',
+	url : '/api/bank/receipt/{id}',
+    }, _receiptCache);
 
-			/**
-			 * Gets a gate
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PGate> a gate
-			 */
-			this.gate = function(id) {
-				if(_gateCache.contains(id)){
-					var deferred = $q.defer();
-					deferred.resolve(_gateCache.get(id));
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/bank/backend/'+id,
-				}).then(function(res){
-					return _gateCache.restor(res.data.id, res.data);
-				});
-			};
+    /**
+     * Lists all receipts
+     * 
+     * @memberof $bank
+     * @return Promise<PaginatorPage<PReceipt>>
+     * createdreceipt
+     * 
+     */
+    this.receipts = $pluf.createFind({
+	method : 'GET',
+	url : '/api/bank/receipt/find',
+    }, _receiptCache);
 
-			/**
-			 * Lists all gates
-			 * 
-			 * @memberof $bank
-			 * @param paginatorParam
-			 * @return Promise<PaginatorPage<PGate>> gates list
-			 */
-			this.gates = function(paginatorParam) {
-				return $http({
-					method : 'GET',
-					url : '/api/bank/backend/find',
-					params : _paginatorParams(paginatorParam)
-				}).then(
-						function(res) {
-							var data = res.data;
-							var page = new PaginatorPage(data);
-							page.items = [];
-							for (var i = 0; i < data.counts; i++) {
-								var item = data.items[i];
-								page.items.push(_gateCache.restor(
-										item.id, item));
-							}
-							return page;
-						});
-			};
+    /**
+     * Creates new gate
+     * 
+     * @memberof $bank
+     * @return Promise<PGate> created gate
+     */
+    this.newGate = $pluf.createNew({
+	method : 'POST',
+	url : '/api/bank/backend/new'
+    }, _gateCache);
+    
+    /**
+     * Gets list of required properties
+     * 
+     * The best way to get a bank property is:
+     * <pre><code>
+     * 	var bank;
+     * 	...
+     * 	$bank.getProperty(bank)//
+     * 	.then(function(proeprty){
+     * 		// TODO: deil with property
+     * 	});
+     * </code></pre>
+     * 
+     * In the other hand, the following type is correct too: 
+     * <pre><code>
+     * 	var bank;
+     * 	...
+     * 	$bank.getProperty({type: bank.type})//
+     * 	.then(function(proeprty){
+     * 		// TODO: deil with property
+     * 	});
+     * </code></pre>
+     * 
+     * @memberof $bank
+     * @return Promise<Property>
+     */
+    this.gateProperty = $pluf.get({
+	url : '/api/bank/backend/new'
+    });
 
-			/**
-			 * Gets bank detail
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PBank>
-			 */
-			this.bank = function(type) {
-				if(_banksCache.contains(type)){
-					var deferred = $q.defer();
-					deferred.resolve(_banksCache.get(type));
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/bank/engine/'+type,
-				}).then(function(res){
-					return _banksCache.restor(res.data.type, res.data);
-				});
-			};
-			
-			/**
-			 * Gets bank list
-			 * 
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PaginatorPage<PGate>> gates list
-			 */
-			this.banks = function(paginatorParam) {
-				return $http({
-					method : 'GET',
-					url : '/api/bank/engine/find',
-					params : _paginatorParams(paginatorParam)
-				})//
-				.then(
-						function(res) {
-							var data = res.data;
-							var page = new PaginatorPage(data);
-							page.items = [];
-							for (var i = 0; i < data.counts; i++) {
-								var item = data.items[i];
-								page.items.push(_banksCache.restor(
-										item.type, item));
-							}
-							return page;
-						});
-			};
+    /**
+     * Gets a gate
+     * 
+     * @memberof $bank
+     * @return Promise<PGate> a gate
+     */
+    this.gate = $pluf.createGet({
+	method : 'GET',
+	url : '/api/bank/backend/{id}',
+    }, _gateCache);
 
-		});
+    /**
+     * Lists all gates
+     * 
+     * @memberof $bank
+     * @param paginatorParam
+     * @return Promise<PaginatorPage<PGate>> gates list
+     */
+    this.gates = $pluf.createFind({
+	method : 'GET',
+	url : '/api/bank/backend/find',
+    }, _gateCache);
+
+    /**
+     * Gets bank detail
+     * 
+     * @memberof $bank
+     * @return Promise<PBank>
+     */
+    this.bank = $pluf.createGet({
+	method : 'GET',
+	url : '/api/bank/engine/{id}',
+    }, _banksCache);
+
+    /**
+     * Gets bank list
+     * 
+     * 
+     * @memberof $bank
+     * @return Promise<PaginatorPage<PGate>> gates list
+     */
+    this.banks = $pluf.createFind({
+	method : 'GET',
+	url : '/api/bank/engine/find',
+    }, _banksCache);
+});
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
  * 
@@ -3294,171 +3181,267 @@ angular.module('pluf')
  * @ngdoc service
  * @name $pluf
  * @description ابزارهای پایه‌ای
+ * 
+ * 
+ * 
+ * Object describing the request to be made and how it should be processed. The
+ * object has following properties:
+ * 
+ * method – {string} – HTTP method (e.g. 'GET', 'POST', etc)
+ * 
+ * url – {string|TrustedObject} – Absolute or relative URL of the resource that
+ * is being requested; or an object created by a call to
+ * $sce.trustAsResourceUrl(url).
+ * 
+ * params – {Object.<string|Object>} – Map of strings or objects which will be
+ * serialized with the paramSerializer and appended as GET parameters.
+ * 
+ * data – {string|Object} – Data to be sent as the request message data.
+ * 
+ * headers – {Object} – Map of strings or functions which return strings
+ * representing HTTP headers to send to the server. If the return value of a
+ * function is null, the header will not be sent. Functions accept a config
+ * object as an argument.
+ * 
+ * eventHandlers - {Object} - Event listeners to be bound to the XMLHttpRequest
+ * object. To bind events to the XMLHttpRequest upload object, use
+ * uploadEventHandlers. The handler will be called in the context of a $apply
+ * block.
+ * 
+ * uploadEventHandlers - {Object} - Event listeners to be bound to the
+ * XMLHttpRequest upload object. To bind events to the XMLHttpRequest object,
+ * use eventHandlers. The handler will be called in the context of a $apply
+ * block.
+ * 
+ * xsrfHeaderName – {string} – Name of HTTP header to populate with the XSRF
+ * token.
+ * 
+ * xsrfCookieName – {string} – Name of cookie containing the XSRF token.
+ * 
+ * transformRequest – {function(data, headersGetter)|Array.<function(data,
+ * headersGetter)>} – transform function or an array of such functions. The
+ * transform function takes the http request body and headers and returns its
+ * transformed (typically serialized) version. See Overriding the Default
+ * Transformations
+ * 
+ * transformResponse – {function(data, headersGetter, status)|Array.<function(data,
+ * headersGetter, status)>} – transform function or an array of such functions.
+ * The transform function takes the http response body, headers and status and
+ * returns its transformed (typically deserialized) version. See Overriding the
+ * Default Transformations
+ * 
+ * paramSerializer - {string|function(Object<string,string>):string} - A
+ * function used to prepare the string representation of request parameters
+ * (specified as an object). If specified as string, it is interpreted as
+ * function registered with the $injector, which means you can create your own
+ * serializer by registering it as a service. The default serializer is the
+ * $httpParamSerializer; alternatively, you can use the
+ * $httpParamSerializerJQLike
+ * 
+ * cache – {boolean|Object} – A boolean value or object created with
+ * $cacheFactory to enable or disable caching of the HTTP response. See $http
+ * Caching for more information.
+ * 
+ * timeout – {number|Promise} – timeout in milliseconds, or promise that should
+ * abort the request when resolved.
+ * 
+ * withCredentials - {boolean} - whether to set the withCredentials flag on the
+ * XHR object. See requests with credentials for more information.
+ * 
+ * responseType - {string} - see XMLHttpRequest.responseType.
+ * 
  */
 .service('$pluf',
 	function(PaginatorPage, $q, $http, $httpParamSerializerJQLike) {
 
-    /**
-     * مسیر رو بر اساس مقادیر ورودی تعیین می‌کنه
-     * 
-     * زمانی که بخواهیم مسیر برای اجرای یک تابع بر اساس پارامترهای خود موجودیت
-     * ایجاد بشه، با استفاده از روش زیر، مسیر رو تعیین می‌کنیم:
-     * 
-     * <pre><code>
-     * 	var path = '/path/:property/of/object';
-     * </code></pre>
-     * 
-     * مقادیری که که با : تعیین شده باشن با استفاده از خصوصیت‌هایی که توی خود 
-     * موجودیت باشه جایگزین می‌شه.
-     * 
-     * @param path
-     * @param object
-     * @returns
-     */
-    function createPath(path, object) {
-	if (path.indexOf(':') === 0) {
-	    return path;
-	}
-	var list = path.split('/');
-	var temp = path;
-	for (var i = 0; i < list.length; i++) {
-	    var id = list[i];
-	    if (id.indexOf(':') === 0) {
-		var key = id.substring(1, id.length);
-		temp = temp.replace(id, object[key]);
-	    }
-	}
-	return temp;
-    }
-
-    /**
-     * 
-     * @memberof $pluf
-     * @param {Object}
-     *                params
-     * @param {PObjectCache}
-     *                cache
-     * @return {function}
-     */
-    this.createFind = function(params, _cache) {
-	var urlTemplate = params.url;
-	return function(paginatorParameter) {
-	    if (paginatorParameter) {
-		params.params = paginatorParameter.getParameter();
-	    }
-	    params.url = createPath(urlTemplate, this);
-	    return $http(params)//
-	    .then(function(res) {
-		var page = new PaginatorPage(res.data);
-		var items = [];
-		for (var i = 0; i < page.counts; i++) {
-		    var item = page.items[i];
-		    items.push(_cache.restor(item.id, item));
+	    /**
+	     * مسیر رو بر اساس مقادیر ورودی تعیین می‌کنه
+	     * 
+	     * زمانی که بخواهیم مسیر برای اجرای یک تابع بر اساس پارامترهای خود
+	     * موجودیت ایجاد بشه، با استفاده از روش زیر، مسیر رو تعیین می‌کنیم:
+	     * 
+	     * <pre><code>
+	     * var path = '/path/:property/of/object';
+	     * </code></pre>
+	     * 
+	     * مقادیری که که با : تعیین شده باشن با استفاده از خصوصیت‌هایی که
+	     * توی خود موجودیت باشه جایگزین می‌شه.
+	     * 
+	     * @param path
+	     * @param object
+	     * @returns
+	     */
+	    function createPath(path, object) {
+		if (path.indexOf(':') === 0) {
+		    return path;
 		}
-		page.items = items;
-		return page;
-	    });
-	};
-    };
-
-    /**
-     * 
-     * @memberof $pluf
-     * @param {Object}
-     *                params
-     * @param {PObjectCache}
-     *                cache
-     * @return {function}
-     */
-    this.createGet = function(params, _cache) {
-	var urlTemplate = params.url;
-	return function(id) {
-	    if (_cache.contains(id)) {
-		var deferred = $q.defer();
-		deferred.resolve(_cache.get(id));
-		return deferred.promise;
+		var list = path.split('/');
+		var temp = path;
+		for (var i = 0; i < list.length; i++) {
+		    var id = list[i];
+		    if (id.indexOf(':') === 0) {
+			var key = id.substring(1, id.length);
+			temp = temp.replace(id, object[key]);
+		    }
+		}
+		return temp;
 	    }
-	    var temp = createPath(urlTemplate, this);
-	    params.url = temp.replace('{id}', id);
-	    return $http(params)//
-	    .then(function(res) {
-		return _cache.restor(res.data.id, res.data);
-	    });
-	};
-    };
 
-    /**
-     * 
-     */
-    this.createUpdate = function(params) {
-	params.headers = {
-		'Content-Type' : 'application/x-www-form-urlencoded'
-	};
-	var urlTemplate = params.url;
-	return function(objectData) {
-	    if(!objectData){
-		objectData = this;
-	    }
-	    var scope = this;
-	    params.url = createPath(urlTemplate, scope);
-	    params.data = $httpParamSerializerJQLike(objectData);
-	    return $http(params)//
-	    .then(function(res) {
-		scope.setData(res.data);
-		return scope;
-	    });
-	};
-    };
+	    /**
+	     * 
+	     * @memberof $pluf
+	     * @param {Object}
+	     *                params
+	     * @param {PObjectCache}
+	     *                cache
+	     * @return {function}
+	     */
+	    this.createFind = function(params, _cache) {
+		var urlTemplate = params.url;
+		return function(paginatorParameter) {
+		    if (paginatorParameter) {
+			params.params = paginatorParameter.getParameter();
+		    }
+		    params.url = createPath(urlTemplate, this);
+		    return $http(params)//
+		    .then(function(res) {
+			var page = new PaginatorPage(res.data);
+			var items = [];
+			for (var i = 0; i < page.counts; i++) {
+			    var item = page.items[i];
+			    items.push(_cache.restor(item.id, item));
+			}
+			page.items = items;
+			return page;
+		    });
+		};
+	    };
 
-    /**
-     * 
-     */
-    this.createDelete = function(params) {
-	var urlTemplate = params.url;
-	return function() {
-	    var scope = this;
-	    params.url = createPath(urlTemplate, scope);
-	    return $http(params)//
-	    .then(function(res) {
-		scope.setData(res.data);
-		return scope;
-	    });
-	};
-    };
+	    /**
+	     * 
+	     * @memberof $pluf
+	     * @param {Object}
+	     *                params
+	     * @param {PObjectCache}
+	     *                cache
+	     * @return {function}
+	     */
+	    this.createGet = function(params, _cache) {
+		var urlTemplate = params.url;
+		return function(id) {
+		    if (_cache.contains(id)) {
+			var deferred = $q.defer();
+			deferred.resolve(_cache.get(id));
+			return deferred.promise;
+		    }
+		    var temp = createPath(urlTemplate, this);
+		    params.url = temp.replace('{id}', id);
+		    return $http(params)//
+		    .then(function(res) {
+			return _cache.restor(res.data.id, res.data);
+		    });
+		};
+	    };
 
-    /**
-     * 
-     * @memberof $pluf
-     * @param {Object}
-     *                params
-     * @param {PObjectCache}
-     *                cache
-     * @return {function}
-     */
-    this.createNew = function(params, _cache) {
-	params.headers = {
-		'Content-Type' : 'application/x-www-form-urlencoded'
-	};
-	var urlTemplate = params.url;
-	return function(objectData) {
-	    params.url = createPath(urlTemplate, this);
-	    params.data = $httpParamSerializerJQLike(objectData);
-	    return $http(params)//
-	    .then(function(res) {
-		return _cache.restor(res.data.id, res.data);
-	    });
-	};
-    };
+	    /**
+	     * 
+	     */
+	    this.createUpdate = function(params) {
+		params.headers = {
+		    'Content-Type' : 'application/x-www-form-urlencoded'
+		};
+		var urlTemplate = params.url;
+		return function(objectData) {
+		    if (!objectData) {
+			objectData = this;
+		    }
+		    var scope = this;
+		    params.url = createPath(urlTemplate, scope);
+		    params.data = $httpParamSerializerJQLike(objectData);
+		    return $http(params)//
+		    .then(function(res) {
+			scope.setData(res.data);
+			return scope;
+		    });
+		};
+	    };
 
-    // this.inherit = function(object) {
-    // function F() {
-    // // Empty object
-    // }
-    // F.prototype = object.prototype;
-    // return new F;
-    // };
+	    /**
+	     * 
+	     */
+	    this.createDelete = function(params) {
+		var urlTemplate = params.url;
+		return function() {
+		    var scope = this;
+		    params.url = createPath(urlTemplate, scope);
+		    return $http(params)//
+		    .then(function(res) {
+			scope.setData(res.data);
+			return scope;
+		    });
+		};
+	    };
 
-});
+	    /**
+	     * 
+	     * @memberof $pluf
+	     * @param {Object}
+	     *                params
+	     * @param {PObjectCache}
+	     *                cache
+	     * @return {function}
+	     */
+	    this.createNew = function(params, _cache) {
+		params.headers = {
+		    'Content-Type' : 'application/x-www-form-urlencoded'
+		};
+		var urlTemplate = params.url;
+		return function(objectData) {
+		    params.url = createPath(urlTemplate, this);
+		    params.data = $httpParamSerializerJQLike(objectData);
+		    return $http(params)//
+		    .then(function(res) {
+			return _cache.restor(res.data.id, res.data);
+		    });
+		};
+	    };
+
+	    this.get = function(params, _cache) {
+		params.method = 'GET';
+		if (params.url.indexOf(':') === 0) {
+		    // No need to create path dynamically
+		    return function(data) {
+			if (!data) {
+			    data = {};
+			}
+			params.params = data;
+			return $http(params)//
+			.then(function(res) {
+			    if (_cache) {
+				return _cache.restor(res.data.id, res.data);
+			    }
+			    return res.data;
+			});
+		    };
+		}
+		var urlTemplate = params.url;
+		return function(data) {
+		    if (!data) {
+			data = {};
+		    }
+		    params.url = createPath(urlTemplate, this);
+		    params.params = data;
+		    return $http(params)//
+		    .then(function(res) {
+			if (_cache) {
+			    return _cache.restor(res.data.id, res.data);
+			}
+			return res.data;
+		    });
+		};
+	    };
+
+	});
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
  * 
