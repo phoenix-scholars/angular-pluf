@@ -83,6 +83,7 @@ describe('$monitor service', function() {
 	expect($httpBackend.flush).not.toThrow();
 	$rootScope.$apply();
     });
+    
     it('should get a monitor', function(done) {
 	$monitor.monitor('bean', 'property')//
 	.then(function(object) {
