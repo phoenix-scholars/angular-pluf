@@ -3888,26 +3888,91 @@ angular.module('pluf')
  * @description
  * 
  */
-.factory('PMonitor', function(PObject, $rootScope, $http, PObjectFactory) {
+.factory('PMonitor', function(PObject, $rootScope, $http,PaginatorPage, PMonitorProperty) {
+
     /*
      * یک نمونه جدید از این موجودیت ایجاد می کند.
      */
-    var pMonitor = function(data) {
-	if (data) {
-	    this.setData(data);
-	    this.path = '/api/monitor/' + this.bean + '/' + this.property;
-	}
+    var pMonitor = function() {
+	PObject.apply(this, arguments);
     };
-
     pMonitor.prototype = new PObject();
 
-    // pMonitor._cache = new PObjectFactory(function(data) {
-    // pMonitor.setData(data);
-    // return pMonitor;
-    // });
 
-    pMonitor.prototype.refresh = function() {
+    pMonitor.prototype.properties = function(paginatorParameter) {
+	var params = {
+		'method' : 'GET',
+		'url': '/api/monitor/'+this.id+'/property/find'
+	}
+	if (paginatorParameter) {
+	    params.params = paginatorParameter.getParameter();
+	}
 	var scope = this;
+	return $http(params)//
+	.then(function(res) {
+	    var page = new PaginatorPage(res.data);
+	    var items = [];
+	    for (var i = 0; i < page.counts; i++) {
+		var item = page.items[i];
+		var p = new PMonitorProperty(item);
+		p.monitor = scope.id;
+		items.push(p);
+	    }
+	    page.items = items;
+	    return page;
+	});
+    };
+
+    return pMonitor;
+});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @ngdoc factory
+ * @name PGroup
+ * @memberof pluf
+ * 
+ * @description
+ * 
+ */
+.factory('PMonitorProperty', function(PObject, $rootScope, $http, PObjectFactory) {
+    /*
+     * یک نمونه جدید از این موجودیت ایجاد می کند.
+     */
+    var pMonitorProperty = function() {
+	PObject.apply(this, arguments);
+    };
+    pMonitorProperty.prototype = new PObject();
+
+    pMonitorProperty.prototype.refresh = function() {
+	var scope = this;
+	if(!this.path){
+	    this.path = '/api/monitor/'+this.monitor+'/property/'+this.id;
+	}
 	return $http.get(this.path)//
 	.then(function(res) {
 	    // XXX: maso, 1395: handle tablular and scalar types
@@ -3925,23 +3990,11 @@ angular.module('pluf')
 	});
     };
 
-    pMonitor.prototype.setBean = function(bean) {
-	this.bean = bean;
-	this.path = '/api/monitor/' + this.bean + '/' + this.property;
-	return this;
-    }
-
-    pMonitor.prototype.setProperty = function(property) {
-	this.property = property;
-	this.path = '/api/monitor/' + this.bean + '/' + this.property;
-	return this;
-    }
-
-    pMonitor.prototype.watch = function(callback) {
+    pMonitorProperty.prototype.watch = function(callback) {
 	return $rootScope.$on(this.path, callback);
     }
 
-    return pMonitor;
+    return pMonitorProperty;
 });
 
 /*
@@ -3984,7 +4037,7 @@ angular.module('pluf')
  * @see PMonitor
  * 
  */
-.service('$monitor', function($q, $timeout, $pluf, PMonitor, PObjectFactory) {
+.service('$monitor', function($q, $timeout, $pluf, PMonitor, PMonitorProperty, PObjectFactory) {
     /*
      * فهرستی از تمام مانیتورهای تعریف شده را نگهداری می ‌کند
      */
@@ -4034,25 +4087,24 @@ angular.module('pluf')
      *                property
      * @return {promise(PMonitor)}
      */
-    this.monitor = function(bean, property) {
+    this.monitor = function(monitor, property) {
 	var def = $q.defer();
 	$timeout(function() {
-	    var monitor = null;
+	    var m = null;
 	    angular.forEach(_monitors, function(element) {
-		if (element.bean === bean && element.property == property) {
-		    monitor = element;
+		if (element.monitor === monitor && element.property == property) {
+		    m = element;
 		}
 	    });
-	    if(monitor){
-		def.resolve(monitor);
+	    if(m){
+		def.resolve(m);
 		return;
 	    }
-	    monitor = new PMonitor();
-	    monitor//
-	    .setBean(bean)//
-	    .setProperty(property);
-	    _monitors.push(monitor);
-	    def.resolve(monitor);
+	    m = new PMonitorProperty();
+	    m.monitor = monitor;
+	    m.id = property;
+	    _monitors.push(m);
+	    def.resolve(m);
 	}, 1);
 	return def.promise;
     };
