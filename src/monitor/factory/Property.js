@@ -31,40 +31,40 @@ angular.module('pluf')
  * @description
  * 
  */
-.factory('PMonitor', function(PObject, $rootScope, $http,PaginatorPage, PMonitorProperty) {
-
+.factory('PMonitorProperty', function(PObject, $rootScope, $http, PObjectFactory) {
     /*
      * یک نمونه جدید از این موجودیت ایجاد می کند.
      */
-    var pMonitor = function() {
+    var pMonitorProperty = function() {
 	PObject.apply(this, arguments);
     };
-    pMonitor.prototype = new PObject();
+    pMonitorProperty.prototype = new PObject();
 
-
-    pMonitor.prototype.properties = function(paginatorParameter) {
-	var params = {
-		'method' : 'GET',
-		'url': '/api/monitor/'+this.id+'/property/find'
-	}
-	if (paginatorParameter) {
-	    params.params = paginatorParameter.getParameter();
-	}
+    pMonitorProperty.prototype.refresh = function() {
 	var scope = this;
-	return $http(params)//
+	if(!this.path){
+	    this.path = '/api/monitor/'+this.monitor+'/property/'+this.id;
+	}
+	return $http.get(this.path)//
 	.then(function(res) {
-	    var page = new PaginatorPage(res.data);
-	    var items = [];
-	    for (var i = 0; i < page.counts; i++) {
-		var item = page.items[i];
-		var p = new PMonitorProperty(item);
-		p.monitor = scope.id;
-		items.push(p);
+	    // XXX: maso, 1395: handle tablular and scalar types
+	    if (res.data.value !== scope.value) {
+		$rootScope.$emit(scope.path, scope.value, res.data.value);
 	    }
-	    page.items = items;
-	    return page;
+	    scope.setData(res.data);
+	    return scope;
+	}, function(){
+		if(scope.value){
+			$rootScope.$emit(scope.path, scope.value, false);
+		}
+		scope.setData(false);
+		return scope;
 	});
     };
 
-    return pMonitor;
+    pMonitorProperty.prototype.watch = function(callback) {
+	return $rootScope.$on(this.path, callback);
+    }
+
+    return pMonitorProperty;
 });

@@ -27,6 +27,7 @@ describe('$monitor service', function() {
     var $monitor;
     var $httpBackend;
     var $timeout;
+    var PMonitorProperty;
 
     // excuted before each "it" is run.
     beforeEach(function() {
@@ -36,11 +37,12 @@ describe('$monitor service', function() {
 	// The _underscores_ are a convenience thing
 	// so you can have your variable name be the
 	// same as your injected service.
-	inject(function(_$monitor_, _$rootScope_, _$httpBackend_, _$timeout_) {
+	inject(function(_$monitor_, _$rootScope_, _$httpBackend_, _$timeout_, _PMonitorProperty_) {
 	    $monitor = _$monitor_;
 	    $rootScope = _$rootScope_;
 	    $httpBackend = _$httpBackend_;
 	    $timeout = _$timeout_;
+	    PMonitorProperty = _PMonitorProperty_;
 	});
 	originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
 	jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
@@ -50,41 +52,12 @@ describe('$monitor service', function() {
 	jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
     });
 
-    // check to see if it has the expected function
-    it('should contain monitor function', function() {
-	expect(angular.isFunction($monitor.monitor)).toBe(true);
-    });
-    it('should contain monitors function', function() {
-	expect(angular.isFunction($monitor.monitors)).toBe(true);
-    });
-
-    it('should contain distroy function', function() {
-	expect(angular.isFunction($monitor.distroy)).toBe(true);
-    });
-
-    it('should call /api/monitor/find to list all monitor', function(done) {
-	$monitor.monitors()//
-	.then(function(page) {
-	    expect(page).not.toBeNull();
-	    done();
-	}, function() {
-	    expect(false).toBe(true);
-	    done();
+    it('should get info', function(done) {
+	var monitor = new PMonitorProperty({
+	    monitor: 'bean',
+	    id: 'property'
 	});
-
-	$httpBackend.//
-	expect('GET', '/api/monitor/find')//
-	.respond(200, {
-	    itmes : [],
-	    item_per_page : 20,
-	    current_page : 1
-	// TODO: maso, 1395: add paginated page params
-	});
-	expect($httpBackend.flush).not.toThrow();
-	$rootScope.$apply();
-    });
-    it('should get a monitor', function(done) {
-	$monitor.monitor('bean', 'property')//
+	monitor.refresh()//
 	.then(function(object) {
 	    expect(object).not.toBeNull();
 	    done();
@@ -92,8 +65,14 @@ describe('$monitor service', function() {
 	    expect(false).toBe(true);
 	    done();
 	});
-	$rootScope.$apply();
-	$timeout.flush();
-    });
 
+	$httpBackend//
+	.expect('GET', '/api/monitor/bean/property/property')//
+	.respond(200, {
+	    'value' : 12.0,
+	    'min' : 0.0,
+	});
+	expect($httpBackend.flush).not.toThrow();
+	$rootScope.$apply();
+    });
 });
