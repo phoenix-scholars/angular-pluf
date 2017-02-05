@@ -3991,6 +3991,9 @@ angular.module('pluf')
     };
 
     pMonitorProperty.prototype.watch = function(callback) {
+	if(!this.path){
+	    this.path = '/api/monitor/'+this.monitor+'/property/'+this.id;
+	}
 	return $rootScope.$on(this.path, callback);
     }
 
