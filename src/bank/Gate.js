@@ -31,42 +31,27 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PGate', function(PObject, $http, $httpParamSerializerJQLike) {
+.factory('PGate', function(PObject, $pluf) {
 
-	/*
-	 * Creates new instance
-	 */
-	var pGate = function() {
-		PObject.apply(this, arguments);
-	};
-	// Extends it from PObject
-	pGate.prototype = new PObject();
+    /*
+     * Creates new instance
+     */
+    var pGate = function() {
+	PObject.apply(this, arguments);
+    };
+    // Extends it from PObject
+    pGate.prototype = new PObject();
 
-	pGate.prototype.update = function() {
-		var scope = this;
-		return $http({
-			method : 'POST',
-			url : '/api/bank/backend/' + this.id,
-			data : $httpParamSerializerJQLike(this),
-			headers : {
-				'Content-Type' : 'application/x-www-form-urlencoded'
-			}
-		}).then(function(res) {
-			scope.setData(res.data);
-			return scope;
-		});
-	};
+    pGate.prototype.update = $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/bank/backend/:id'
+    });
 
-	pGate.prototype.remove = function() {
-		var scope = this;
-		return $http({
-			method : 'DELETE',
-			url : '/api/bank/backend/' + this.id,
-		}).then(function(res) {
-			scope.setData(res.data);
-			scope.id = null;
-			return scope;
-		});
-	};
-	return pGate;
+    pGate.prototype.remove = $pluf.createDelete({
+	method: 'DELETE',
+	url : '/api/bank/backend/:id',
+    });
+
+    pGate.prototype.delete = pGate.prototype.remove;
+    return pGate;
 });

@@ -54,8 +54,8 @@ describe('Core module: PProfile', function() {
 		var id = 1;
 		var profile = new PProfile();
 		profile.id = id;
-		profile.user = new PUser();
-		profile.user.id = 1;
+//		profile.user = new PUser();
+		profile.user = 1;
 		profile.update().then(function(p) {
 			expect(p).not.toBeNull();
 			expect(p.id).toBe(1);
