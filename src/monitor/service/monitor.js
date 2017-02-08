@@ -38,7 +38,7 @@ angular.module('pluf')
  * @see PMonitor
  * 
  */
-.service('$monitor', function($q, $timeout, $pluf, PMonitor, PObjectFactory) {
+.service('$monitor', function($q, $timeout, $pluf, PMonitor, PMonitorProperty, PObjectFactory) {
     /*
      * فهرستی از تمام مانیتورهای تعریف شده را نگهداری می ‌کند
      */
@@ -88,25 +88,24 @@ angular.module('pluf')
      *                property
      * @return {promise(PMonitor)}
      */
-    this.monitor = function(bean, property) {
+    this.monitor = function(monitor, property) {
 	var def = $q.defer();
 	$timeout(function() {
-	    var monitor = null;
+	    var m = null;
 	    angular.forEach(_monitors, function(element) {
-		if (element.bean === bean && element.property == property) {
-		    monitor = element;
+		if (element.monitor === monitor && element.property == property) {
+		    m = element;
 		}
 	    });
-	    if(monitor){
-		def.resolve(monitor);
+	    if(m){
+		def.resolve(m);
 		return;
 	    }
-	    monitor = new PMonitor();
-	    monitor//
-	    .setBean(bean)//
-	    .setProperty(property);
-	    _monitors.push(monitor);
-	    def.resolve(monitor);
+	    m = new PMonitorProperty();
+	    m.monitor = monitor;
+	    m.id = property;
+	    _monitors.push(m);
+	    def.resolve(m);
 	}, 1);
 	return def.promise;
     };

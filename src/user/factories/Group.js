@@ -94,6 +94,7 @@ angular.module('pluf')
 		    return scope;
 		});
 	    };
+	    pGroup.prototype.delete = pGroup.prototype.remove;
 
 	    /**
 	     * حذف یک رول
