@@ -24,47 +24,40 @@
 angular.module('pluf')
 
 /**
- * @ngdoc factory
- * @name PGroup
- * @memberof pluf
- * 
+ * @memberof $calendar
+ * @ngdoc Facotyr
+ * @name PEvent
  * @description
  * 
+ * 
  */
-.factory('PMonitor', function(PObject, $rootScope, $http,PaginatorPage, PMonitorProperty) {
+.factory('PEvent', function(PObject, $pluf) {
 
     /*
-     * یک نمونه جدید از این موجودیت ایجاد می کند.
+     * Creates new instance
      */
-    var pMonitor = function() {
+    var pEvent = function() {
 	PObject.apply(this, arguments);
     };
-    pMonitor.prototype = new PObject();
+    // Extends it from PObject
+    pEvent.prototype = new PObject();
 
+    /**
+     * Updates bank
+     */
+    pEvent.prototype.update = $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/calendar/events/:id'
+    });
 
-    pMonitor.prototype.properties = function(paginatorParameter) {
-	var params = {
-		'method' : 'GET',
-		'url': '/api/monitor/'+this.id+'/property/find'
-	}
-	if (paginatorParameter) {
-	    params.params = paginatorParameter.getParameter();
-	}
-	var scope = this;
-	return $http(params)//
-	.then(function(res) {
-	    var page = new PaginatorPage(res.data);
-	    var items = [];
-	    for (var i = 0; i < page.counts; i++) {
-		var item = page.items[i];
-		var p = new PMonitorProperty(item);
-		p.monitor = scope.id;
-		items.push(p);
-	    }
-	    page.items = items;
-	    return page;
-	});
-    };
-
-    return pMonitor;
+    /**
+     * remove bank
+     */
+    pEvent.prototype.remove = $pluf.createDelete({
+	method: 'DELETE',
+	url : '/api/calendar/events/:id',
+    });
+    pEvent.prototype.delete = pEvent.prototype.remove;
+    //
+    return pEvent;
 });
