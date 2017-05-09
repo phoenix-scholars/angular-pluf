@@ -31,50 +31,32 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PCollection', function(PObject, $pluf, PObjectFactory, PDocument) {
-
-	var _cache = new PObjectFactory(function(data) {
-		return new PDocument(data);
-	});
+.factory('PDocument', function(PObject, $pluf) {
 
 	/*
 	 * Creates new instance
 	 */
-	var collection = function() {
+	var document = function() {
 		PObject.apply(this, arguments);
 	};
 	// Extends it from PObject
-	collection.prototype = new PObject();
+	document.prototype = new PObject();
 
 	/**
 	 * Updates bank
 	 */
-	collection.prototype.update = $pluf.createUpdate({
+	document.prototype.update = $pluf.createUpdate({
 		method : 'POST',
-		url : '/api/collection/:id'
+		url : '/api/collection/:collection/document/:id'
 	});
 
 	/**
 	 * remove bank
 	 */
-	collection.prototype.remove = $pluf.createDelete({
+	document.prototype.remove = $pluf.createDelete({
 		method: 'DELETE',
-		url : '/api/collection/:id',
+		url : '/api/collection/:collection/document/:id',
 	});
-
-	/**
-	 * Lists all collections
-	 * 
-	 * @memberof $collection
-	 * @return Promise<PaginatorPage<PCollection>>
-	 * createdreceipt
-	 * 
-	 */
-	collection.prototype.documents = $pluf.createFind({
-		method : 'GET',
-		url : '/api/collection/:id/document/find',
-	}, _cache);
-
 	//
-	return collection;
+	return document;
 });
