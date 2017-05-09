@@ -1427,7 +1427,7 @@ angular.module('pluf')
 	/**
 	 * remove bank
 	 */
-	collection.prototype.remove = $pluf.createDelete({
+	collection.prototype.delete = $pluf.createDelete({
 		method: 'DELETE',
 		url : '/api/collection/:id',
 	});
