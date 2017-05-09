@@ -63,9 +63,9 @@ angular.module('pluf')
 	});
 
 	/**
-	 * Lists all collections
+	 * Lists all documents
 	 * 
-	 * @memberof $collection
+	 * @memberof PCollection
 	 * @return Promise<PaginatorPage<PCollection>>
 	 * createdreceipt
 	 * 
@@ -74,7 +74,34 @@ angular.module('pluf')
 		method : 'GET',
 		url : '/api/collection/:id/document/find',
 	}, _cache);
+	
 
+	/**
+	 * Creates new document
+	 * 
+	 * @memberof PCollection
+	 * @return Promise<PDocument>
+	 * createdreceipt
+	 * 
+	 */
+	collection.prototype.newDocument = $pluf.createNew({
+		method : 'POST',
+		url : '/api/collection/:id/document/new'
+	}, _cache);
+
+	/**
+	 * Gets document detail
+	 * 
+	 * @memberof PCollection
+	 * @return Promise<PDocument>
+	 * createdreceipt
+	 * 
+	 */
+	collection.prototype.document = $pluf.createGet({
+		method : 'GET',
+		url : '/api/collection/:id/document/{id}',
+	}, _cache);
+	
 	//
 	return collection;
 });
