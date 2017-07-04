@@ -3806,196 +3806,224 @@ angular.module('pluf')
  * 
  */
 .service('$pluf',
-	function(PaginatorPage, $q, $http, $httpParamSerializerJQLike) {
+		function(PaginatorPage, $q, $http, $httpParamSerializerJQLike) {
 
-	    /**
-	     * مسیر رو بر اساس مقادیر ورودی تعیین می‌کنه
-	     * 
-	     * زمانی که بخواهیم مسیر برای اجرای یک تابع بر اساس پارامترهای خود
-	     * موجودیت ایجاد بشه، با استفاده از روش زیر، مسیر رو تعیین می‌کنیم:
-	     * 
-	     * <pre><code>
-	     * var path = '/path/:property/of/object';
-	     * </code></pre>
-	     * 
-	     * مقادیری که که با : تعیین شده باشن با استفاده از خصوصیت‌هایی که
-	     * توی خود موجودیت باشه جایگزین می‌شه.
-	     * 
-	     * @param path
-	     * @param object
-	     * @returns
-	     */
-	    function createPath(path, object) {
+	/**
+	 * مسیر رو بر اساس مقادیر ورودی تعیین می‌کنه
+	 * 
+	 * زمانی که بخواهیم مسیر برای اجرای یک تابع بر اساس پارامترهای خود
+	 * موجودیت ایجاد بشه، با استفاده از روش زیر، مسیر رو تعیین می‌کنیم:
+	 * 
+	 * <pre><code>
+	 * var path = '/path/:property/of/object';
+	 * </code></pre>
+	 * 
+	 * مقادیری که که با : تعیین شده باشن با استفاده از خصوصیت‌هایی که
+	 * توی خود موجودیت باشه جایگزین می‌شه.
+	 * 
+	 * @param path
+	 * @param object
+	 * @returns
+	 */
+	function createPath(path, object) {
 		if (path.indexOf(':') === 0) {
-		    return path;
+			return path;
 		}
 		var list = path.split('/');
 		var temp = path;
 		for (var i = 0; i < list.length; i++) {
-		    var id = list[i];
-		    if (id.indexOf(':') === 0) {
-			var key = id.substring(1, id.length);
-			temp = temp.replace(id, object[key]);
-		    }
+			var id = list[i];
+			if (id.indexOf(':') === 0) {
+				var key = id.substring(1, id.length);
+				temp = temp.replace(id, object[key]);
+			}
 		}
 		return temp;
-	    }
+	}
 
-	    /**
-	     * 
-	     * @memberof $pluf
-	     * @param {Object}
-	     *                params
-	     * @param {PObjectCache}
-	     *                cache
-	     * @return {function}
-	     */
-	    this.createFind = function(params, _cache) {
+	/**
+	 * 
+	 * @memberof $pluf
+	 * @param {Object}
+	 *                params
+	 * @param {PObjectCache}
+	 *                cache
+	 * @return {function}
+	 */
+	this.createFind = function(params, _cache) {
 		var urlTemplate = params.url;
 		return function(paginatorParameter) {
-		    if (paginatorParameter) {
-			params.params = paginatorParameter.getParameter();
-		    }
-		    params.url = createPath(urlTemplate, this);
-		    return $http(params)//
-		    .then(function(res) {
-			var page = new PaginatorPage(res.data);
-			var items = [];
-			for (var i = 0; i < page.counts; i++) {
-			    var item = page.items[i];
-			    items.push(_cache.restor(item.id, item));
+			if (paginatorParameter) {
+				params.params = paginatorParameter.getParameter();
 			}
-			page.items = items;
-			return page;
-		    });
-		};
-	    };
-
-	    /**
-	     * 
-	     * @memberof $pluf
-	     * @param {Object}
-	     *                params
-	     * @param {PObjectCache}
-	     *                cache
-	     * @return {function}
-	     */
-	    this.createGet = function(params, _cache) {
-		var urlTemplate = params.url;
-		return function(id) {
-		    if (_cache.contains(id)) {
-			var deferred = $q.defer();
-			deferred.resolve(_cache.get(id));
-			return deferred.promise;
-		    }
-		    var temp = createPath(urlTemplate, this);
-		    params.url = temp.replace('{id}', id);
-		    return $http(params)//
-		    .then(function(res) {
-			return _cache.restor(res.data.id, res.data);
-		    });
-		};
-	    };
-
-	    /**
-	     * 
-	     */
-	    this.createUpdate = function(params) {
-		params.headers = {
-		    'Content-Type' : 'application/x-www-form-urlencoded'
-		};
-		var urlTemplate = params.url;
-		return function(objectData) {
-		    if (!objectData) {
-			objectData = this;
-		    }
-		    var scope = this;
-		    params.url = createPath(urlTemplate, scope);
-		    params.data = $httpParamSerializerJQLike(objectData);
-		    return $http(params)//
-		    .then(function(res) {
-			scope.setData(res.data);
-			return scope;
-		    });
-		};
-	    };
-
-	    /**
-	     * 
-	     */
-	    this.createDelete = function(params) {
-		var urlTemplate = params.url;
-		return function() {
-		    var scope = this;
-		    params.url = createPath(urlTemplate, scope);
-		    return $http(params)//
-		    .then(function(res) {
-			scope.setData(res.data);
-			return scope;
-		    });
-		};
-	    };
-
-	    /**
-	     * 
-	     * @memberof $pluf
-	     * @param {Object}
-	     *                params
-	     * @param {PObjectCache}
-	     *                cache
-	     * @return {function}
-	     */
-	    this.createNew = function(params, _cache) {
-		params.headers = {
-		    'Content-Type' : 'application/x-www-form-urlencoded'
-		};
-		var urlTemplate = params.url;
-		return function(objectData) {
-		    params.url = createPath(urlTemplate, this);
-		    params.data = $httpParamSerializerJQLike(objectData);
-		    return $http(params)//
-		    .then(function(res) {
-			return _cache.restor(res.data.id, res.data);
-		    });
-		};
-	    };
-
-	    this.get = function(params, _cache) {
-		params.method = 'GET';
-		if (params.url.indexOf(':') === 0) {
-		    // No need to create path dynamically
-		    return function(data) {
-			if (!data) {
-			    data = {};
-			}
-			params.params = data;
+			params.url = createPath(urlTemplate, this);
 			return $http(params)//
 			.then(function(res) {
-			    if (_cache) {
-				return _cache.restor(res.data.id, res.data);
-			    }
-			    return res.data;
+				var page = new PaginatorPage(res.data);
+				var items = [];
+				for (var i = 0; i < page.counts; i++) {
+					var item = page.items[i];
+					items.push(_cache.restor(item.id, item));
+				}
+				page.items = items;
+				return page;
 			});
-		    };
+		};
+	};
+
+	/**
+	 * 
+	 * @memberof $pluf
+	 * @param {Object}
+	 *                params
+	 * @param {PObjectCache}
+	 *                cache
+	 * @return {function}
+	 */
+	this.createGet = function(params, _cache) {
+		var urlTemplate = params.url;
+		return function(id) {
+			if (_cache.contains(id)) {
+				var deferred = $q.defer();
+				deferred.resolve(_cache.get(id));
+				return deferred.promise;
+			}
+			var temp = createPath(urlTemplate, this);
+			params.url = temp.replace('{id}', id);
+			return $http(params)//
+			.then(function(res) {
+				return _cache.restor(res.data.id, res.data);
+			});
+		};
+	};
+
+	/**
+	 * 
+	 */
+	this.createUpdate = function(params) {
+		params.headers = {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+		};
+		var urlTemplate = params.url;
+		return function(objectData) {
+			if (!objectData) {
+				objectData = this;
+			}
+			var scope = this;
+			params.url = createPath(urlTemplate, scope);
+			params.data = $httpParamSerializerJQLike(objectData);
+			return $http(params)//
+			.then(function(res) {
+				scope.setData(res.data);
+				return scope;
+			});
+		};
+	};
+
+	/**
+	 * 
+	 */
+	this.createDelete = function(params) {
+		var urlTemplate = params.url;
+		return function() {
+			var scope = this;
+			params.url = createPath(urlTemplate, scope);
+			return $http(params)//
+			.then(function(res) {
+				scope.setData(res.data);
+				return scope;
+			});
+		};
+	};
+
+	/**
+	 * Remove Association of a resource
+	 * 
+	 * @memberof $pluf
+	 * @param {Object}
+	 *                params
+	 * @param {PObjectCache}
+	 *                cache
+	 * @return {function}
+	 */
+	this.createDeleteAss = function(params, _cache) {
+		var urlTemplate = params.url;
+		return function(child) {
+			var scope = this;
+			params.url = createPath(urlTemplate, scope);
+			if(child.id){
+				params.url = params.url.replace('{id}', child.id);
+			}
+			return $http(params)//
+			.then(function(res) {
+				if (_cache) {
+					return _cache.restor(res.data.id, res.data);
+				}
+				return res.data;
+			});
+		};
+	};
+
+	/**
+	 * 
+	 * @memberof $pluf
+	 * @param {Object}
+	 *                params
+	 * @param {PObjectCache}
+	 *                cache
+	 * @return {function}
+	 */
+	this.createNew = function(params, _cache) {
+		params.headers = {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+		};
+		var urlTemplate = params.url;
+		return function(objectData) {
+			params.url = createPath(urlTemplate, this);
+			params.data = $httpParamSerializerJQLike(objectData);
+			return $http(params)//
+			.then(function(res) {
+				return _cache.restor(res.data.id, res.data);
+			});
+		};
+	};
+
+	this.get = function(params, _cache) {
+		params.method = 'GET';
+		if (params.url.indexOf(':') === 0) {
+			// No need to create path dynamically
+			return function(data) {
+				if (!data) {
+					data = {};
+				}
+				params.params = data;
+				return $http(params)//
+				.then(function(res) {
+					if (_cache) {
+						return _cache.restor(res.data.id, res.data);
+					}
+					return res.data;
+				});
+			};
 		}
 		var urlTemplate = params.url;
 		return function(data) {
-		    if (!data) {
-			data = {};
-		    }
-		    params.url = createPath(urlTemplate, this);
-		    params.params = data;
-		    return $http(params)//
-		    .then(function(res) {
-			if (_cache) {
-			    return _cache.restor(res.data.id, res.data);
+			if (!data) {
+				data = {};
 			}
-			return res.data;
-		    });
+			params.url = createPath(urlTemplate, this);
+			params.params = data;
+			return $http(params)//
+			.then(function(res) {
+				if (_cache) {
+					return _cache.restor(res.data.id, res.data);
+				}
+				return res.data;
+			});
 		};
-	    };
+	};
 
-	});
+});
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
  * 
@@ -5159,158 +5187,127 @@ angular.module('pluf')
  * @description
  * 
  */
-.factory(
-	'PGroup',
-	function(PObject, $http, $httpParamSerializerJQLike, $q, $injector,
-		PaginatorPage) {
-	    /*
-	     * یک نمونه جدید از این موجودیت ایجاد می کند.
-	     */
-	    var pGroup = function(data) {
-		if (data) {
-		    this.setData(data);
+.factory('PGroup',function(PObject,PObjectFactory, $injector, $pluf) {
+
+	var _roleCache = new PObjectFactory(function(data) {
+		if (!this.PRole) {
+			this.PRole = $injector.get('PRole');
 		}
-	    };
-
-	    pGroup.prototype = new PObject();
-
-	    /**
-	     * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور
-	     * انتقال می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
-	     * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
-	     * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
-	     * 
-	     * @memberof PProfile
-	     * 
-	     * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
-	     */
-	    pGroup.prototype.update = function() {
-		if (this.isAnonymous()) {
-		    var deferred = $q.defer();
-		    deferred.reject();
-		    return deferred.promise;
-		}
-		var scope = this;
-		return $http({
-		    method : 'POST',
-		    url : '/api/group/' + this.id,
-		    data : $httpParamSerializerJQLike(scope),
-		    headers : {
-			'Content-Type' : 'application/x-www-form-urlencoded'
-		    }
-		}).then(function(res) {
-		    scope.setData(res.data);
-		    return scope;
-		});
-	    };
-
-	    /**
-	     * پروفایل کاربری را حذف می کند
-	     * 
-	     * @memberof PProfile
-	     * 
-	     * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف
-	     *          شده
-	     */
-	    pGroup.prototype.remove = function() {
-		var scope = this;
-		return $http({
-		    method : 'DELETE',
-		    url : '/api/group/' + this.id,
-		}).then(function(data) {
-		    scope.setData(data.data);
-		    return scope;
-		});
-	    };
-	    pGroup.prototype.delete = pGroup.prototype.remove;
-
-	    /**
-	     * حذف یک رول
-	     * 
-	     * برای حذف نقش باید خود نقش را داشته باشید.
-	     * 
-	     * @param {PRole}
-	     *                نقش مورد نظر
-	     * @return promise پارامتری برای خروجی در نظر گرفته نشده
-	     */
-	    pGroup.prototype.removeRole = function(role) {
-		return $http({
-		    method : 'DELETE',
-		    url : '/api/group/' + this.id + '/role/' + role.id,
-		});
-	    };
-
-	    /**
-	     * فهرست نقش‌های گروه را تعیین می‌کند
-	     * 
-	     * @param PaginationParameter
-	     * @return promise(PaginatedPage(Role))
-	     */
-	    pGroup.prototype.roles = function(paginationParam) {
-		var params = {};
-		if (paginationParam) {
-		    params = paginationParam.getParameter();
-		}
-		return $http({
-		    method : 'GET',
-		    url : '/api/group/' + this.id + '/role/find',
-		    params : params
-		}).then(function(res) {
-		    var $usr = $injector.get('$usr');
-		    var page = new PaginatorPage(res.data);
-		    var items = [];
-		    for (var i = 0; i < page.counts; i++) {
-			var item = page.items[i];
-			items.push($usr._roleCache.restor(item.id, item));
-		    }
-		    page.items = items;
-		    return page;
-		});
-	    };
-
-	    /**
-	     * کاربر رو حذف می‌کنه
-	     * 
-	     * معادل با حذف نقش کاربر هست.
-	     * 
-	     * @param {PUser}
-	     *                کاربر مورد نظر
-	     */
-	    pGroup.prototype.removeUser = function(user) {
-		return $http({
-		    method : 'DELETE',
-		    url : '/api/group/' + this.id + '/user/' + user.id,
-		});
-	    };
-
-	    /**
-	     * فهرست کاربران را تعیین می‌کند
-	     * 
-	     */
-	    pGroup.prototype.users = function(paginationParam) {
-		var params = {};
-		if (paginationParam) {
-		    params = paginationParam.getParameter();
-		}
-		return $http({
-		    method : 'GET',
-		    url : '/api/group/' + this.id + '/user/find',
-		    params : params
-		}).then(function(res) {
-		    var $usr = $injector.get('$usr');
-		    var page = new PaginatorPage(res.data);
-		    var items = [];
-		    for (var i = 0; i < page.counts; i++) {
-			var item = page.items[i];
-			items.push($usr._userCache.restor(item.id, item));
-		    }
-		    page.items = items;
-		    return page;
-		});
-	    };
-
-	    return pGroup;
+		return new this.PRole(data);
 	});
+	var _userCache = new PObjectFactory(function(data) {
+		if (!this.PGroup) {
+			this.PUser = $injector.get('PUser');
+		}
+		return new this.PUser(data);
+	});
+
+	/*
+	 * یک نمونه جدید از این موجودیت ایجاد می کند.
+	 */
+	var pGroup = function(data) {
+		if (data) {
+			this.setData(data);
+		}
+	};
+
+	pGroup.prototype = new PObject();
+
+	/**
+	 * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور انتقال
+	 * می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای اعمال شده در
+	 * این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و با بارگذاری دوباره
+	 * سیستم، به حالت اولیه برگردانده خواهد شد
+	 * 
+	 * @memberof PProfile
+	 * 
+	 * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
+	 */
+	pGroup.prototype.update = $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/group/:id',
+	});
+
+
+	/**
+	 * پروفایل کاربری را حذف می کند
+	 * 
+	 * @memberof PProfile
+	 * 
+	 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف شده
+	 */
+	pGroup.prototype.remove = $pluf.createDelete({
+		method : 'DELETE',
+		url : '/api/group/:id'
+	});
+	pGroup.prototype.delete = pGroup.prototype.remove;
+
+	/**
+	 * حذف یک رول
+	 * 
+	 * برای حذف نقش باید خود نقش را داشته باشید.
+	 * 
+	 * @param {PRole}
+	 *            نقش مورد نظر
+	 * @return promise پارامتری برای خروجی در نظر گرفته نشده
+	 */
+	pGroup.prototype.removeRole = $pluf.createDeleteAss({
+		method : 'DELETE',
+		url : '/api/group/:id/role/{id}',
+	}, _roleCache);
+
+	/**
+	 * فهرست نقش‌های گروه را تعیین می‌کند
+	 * 
+	 * @param PaginationParameter
+	 * @return promise(PaginatedPage(Role))
+	 */
+	pGroup.prototype.roles = $pluf.createFind({
+		method : 'GET',
+		url : '/api/group/:id/role/find',
+	}, _roleCache);
+
+
+	/**
+	 * Adds a role into the role list of a group
+	 */
+	pGroup.prototype.newRole = $pluf.createNew({
+		method : 'POST',
+		url : '/api/group/:id/role/new'
+	}, _roleCache);
+
+	/**
+	 * کاربر رو حذف می‌کنه
+	 * 
+	 * معادل با حذف نقش کاربر هست.
+	 * 
+	 * @param {PUser}
+	 *            کاربر مورد نظر
+	 */
+	pGroup.prototype.removeUser = $pluf.createDeleteAss({
+		method : 'DELETE',
+		url : '/api/group/:id/user/{id}',
+	}, _userCache);
+
+	/**
+	 * فهرست کاربران را تعیین می‌کند
+	 * 
+	 */
+	pGroup.prototype.users = $pluf.createFind({
+		method : 'GET',
+		url : '/api/group/:id/user/find',
+	}, _userCache);
+
+	/**
+	 * Adds a user
+	 */
+	pGroup.prototype.newUser = $pluf.createNew({
+		method : 'POST',
+		url : '/api/group/:id/user/new'
+	}, _userCache);
+
+	return pGroup;
+});
 
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
