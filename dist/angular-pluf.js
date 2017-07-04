@@ -5552,156 +5552,128 @@ angular.module('pluf')
  * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد پروفایل
  * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
-.factory(
-	'PRole',
-	function(PObject, $http, $httpParamSerializerJQLike, $q, $injector,
-		PaginatorPage) {
-	    /*
-	     * یک نمونه جدید از این موجودیت ایجاد می کند.
-	     */
-	    var pRole = function(data) {
-		if (data) {
-		    this.setData(data);
+.factory('PRole', function(PObject, PObjectFactory, $pluf, $injector) {
+
+	var _userCache = new PObjectFactory(function(data) {
+		if (!this.PGroup) {
+			this.PUser = $injector.get('PUser');
 		}
-	    };
-
-	    pRole.prototype = new PObject();
-
-	    /**
-	     * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور
-	     * انتقال می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
-	     * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
-	     * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
-	     * 
-	     * @memberof PProfile
-	     * 
-	     * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
-	     */
-	    pRole.prototype.update = function() {
-		if (this.isAnonymous()) {
-		    var deferred = $q.defer();
-		    deferred.reject();
-		    return deferred.promise;
-		}
-		var scope = this;
-		return $http({
-		    method : 'POST',
-		    url : '/api/role/' + this.id,
-		    data : $httpParamSerializerJQLike(this),
-		    headers : {
-			'Content-Type' : 'application/x-www-form-urlencoded'
-		    }
-		}).then(function(res) {
-		    scope.setData(res.data);
-		    return scope;
-		});
-	    };
-
-	    /**
-	     * پروفایل کاربری را حذف می کند
-	     * 
-	     * @memberof PProfile
-	     * 
-	     * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف
-	     *          شده
-	     */
-	    pRole.prototype.remove = function() {
-		var scope = this;
-		return $http({
-		    method : 'DELETE',
-		    url : '/api/role/' + this.id,
-		    data : $httpParamSerializerJQLike(scope),
-		    headers : {
-			'Content-Type' : 'application/x-www-form-urlencoded'
-		    }
-		}).then(function(data) {
-		    scope.setData(data.data);
-		    return scope;
-		});
-	    };
-
-	    /**
-	     * کاربر رو حذف می‌کنه
-	     * 
-	     * معادل با حذف نقش کاربر هست.
-	     * 
-	     * @param {PUser}
-	     *                کاربر مورد نظر
-	     */
-	    pRole.prototype.removeUser = function(user) {
-		return $http({
-		    method : 'DELETE',
-		    url : '/api/role/' + this.id + '/user/' + user.id,
-		});
-	    };
-
-	    /**
-	     * فهرست کاربران را تعیین می‌کند
-	     * 
-	     */
-	    pRole.prototype.users = function(paginationParam) {
-		// TODO: mao, 1395: replase with $pluf service
-		var params = {};
-		if (paginationParam) {
-		    params = paginationParam.getParameter();
-		}
-		return $http({
-		    method : 'GET',
-		    url : '/api/role/' + this.id + '/user/find',
-		    params : params
-		}).then(function(res) {
-		    var $usr = $injector.get('$usr');
-		    var page = new PaginatorPage(res.data);
-		    var items = [];
-		    for (var i = 0; i < page.counts; i++) {
-			var item = page.items[i];
-			items.push($usr._userCache.restor(item.id, item));
-		    }
-		    page.items = items;
-		    return page;
-		});
-	    };
-
-	    /**
-	     * گروه رو حذف می‌کنه
-	     * 
-	     * این فراخوانی معادل با حذف یک نقش از یک گروه هست.
-	     * 
-	     * 
-	     */
-	    pRole.prototype.removeGroup = function(group) {
-		return $http({
-		    method : 'DELETE',
-		    url : '/api/role/' + this.id + '/group/' + group.id,
-		});
-	    };
-
-	    /**
-	     * فهرست گوره‌هایی که در این نقش هستند
-	     */
-	    pRole.prototype.groups = function(paginationParam) {
-		var params = {};
-		if (paginationParam) {
-		    params = paginationParam.getParameter();
-		}
-		return $http({
-		    method : 'GET',
-		    url : '/api/role/' + this.id + '/group/find',
-		    params : params
-		}).then(function(res) {
-		    var $usr = $injector.get('$usr');
-		    var page = new PaginatorPage(res.data);
-		    var items = [];
-		    for (var i = 0; i < page.counts; i++) {
-			var item = page.items[i];
-			items.push($usr._groupCache.restor(item.id, item));
-		    }
-		    page.items = items;
-		    return page;
-		});
-	    };
-	    return pRole;
+		return new this.PUser(data);
 	});
+
+	var _groupCache = new PObjectFactory(function(data) {
+		if (!this.PGroup) {
+			this.PGroup = $injector.get('PGroup');
+		}
+		return new this.PGroup(data);
+	});
+
+	/*
+	 * یک نمونه جدید از این موجودیت ایجاد می کند.
+	 */
+	var pRole = function(data) {
+		if (data) {
+			this.setData(data);
+		}
+	};
+
+	pRole.prototype = new PObject();
+
+	/**
+	 * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور
+	 * انتقال می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
+	 * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
+	 * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
+	 * 
+	 * @memberof PProfile
+	 * 
+	 * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
+	 */
+	pRole.prototype.update = $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/role/:id'
+	});
+
+	/**
+	 * پروفایل کاربری را حذف می کند
+	 * 
+	 * @memberof PProfile
+	 * 
+	 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف
+	 *          شده
+	 */
+	pRole.prototype.remove = $pluf.createDelete({
+		method : 'DELETE',
+		url : '/api/role/:id' 
+	});
+
+
+	/**
+	 * کاربر رو حذف می‌کنه
+	 * 
+	 * معادل با حذف نقش کاربر هست.
+	 * 
+	 * @param {PUser}
+	 *            کاربر مورد نظر
+	 */
+	pRole.prototype.removeUser = $pluf.createDeleteAss({
+		method : 'DELETE',
+		url : '/api/role/:id/user/{id}',
+	}, _userCache);
+
+	/**
+	 * فهرست کاربران را تعیین می‌کند
+	 * 
+	 */
+	pRole.prototype.users = $pluf.createFind({
+		method : 'GET',
+		url : '/api/role/:id/user/find',
+	}, _userCache);
+
+	/**
+	 * Adds a user
+	 */
+	pRole.prototype.newUser = $pluf.createNew({
+		method : 'POST',
+		url : '/api/role/:id/user/new'
+	}, _userCache);
+
+
+	/**
+	 * Deletes group ass.
+	 * 
+	 * @param {PGroup}
+	 *                گروه مورد نظر
+	 * @return {Promise<PGroup>}
+	 */
+	pRole.prototype.removeGroup = $pluf.createDeleteAss({
+		method : 'DELETE',
+		url : '/api/role/:id/group/{id}',
+	});
+
+	/**
+	 * Lists all groups
+	 * 
+	 * @param {PaginationParameter}
+	 * @return {Promise<PaginatedPage<PGroup>>}
+	 */
+	pRole.prototype.groups = $pluf.createGet({
+		method : 'GET',
+		url : '/api/role/:id/group/find',
+	}, _groupCache);
+
+	/**
+	 * Adds new group
+	 */
+	pRole.prototype.newGroup = $pluf.createNew({
+		method : 'POST',
+		url : '/api/role/:id/group/new'
+	}, _groupCache);
+
+
+
+	return pRole;
+});
 
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -5769,218 +5741,217 @@ angular.module('pluf')
  * اعمال خواهد شد.
  */
 .factory('PUser',
-	function($http, $q, $pluf, PObject, PObjectFactory, $injector) {
+		function($http, $q, $pluf, PObject, PObjectFactory, $injector) {
 
-    var _profileCache = new PObjectFactory(function(data) {
-	if (!this.PRole) {
-	    this.PProfile = $injector.get('PProfile');
-	}
-	return new this.PProfile(data);
-    });
-    var _roleCache = new PObjectFactory(function(data) {
-	if (!this.PRole) {
-	    this.PRole = $injector.get('PRole');
-	}
-	return new this.PRole(data);
-    });
-    var _groupCache = new PObjectFactory(function(data) {
-	if (!this.PGroup) {
-	    this.PGroup = $injector.get('PGroup');
-	}
-	return new this.PGroup(data);
-    });
-    var _messageCache = new PObjectFactory(function(data) {
-	if (!this.PMessage) {
-	    this.PProfile = $injector.get('PMessage');
-	}
-	return new this.PMessage(data);
-    });
-
-    var pUser = function(data) {
-	if (data) {
-	    this.setData(data);
-	    /*
-	     * NOTE: فرض ما این هست که شناسه داره و این شناسه تغییر
-	     * نمی‌کنه
-	     */
-	    this.avatar = '/api/user/' + this.id + '/avatar';
-	}
-    };
-
-    pUser.prototype = new PObject();
-
-    /**
-     * اطلاعات حساب کاربری را به‌روزرسانی می‌کند
-     * 
-     * تغییراتی که در ساختارهای داده‌ای اعمال شده است را در سرور نیز
-     * اعمال می‌کند. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
-     * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
-     * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد.
-     * 
-     * @memberof PUser
-     * 
-     * @return {promise(PUser)} ساختار داده‌ای به‌روز شده‌ی حساب کاربری
-     */
-    pUser.prototype.update = $pluf.createUpdate({
-	method : 'POST',
-	url : '/api/user/:id',
-    });
-
-    // TODO: maso, document: پارامتر ورودی ساختاری با داده گذرواژه
-    pUser.prototype.newPassword = $pluf.createUpdate({
-	method : 'POST',
-	url : '/api/user/:id/password',
-    });
-    
-    // TODO: maso, document
-    pUser.prototype.newAvatar = function(file){
-	var fd = new FormData();
-	fd.append('file', file);
-	return $http.post('/api/user/'+this.id+'/avatar', fd, {
-	    transformRequest : angular.identity,
-	    headers : {
-		'Content-Type' : undefined
-	    }
+	var _profileCache = new PObjectFactory(function(data) {
+		if (!this.PRole) {
+			this.PProfile = $injector.get('PProfile');
+		}
+		return new this.PProfile(data);
 	});
-    };
-
-    /**
-     * حساب کاربری را حذف می‌کند
-     * 
-     * @memberof PUser
-     * 
-     * @return {promise(PUser)} ساختار داده‌ای حساب کاربری حذف شده
-     */
-    pUser.prototype.delete = $pluf.createDelete({
-	method : 'DELETE',
-	url : '/api/user/:id'
-    });
-
-    /**
-     * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی
-     * به صورت هم زمان انجام می‌شود.
-     * 
-     * @memberof PUser
-     * 
-     * @return {boolean} حالت مدیر بودن کاربر
-     */
-    pUser.prototype.isAdministrator = function() {
-	return (this.id && this.id > 0 && this.administrator);
-    };
-    
-    /**
-     * تعیین می‌کند که آیا کاربر جاری یک کاربر ثبت شده است یا نه. این فراخوانی
-     * به صورت هم زمان انجام می‌شود.
-     * 
-     * @memberof PUser
-     * 
-     * @return {boolean} 
-     */
-    pUser.prototype.isAnonymous = function() {
-	return !(this.id && this.id > 0);
-    };
-
-    /**
-     * تعیین می‌کند که آیا کاربر جاری staff است یا نه. این فراخوانی به
-     * صورت هم زمان انجام می‌شود.
-     * 
-     * @memberof PUser
-     * 
-     * @return {boolean} حالت staff بودن کاربر
-     */
-    pUser.prototype.isStaff = function() {
-	return (this.id && this.id > 0 && this.staff);
-    };
-
-    /**
-     * پروفایل کاربر را تعیین می‌کند.
-     * 
-     * @memberof PUser
-     * 
-     * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری مربوط
-     *          به این حساب کاربری
-     */
-    pUser.prototype.profile = $pluf.createGet({
-	method : 'GET',
-	url : '/api/user/:id/profile',
-    }, _profileCache);
-
-    /**
-     * حذف یک رول از کاربر
-     * 
-     * برای حذف نقش باید خود نقش را داشته باشید.
-     * 
-     * @param {PRole}
-     *                نقش مورد نظر
-     * @return promise پارامتری برای خروجی در نظر گرفته نشده
-     */
-    pUser.prototype.removeRole = function(role) {
-	return $http({
-	    method : 'DELETE',
-	    url : '/api/user/' + this.id + '/role/' + role.id,
+	var _roleCache = new PObjectFactory(function(data) {
+		if (!this.PRole) {
+			this.PRole = $injector.get('PRole');
+		}
+		return new this.PRole(data);
 	});
-    };
-
-    /**
-     * فهرست نقش‌های کاربر را تعیین می‌کند
-     * 
-     * @param PaginationParameter
-     * @return promise(PaginatedPage(Role))
-     */
-    pUser.prototype.roles = $pluf.createFind({
-	method : 'GET',
-	url : '/api/user/:id/role/find',
-    }, _roleCache);
-    
-    /**
-     * Crate a new role 
-     */
-    pUser.prototype.newRole = $pluf.createNew({
-	method : 'POST',
-	url : '/api/user/:id/role/new'
-    }, _roleCache);
-
-    /**
-     * رابطه میان گروه و کاربر را حذف می کند.
-     * 
-     * پارامتر ورودی باید یک گروه باشد.
-     * 
-     * @param {PGroup}
-     *                گروه مورد نظر
-     * @return {Promise<PGroup>}
-     */
-    pUser.prototype.removeGroup = function(group) {
-	return $http({
-	    method : 'DELETE',
-	    url : '/api/user/' + this.id + '/group/' + group.id,
+	var _groupCache = new PObjectFactory(function(data) {
+		if (!this.PGroup) {
+			this.PGroup = $injector.get('PGroup');
+		}
+		return new this.PGroup(data);
 	});
-    };
+	var _messageCache = new PObjectFactory(function(data) {
+		if (!this.PMessage) {
+			this.PProfile = $injector.get('PMessage');
+		}
+		return new this.PMessage(data);
+	});
 
-    /**
-     * فهرست گروه‌هایی را تعیین می‌کند که کاربر در آنها است
-     * 
-     * @param {PaginationParameter}
-     * @return {Promise<PaginatedPage<PGroup>>}
-     */
-    pUser.prototype.groups = $pluf.createGet({
-	method : 'GET',
-	url : '/api/user/:id/group/find',
-    }, _groupCache);
+	var pUser = function(data) {
+		if (data) {
+			this.setData(data);
+			/*
+			 * NOTE: فرض ما این هست که شناسه داره و این شناسه تغییر
+			 * نمی‌کنه
+			 */
+			this.avatar = '/api/user/' + this.id + '/avatar';
+		}
+	};
 
-    pUser.prototype.newGroup = $pluf.createNew({
-	method : 'POST',
-	url : '/api/user/:id/group/new'
-    }, _roleCache);
+	pUser.prototype = new PObject();
 
-    /**
-     * 
-     */
-    pUser.prototype.messages = $pluf.createFind({
-	method : 'GET',
-	url : '/api/user/:id/message/find',
-    }, _messageCache);
+	/**
+	 * اطلاعات حساب کاربری را به‌روزرسانی می‌کند
+	 * 
+	 * تغییراتی که در ساختارهای داده‌ای اعمال شده است را در سرور نیز
+	 * اعمال می‌کند. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
+	 * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
+	 * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد.
+	 * 
+	 * @memberof PUser
+	 * 
+	 * @return {promise(PUser)} ساختار داده‌ای به‌روز شده‌ی حساب کاربری
+	 */
+	pUser.prototype.update = $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/user/:id',
+	});
 
-    return pUser;
+	// TODO: maso, document: پارامتر ورودی ساختاری با داده گذرواژه
+	pUser.prototype.newPassword = $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/user/:id/password',
+	});
+
+	// TODO: maso, document
+	pUser.prototype.newAvatar = function(file){
+		var fd = new FormData();
+		fd.append('file', file);
+		return $http.post('/api/user/'+this.id+'/avatar', fd, {
+			transformRequest : angular.identity,
+			headers : {
+				'Content-Type' : undefined
+			}
+		});
+	};
+
+	/**
+	 * حساب کاربری را حذف می‌کند
+	 * 
+	 * @memberof PUser
+	 * 
+	 * @return {promise(PUser)} ساختار داده‌ای حساب کاربری حذف شده
+	 */
+	pUser.prototype.delete = $pluf.createDelete({
+		method : 'DELETE',
+		url : '/api/user/:id'
+	});
+
+	/**
+	 * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی
+	 * به صورت هم زمان انجام می‌شود.
+	 * 
+	 * @memberof PUser
+	 * 
+	 * @return {boolean} حالت مدیر بودن کاربر
+	 */
+	pUser.prototype.isAdministrator = function() {
+		return (this.id && this.id > 0 && this.administrator);
+	};
+
+	/**
+	 * تعیین می‌کند که آیا کاربر جاری یک کاربر ثبت شده است یا نه. این فراخوانی
+	 * به صورت هم زمان انجام می‌شود.
+	 * 
+	 * @memberof PUser
+	 * 
+	 * @return {boolean} 
+	 */
+	pUser.prototype.isAnonymous = function() {
+		return !(this.id && this.id > 0);
+	};
+
+	/**
+	 * تعیین می‌کند که آیا کاربر جاری staff است یا نه. این فراخوانی به
+	 * صورت هم زمان انجام می‌شود.
+	 * 
+	 * @memberof PUser
+	 * 
+	 * @return {boolean} حالت staff بودن کاربر
+	 */
+	pUser.prototype.isStaff = function() {
+		return (this.id && this.id > 0 && this.staff);
+	};
+
+	/**
+	 * پروفایل کاربر را تعیین می‌کند.
+	 * 
+	 * @memberof PUser
+	 * 
+	 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری مربوط
+	 *          به این حساب کاربری
+	 */
+	pUser.prototype.profile = $pluf.createGet({
+		method : 'GET',
+		url : '/api/user/:id/profile',
+	}, _profileCache);
+
+	/**
+	 * حذف یک رول از کاربر
+	 * 
+	 * برای حذف نقش باید خود نقش را داشته باشید.
+	 * 
+	 * @param {PRole}
+	 *                نقش مورد نظر
+	 * @return promise پارامتری برای خروجی در نظر گرفته نشده
+	 */
+	pUser.prototype.removeRole = function(role) {
+		return $http({
+			method : 'DELETE',
+			url : '/api/user/' + this.id + '/role/' + role.id,
+		});
+	};
+
+	/**
+	 * فهرست نقش‌های کاربر را تعیین می‌کند
+	 * 
+	 * @param PaginationParameter
+	 * @return promise(PaginatedPage(Role))
+	 */
+	pUser.prototype.roles = $pluf.createFind({
+		method : 'GET',
+		url : '/api/user/:id/role/find',
+	}, _roleCache);
+
+	/**
+	 * Crate a new role 
+	 */
+	pUser.prototype.newRole = $pluf.createNew({
+		method : 'POST',
+		url : '/api/user/:id/role/new'
+	}, _roleCache);
+
+	/**
+	 * Deletes group ass.
+	 * 
+	 * @param {PGroup}
+	 *                گروه مورد نظر
+	 * @return {Promise<PGroup>}
+	 */
+	pUser.prototype.removeGroup = $pluf.createDeleteAss({
+		method : 'DELETE',
+		url : '/api/user/:id/group/{id}',
+	});
+
+	/**
+	 * Lists all groups
+	 * 
+	 * @param {PaginationParameter}
+	 * @return {Promise<PaginatedPage<PGroup>>}
+	 */
+	pUser.prototype.groups = $pluf.createGet({
+		method : 'GET',
+		url : '/api/user/:id/group/find',
+	}, _groupCache);
+
+	/**
+	 * Adds new group
+	 */
+	pUser.prototype.newGroup = $pluf.createNew({
+		method : 'POST',
+		url : '/api/user/:id/group/new'
+	}, _groupCache);
+
+	/**
+	 * 
+	 */
+	pUser.prototype.messages = $pluf.createFind({
+		method : 'GET',
+		url : '/api/user/:id/message/find',
+	}, _messageCache);
+
+	return pUser;
 });
 
 /*
