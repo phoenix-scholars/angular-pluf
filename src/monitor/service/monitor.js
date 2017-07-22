@@ -162,6 +162,8 @@ angular.module('pluf')
 	 * 
 	 * <value> refers to the query result data, which has varying formats
 	 * depending on the resultType
+	 * 
+	 * @see https://prometheus.io/docs/querying/api/
 	 */
 	this.query = $pluf.get({
 		url: '/api/v1/query'
@@ -196,6 +198,8 @@ angular.module('pluf')
 	 * 
 	 * The following example evaluates the expression up over a 30-second range
 	 * with a query resolution of 15 seconds.
+	 * 
+	 * @see https://prometheus.io/docs/querying/api/
 	 */
 	this.queryRange = $pluf.get({
 		url: '/api/v1/query_range'
