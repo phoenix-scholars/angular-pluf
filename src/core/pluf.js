@@ -281,6 +281,9 @@ angular.module('pluf')
 		};
 	};
 
+	/**
+	 * Create a get method
+	 */
 	this.get = function(params, _cache) {
 		params.method = 'GET';
 		if (params.url.indexOf(':') === 0) {
