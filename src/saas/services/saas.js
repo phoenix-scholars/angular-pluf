@@ -28,7 +28,7 @@ angular.module('pluf')
  * @memberof pluf.saas
  * @description مدیریت ملک و نرم افزارها را انجام می‌دهد.
  */
-.service('$saas', function($http, PTenant, PSpa, PObjectCache, $pluf) {
+.service('$saas', function($http, PTenant, PSpa, PObjectCache, $pluf, $httpParamSerializerJQLike) {
 
     var _tenantCache = new PObjectCache(function(data) {
 	return new PTenant(data);
@@ -142,4 +142,48 @@ angular.module('pluf')
 	});
     };
 
+    /**
+     * Sets or Gets setting value
+     * 
+     * Each teanant is contains of severall settings. This method allow you to
+     * set or get value.
+     * 
+     * <code>
+     * 	$saas.setting('key', 'value')//
+     * 		.then(function(){
+     * 			// value is set
+     * 		});
+     * </code>
+     * 
+     * And getting the value:
+     * 
+     * <code>
+     * 	$saas.setting('key')//
+     * 		.then(function(value){
+     * 			// access value
+     * 		});
+     * </code>
+     */
+    this.setting = function(key, value) {
+	if (angular.isDefined(value)) {
+	    // Setting value
+	    return $http({
+		method : 'POST',
+		url : '/api/setting/spa.default',
+		headers : {
+		    'Content-Type' : 'application/x-www-form-urlencoded'
+		},
+		data : $httpParamSerializerJQLike({
+		    'value' : value
+		})
+	    })
+	}
+	// getting value
+	return $http({
+	    method : 'GET',
+	    url : '/api/setting/spa.default'
+	}).then(function(res) {
+	    return res.data.value;
+	});
+    }
 });

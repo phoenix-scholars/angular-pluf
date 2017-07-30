@@ -24,34 +24,40 @@
 angular.module('pluf')
 
 /**
- * @memberof pluf
- * @ngdoc service
- * @name $act
+ * @memberof $calendar
+ * @ngdoc Facotyr
+ * @name PEvent
  * @description
  * 
  * 
  */
-.factory('PGate', function(PObject, $pluf) {
+.factory('PEvent', function(PObject, $pluf) {
 
     /*
      * Creates new instance
      */
-    var pGate = function() {
+    var pEvent = function() {
 	PObject.apply(this, arguments);
     };
     // Extends it from PObject
-    pGate.prototype = new PObject();
+    pEvent.prototype = new PObject();
 
-    pGate.prototype.update = $pluf.createUpdate({
+    /**
+     * Updates bank
+     */
+    pEvent.prototype.update = $pluf.createUpdate({
 	method : 'POST',
-	url : '/api/bank/backend/:id'
+	url : '/api/calendar/events/:id'
     });
 
-    pGate.prototype.remove = $pluf.createDelete({
+    /**
+     * remove bank
+     */
+    pEvent.prototype.remove = $pluf.createDelete({
 	method: 'DELETE',
-	url : '/api/bank/backend/:id',
+	url : '/api/calendar/events/:id',
     });
-
-    pGate.prototype.delete = pGate.prototype.remove;
-    return pGate;
+    pEvent.prototype.delete = pEvent.prototype.remove;
+    //
+    return pEvent;
 });

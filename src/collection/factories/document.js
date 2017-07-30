@@ -31,27 +31,32 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PGate', function(PObject, $pluf) {
+.factory('PDocument', function(PObject, $pluf) {
 
-    /*
-     * Creates new instance
-     */
-    var pGate = function() {
-	PObject.apply(this, arguments);
-    };
-    // Extends it from PObject
-    pGate.prototype = new PObject();
+	/*
+	 * Creates new instance
+	 */
+	var document = function() {
+		PObject.apply(this, arguments);
+	};
+	// Extends it from PObject
+	document.prototype = new PObject();
 
-    pGate.prototype.update = $pluf.createUpdate({
-	method : 'POST',
-	url : '/api/bank/backend/:id'
-    });
+	/**
+	 * Updates bank
+	 */
+	document.prototype.update = $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/collection/:collection/document/:id'
+	});
 
-    pGate.prototype.remove = $pluf.createDelete({
-	method: 'DELETE',
-	url : '/api/bank/backend/:id',
-    });
-
-    pGate.prototype.delete = pGate.prototype.remove;
-    return pGate;
+	/**
+	 * remove bank
+	 */
+	document.prototype.remove = $pluf.createDelete({
+		method: 'DELETE',
+		url : '/api/collection/:collection/document/:id',
+	});
+	//
+	return document;
 });

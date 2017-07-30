@@ -66,50 +66,34 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PBank', function(PObject, $http, $httpParamSerializerJQLike) {
+.factory('PBank', function(PObject, $pluf) {
 
-	/*
-	 * Creates new instance
-	 */
-	var pBank = function() {
-		PObject.apply(this, arguments);
-	};
-	// Extends it from PObject
-	pBank.prototype = new PObject();
+    /*
+     * Creates new instance
+     */
+    var pBank = function() {
+	PObject.apply(this, arguments);
+    };
+    // Extends it from PObject
+    pBank.prototype = new PObject();
 
-	/**
-	 * Updates bank
-	 */
-	pBank.prototype.update = function() {
-		var scope = this;
-		return $http({
-			method : 'POST',
-			url : '/api/bank/engine/' + scope.id,
-			data : $httpParamSerializerJQLike(scope),
-			headers : {
-				'Content-Type' : 'application/x-www-form-urlencoded'
-			}
-		}).then(function(result) {
-			scope.setData(result.data);
-			return scope;
-		});
-	};
+    /**
+     * Updates bank
+     */
+    pBank.prototype.update = $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/bank/engine/:id'
+    });
 
-	/**
-	 * remove bank
-	 */
-	pBank.prototype.remove = function() {
-		var scope = this;
-		return $http({
-			method : 'DELETE',
-			url : '/api/bank/engine/' + this.id,
-		}).then(function(result) {
-			scope.setData(result.data);
-			return scope;
-		});
-	};
-	//
-	return pBank;
+    /**
+     * remove bank
+     */
+    pBank.prototype.remove = $pluf.createDelete({
+	method: 'DELETE',
+	url : '/api/bank/engine/:id',
+    });
+    //
+    return pBank;
 });
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -144,44 +128,29 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PGate', function(PObject, $http, $httpParamSerializerJQLike) {
+.factory('PGate', function(PObject, $pluf) {
 
-	/*
-	 * Creates new instance
-	 */
-	var pGate = function() {
-		PObject.apply(this, arguments);
-	};
-	// Extends it from PObject
-	pGate.prototype = new PObject();
+    /*
+     * Creates new instance
+     */
+    var pGate = function() {
+	PObject.apply(this, arguments);
+    };
+    // Extends it from PObject
+    pGate.prototype = new PObject();
 
-	pGate.prototype.update = function() {
-		var scope = this;
-		return $http({
-			method : 'POST',
-			url : '/api/bank/backend/' + this.id,
-			data : $httpParamSerializerJQLike(this),
-			headers : {
-				'Content-Type' : 'application/x-www-form-urlencoded'
-			}
-		}).then(function(res) {
-			scope.setData(res.data);
-			return scope;
-		});
-	};
+    pGate.prototype.update = $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/bank/backend/:id'
+    });
 
-	pGate.prototype.remove = function() {
-		var scope = this;
-		return $http({
-			method : 'DELETE',
-			url : '/api/bank/backend/' + this.id,
-		}).then(function(res) {
-			scope.setData(res.data);
-			scope.id = null;
-			return scope;
-		});
-	};
-	return pGate;
+    pGate.prototype.remove = $pluf.createDelete({
+	method: 'DELETE',
+	url : '/api/bank/backend/:id',
+    });
+
+    pGate.prototype.delete = pGate.prototype.remove;
+    return pGate;
 });
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -216,44 +185,29 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PReceipt', function(PObject, $http, $httpParamSerializerJQLike) {
+.factory('PReceipt', function(PObject, $pluf) {
 
-	/*
-	 * Creates new instance
-	 */
-	var pReceipt = function() {
-		PObject.apply(this, arguments);
-	};
-	// Extends it from PObject
-	pReceipt.prototype = new PObject();
+    /*
+     * Creates new instance
+     */
+    var pReceipt = function() {
+	PObject.apply(this, arguments);
+    };
+    // Extends it from PObject
+    pReceipt.prototype = new PObject();
 
-	pReceipt.prototype.update = function() {
-		var scope = this;
-		return $http({
-			method : 'POST',
-			url : '/api/bank/receipt/' + this.id,
-			data : $httpParamSerializerJQLike(this),
-			headers : {
-				'Content-Type' : 'application/x-www-form-urlencoded'
-			}
-		}).then(function(res) {
-			scope.setData(res.data);
-			return scope;
-		});
-	};
+    pReceipt.prototype.update = $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/bank/receipt/:id'
+    });
 
-	pReceipt.prototype.remove = function() {
-		var scope = this;
-		return $http({
-			method : 'DELETE',
-			url : '/api/bank/receipt/' + this.id,
-		}).then(function(res) {
-			scope.setData(res.data);
-			scope.id = null;
-			return scope;
-		});
-	};
-	return pReceipt;
+    pReceipt.prototype.remove = $pluf.createDelete({
+	method: 'DELETE',
+	url : '/api/bank/receipt/:id',
+    });
+
+    pReceipt.prototype.delete = pReceipt.prototype.remove;
+    return pReceipt;
 });
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -314,213 +268,146 @@ angular.module('pluf')
  * A receipt is accessable with secure_id.
  * 
  */
-.service(
-		'$bank',
-		function($http, $q, PaginatorPage, PBank, PGate, PReceipt,$httpParamSerializerJQLike, PObjectCache) {
-			
-			var _banksCache = new PObjectCache(function(data) {
-				return new PBank(data);
-			});
-			
-			var _gateCache = new PObjectCache(function(data) {
-				return new PBank(data);
-			});
-			var _receiptCache = new PObjectCache(function(data) {
-				return new PBank(data);
-			});
-			
+.service( '$bank', function($pluf, PBank, PGate, PReceipt, PObjectCache) {
 
-			// TODO: maso, 1395: add to PObject
-			function _paginatorParams(paginatorParam) {
-				if (angular.isUndefined(paginatorParam) || !angular.isFunction(paginatorParam.getParameter)) {
-					return {};
-				}
-				return paginatorParam.getParameter();
-			}
-			
+    var _banksCache = new PObjectCache(function(data) {
+	return new PBank(data);
+    });
 
-			
-			/**
-			 * Creates new receipt
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PReceipt>
-			 * createdreceipt
-			 * 
-			 */
-			this.createReceipt = function(receipt) {
-				return $http({
-					method: 'POST',
-					url: '/api/bank/receipt/new',
-					data : $httpParamSerializerJQLike(receipt),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(res){
-					return _receiptCache.restor(res.data.id, res.data);
-				});
-			};
+    var _gateCache = new PObjectCache(function(data) {
+	return new PGate(data);
+    });
 
-			/**
-			 * Gets receipt detail by secure id
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PReceipt>
-			 * createdreceipt
-			 * 
-			 */
-			this.receipt = function(id) {
-				if(_receiptCache.contains(id)){
-					var deferred = $q.defer();
-					deferred.resolve(_receiptCache.get(id));
-					return deferred.promise;
-				}
-				return $http.get('/api/bank/receipt/'+id)//
-				.then(function(res){
-					return _receiptCache.restor(res.data.id, res.data);
-				});
-			};
+    var _receiptCache = new PObjectCache(function(data) {
+	return new PReceipt(data);
+    });
 
-			/**
-			 * Lists all receipts
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PaginatorPage<PReceipt>>
-			 * createdreceipt
-			 * 
-			 */
-			this.receipts = function(paginatorParam) {
-				return $http({
-					method : 'GET',
-					url : '/api/bank/receipt/find',
-					params : _paginatorParams(paginatorParam)
-				}).then(
-						function(res) {
-							var data = res.data;
-							var page = new PaginatorPage(data);
-							page.items = [];
-							for (var i = 0; i < data.counts; i++) {
-								var item = data.items[i];
-								page.items.push(_receiptCache.resotr(
-										item.id, item));
-							}
-							return page;
-						});
-			};
+    /**
+     * Creates new receipt
+     * 
+     * @memberof $bank
+     * @return Promise<PReceipt>
+     * createdreceipt
+     * 
+     */
+    this.newReceipt = $pluf.createNew({
+	method : 'POST',
+	url : '/api/bank/receipt/new'
+    }, _receiptCache);
 
-			/**
-			 * Creates new gate
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PGate> created gate
-			 */
-			this.createGate = function(gate) {
-				return $http({
-					method: 'POST',
-					url: '/api/bank/backend/new',
-					data : $httpParamSerializerJQLike(gate),
-					headers : {
-						'Content-Type' : 'application/x-www-form-urlencoded'
-					}
-				}).then(function(res){
-					return _gateCache.restor(res.data.id, res.data);
-				});
-			};
+    /**
+     * Gets receipt detail by secure id
+     * 
+     * @memberof $bank
+     * @return Promise<PReceipt>
+     * createdreceipt
+     * 
+     */
+    this.receipt = $pluf.createGet({
+	method : 'GET',
+	url : '/api/bank/receipt/{id}',
+    }, _receiptCache);
 
-			/**
-			 * Gets a gate
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PGate> a gate
-			 */
-			this.gate = function(id) {
-				if(_gateCache.contains(id)){
-					var deferred = $q.defer();
-					deferred.resolve(_gateCache.get(id));
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/bank/backend/'+id,
-				}).then(function(res){
-					return _gateCache.restor(res.data.id, res.data);
-				});
-			};
+    /**
+     * Lists all receipts
+     * 
+     * @memberof $bank
+     * @return Promise<PaginatorPage<PReceipt>>
+     * createdreceipt
+     * 
+     */
+    this.receipts = $pluf.createFind({
+	method : 'GET',
+	url : '/api/bank/receipt/find',
+    }, _receiptCache);
 
-			/**
-			 * Lists all gates
-			 * 
-			 * @memberof $bank
-			 * @param paginatorParam
-			 * @return Promise<PaginatorPage<PGate>> gates list
-			 */
-			this.gates = function(paginatorParam) {
-				return $http({
-					method : 'GET',
-					url : '/api/bank/backend/find',
-					params : _paginatorParams(paginatorParam)
-				}).then(
-						function(res) {
-							var data = res.data;
-							var page = new PaginatorPage(data);
-							page.items = [];
-							for (var i = 0; i < data.counts; i++) {
-								var item = data.items[i];
-								page.items.push(_gateCache.restor(
-										item.id, item));
-							}
-							return page;
-						});
-			};
+    /**
+     * Creates new gate
+     * 
+     * @memberof $bank
+     * @return Promise<PGate> created gate
+     */
+    this.newGate = $pluf.createNew({
+	method : 'POST',
+	url : '/api/bank/backend/new'
+    }, _gateCache);
+    
+    /**
+     * Gets list of required properties
+     * 
+     * The best way to get a bank property is:
+     * <pre><code>
+     * 	var bank;
+     * 	...
+     * 	$bank.getProperty(bank)//
+     * 	.then(function(proeprty){
+     * 		// TODO: deil with property
+     * 	});
+     * </code></pre>
+     * 
+     * In the other hand, the following type is correct too: 
+     * <pre><code>
+     * 	var bank;
+     * 	...
+     * 	$bank.getProperty({type: bank.type})//
+     * 	.then(function(proeprty){
+     * 		// TODO: deil with property
+     * 	});
+     * </code></pre>
+     * 
+     * @memberof $bank
+     * @return Promise<Property>
+     */
+    this.gateProperty = $pluf.get({
+	url : '/api/bank/backend/new'
+    });
 
-			/**
-			 * Gets bank detail
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PBank>
-			 */
-			this.bank = function(type) {
-				if(_banksCache.contains(type)){
-					var deferred = $q.defer();
-					deferred.resolve(_banksCache.get(type));
-					return deferred.promise;
-				}
-				return $http({
-					method : 'GET',
-					url : '/api/bank/engine/'+type,
-				}).then(function(res){
-					return _banksCache.restor(res.data.type, res.data);
-				});
-			};
-			
-			/**
-			 * Gets bank list
-			 * 
-			 * 
-			 * @memberof $bank
-			 * @return Promise<PaginatorPage<PGate>> gates list
-			 */
-			this.banks = function(paginatorParam) {
-				return $http({
-					method : 'GET',
-					url : '/api/bank/engine/find',
-					params : _paginatorParams(paginatorParam)
-				})//
-				.then(
-						function(res) {
-							var data = res.data;
-							var page = new PaginatorPage(data);
-							page.items = [];
-							for (var i = 0; i < data.counts; i++) {
-								var item = data.items[i];
-								page.items.push(_banksCache.restor(
-										item.type, item));
-							}
-							return page;
-						});
-			};
+    /**
+     * Gets a gate
+     * 
+     * @memberof $bank
+     * @return Promise<PGate> a gate
+     */
+    this.gate = $pluf.createGet({
+	method : 'GET',
+	url : '/api/bank/backend/{id}',
+    }, _gateCache);
 
-		});
+    /**
+     * Lists all gates
+     * 
+     * @memberof $bank
+     * @param paginatorParam
+     * @return Promise<PaginatorPage<PGate>> gates list
+     */
+    this.gates = $pluf.createFind({
+	method : 'GET',
+	url : '/api/bank/backend/find',
+    }, _gateCache);
+
+    /**
+     * Gets bank detail
+     * 
+     * @memberof $bank
+     * @return Promise<PBank>
+     */
+    this.bank = $pluf.createGet({
+	method : 'GET',
+	url : '/api/bank/engine/{id}',
+    }, _banksCache);
+
+    /**
+     * Gets bank list
+     * 
+     * 
+     * @memberof $bank
+     * @return Promise<PaginatorPage<PGate>> gates list
+     */
+    this.banks = $pluf.createFind({
+	method : 'GET',
+	url : '/api/bank/engine/find',
+    }, _banksCache);
+});
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
  * 
@@ -943,6 +830,304 @@ angular.module('pluf')
 	};
 });
 
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @memberof $calendar
+ * @ngdoc Facotyr
+ * @name PEvent
+ * @description
+ * 
+ * 
+ */
+.factory('PCalendar', function(PObject, $pluf, PObjectFactory) {
+    
+    // Object factory
+    var _eventCache = new PObjectFactory(function(data) {
+	if (!this.PEvent) {
+	    this.PEvent = $injector.get('PEvent');
+	}
+	return new this.PEvent(data);
+    });
+    
+    /*
+     * Creates new instance
+     */
+    var pCalendar = function() {
+	PObject.apply(this, arguments);
+    };
+    // Extends it from PObject
+    pCalendar.prototype = new PObject();
+
+    /**
+     * Updates bank
+     */
+    pCalendar.prototype.update = $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/calendar/calendars/:id'
+    });
+
+    /**
+     * remove bank
+     */
+    pCalendar.prototype.remove = $pluf.createDelete({
+	method: 'DELETE',
+	url : '/api/calendar/calendars/:id',
+    });
+    pCalendar.prototype.delete = pCalendar.prototype.remove;
+    
+    /**
+     * Fetchs event list
+     * 
+     * @param {PaginationParameter}
+     * @return {Promise<PaginatedPage<PEvent>>}
+     */
+    pCalendar.prototype.events = $pluf.createGet({
+	method : 'GET',
+	url : '/api/calendars/calendar/:id/events/find',
+    }, _eventCache);
+
+    /**
+     * Creates new event
+     *
+     * @param {PEvent data}
+     * @return {Promise<PEvent>}
+     */
+    pCalendar.prototype.newGroup = $pluf.createNew({
+	method : 'POST',
+	url : '/api/calendars/calendar/:id/events/new'
+    }, _eventCache);
+    //
+    return pCalendar;
+});
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @memberof $calendar
+ * @ngdoc Facotyr
+ * @name PEvent
+ * @description
+ * 
+ * 
+ */
+.factory('PEvent', function(PObject, $pluf) {
+
+    /*
+     * Creates new instance
+     */
+    var pEvent = function() {
+	PObject.apply(this, arguments);
+    };
+    // Extends it from PObject
+    pEvent.prototype = new PObject();
+
+    /**
+     * Updates bank
+     */
+    pEvent.prototype.update = $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/calendar/events/:id'
+    });
+
+    /**
+     * remove bank
+     */
+    pEvent.prototype.remove = $pluf.createDelete({
+	method: 'DELETE',
+	url : '/api/calendar/events/:id',
+    });
+    pEvent.prototype.delete = pEvent.prototype.remove;
+    //
+    return pEvent;
+});
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @ngdoc service
+ * @name $bank
+ * @description
+ * 
+ * سرویس انجام کارهای بانکی.
+ * 
+ * مهم‌ترین کاری که برای این سرویس در نظر گرفته شده است ایجاد یک پرداخت جدید در
+ * سیستم است.
+ * 
+ * <pre><code>
+ * // اجرای دستور
+ * $bank.receipt({...}).then(function(receipt) {
+ * 	// handle new receipt
+ * });
+ * </code></pre>
+ * 
+ * بعد از اینکه پرداخت در سیستم ایجاد شد کاربر می تونه برای پرداخت آن از درگاه
+ * تعیین شده اقدام کنه.
+ * 
+ * Gate way link is placed in receipt.
+ * 
+ * <pre><code>
+ * $bank.receipt({...}).then(function(receipt) {
+ * 	var ulr = receipt.callUrl;
+ * });
+ * </code></pre>
+ * 
+ * Users must go to callUrl to pay.
+ * 
+ * A receipt is accessable with secure_id.
+ * 
+ */
+.service( '$calendar', function($pluf, PCalendar, PEvent, PObjectCache) {
+
+    var _calendarCache = new PObjectCache(function(data) {
+	return new PCalendar(data);
+    });
+
+    var _eventCache = new PObjectCache(function(data) {
+	return new PEvent(data);
+    });
+
+    /**
+     * Creates new calendar
+     * 
+     * @memberof $calendar
+     * @return Promise<PCalendar>
+     * 
+     */
+    this.newCalendar = $pluf.createNew({
+	method : 'POST',
+	url : '/api/calendar/calendars/new'
+    }, _calendarCache);
+
+    /**
+     * Gets calendar detail by secure id
+     * 
+     * @memberof $calendar
+     * @return Promise<PCalendar>
+     * 
+     */
+    this.calendar = $pluf.createGet({
+	method : 'GET',
+	url : '/api/calendar/calendars/{id}',
+    }, _calendarCache);
+
+    /**
+     * Lists all calendar
+     * 
+     * @memberof $calendar
+     * @return Promise<PaginatorPage<PCalendar>>
+     * 
+     */
+    this.calendars = $pluf.createFind({
+	method : 'GET',
+	url : '/api/calendar/calendars/find',
+    }, _calendarCache);
+
+    /**
+     * Creates new event
+     * 
+     * @memberof $calendar
+     * @return Promise<PEvent> created gate
+     */
+    this.newEvent = $pluf.createNew({
+	method : 'POST',
+	url : '/api/calendar/events/new'
+    }, _eventCache);
+    
+
+    /**
+     * Gets event detail by secure id
+     * 
+     * @memberof $calendar
+     * @return Promise<PEvent>
+     * 
+     */
+    this.event = $pluf.createGet({
+	method : 'GET',
+	url : '/api/calendar/events/{id}',
+    }, _eventCache);
+
+    /**
+     * Lists all events
+     * 
+     * @memberof $calendar
+     * @return Promise<PaginatorPage<PEvent>>
+     * 
+     */
+    this.events = $pluf.createFind({
+	method : 'GET',
+	url : '/api/calendar/events/find',
+    }, _eventCache);
+
+});
 /* jslint todo: true */
 /* jslint xxx: true */
 /* jshint -W100 */
@@ -1013,6 +1198,8 @@ angular.module('pluf')
 		});
 	};
 
+	pContent.prototype.delete = pContent.prototype.remove;
+	
 	/**
 	 * مقدار محتوی را تعیین می‌کند که معمولا برای گرفتن محتوی ساختار یافته و
 	 * رشته‌ها مناسب است. در سایر موارد استفاده از پیوند محتوی بهتر است.
@@ -1126,6 +1313,33 @@ angular.module('pluf')
 				method : 'POST',
 				url : '/api/cms/new'
 			}, _cache);
+			
+			/**
+			 * این فراخوانی یک ساختار داده‌ای جدید ایجاد می‌کند.
+			 * 
+			 * @memberof $cms
+			 * @param {PContent}
+			 *            contet ساختار داده‌ای محتوی برای ایجاد
+			 * @return {promise(PContent)}
+			 */
+			this.newFileContent = function(objectData, file) {
+				var formData = new FormData();
+				for(var key in objectData){
+					if(objectData[key]){
+						formData.append(key, objectData[key]);
+					}
+				}
+				formData.append('file', file);
+				return $http.post('/api/cms/new', formData, {
+					transformRequest : angular.identity,
+					headers : {
+						'Content-Type' : undefined
+					}
+				})//
+				.then(function(res) {
+					return _cache.restor(res.data.id, res.data);
+				});
+			};
 
 			/**
 			 * یک محتوی با شناسه خاص را تعیین می‌کند.
@@ -1153,6 +1367,262 @@ angular.module('pluf')
 				url : '/api/cms/find'
 			}, _cache);
 		});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @ngdoc service
+ * @name $act
+ * @description
+ * 
+ * 
+ */
+.factory('PCollection', function(PObject, $pluf, PObjectFactory, PDocument) {
+
+	var _cache = new PObjectFactory(function(data) {
+		return new PDocument(data);
+	});
+
+	/*
+	 * Creates new instance
+	 */
+	var collection = function() {
+		PObject.apply(this, arguments);
+	};
+	// Extends it from PObject
+	collection.prototype = new PObject();
+
+	/**
+	 * Updates bank
+	 */
+	collection.prototype.update = $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/collection/:id'
+	});
+
+	/**
+	 * remove bank
+	 */
+	collection.prototype.delete = $pluf.createDelete({
+		method: 'DELETE',
+		url : '/api/collection/:id',
+	});
+
+	/**
+	 * Lists all documents
+	 * 
+	 * @memberof PCollection
+	 * @return Promise<PaginatorPage<PCollection>>
+	 * createdreceipt
+	 * 
+	 */
+	collection.prototype.documents = $pluf.createFind({
+		method : 'GET',
+		url : '/api/collection/:id/document/find',
+	}, _cache);
+	
+
+	/**
+	 * Creates new document
+	 * 
+	 * @memberof PCollection
+	 * @return Promise<PDocument>
+	 * createdreceipt
+	 * 
+	 */
+	collection.prototype.newDocument = $pluf.createNew({
+		method : 'POST',
+		url : '/api/collection/:id/document/new'
+	}, _cache);
+
+	/**
+	 * Gets document detail
+	 * 
+	 * @memberof PCollection
+	 * @return Promise<PDocument>
+	 * createdreceipt
+	 * 
+	 */
+	collection.prototype.document = $pluf.createGet({
+		method : 'GET',
+		url : '/api/collection/:id/document/{id}',
+	}, _cache);
+	
+	//
+	return collection;
+});
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @ngdoc service
+ * @name $act
+ * @description
+ * 
+ * 
+ */
+.factory('PDocument', function(PObject, $pluf) {
+
+	/*
+	 * Creates new instance
+	 */
+	var document = function() {
+		PObject.apply(this, arguments);
+	};
+	// Extends it from PObject
+	document.prototype = new PObject();
+
+	/**
+	 * Updates bank
+	 */
+	document.prototype.update = $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/collection/:collection/document/:id'
+	});
+
+	/**
+	 * remove bank
+	 */
+	document.prototype.remove = $pluf.createDelete({
+		method: 'DELETE',
+		url : '/api/collection/:collection/document/:id',
+	});
+	//
+	return document;
+});
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @ngdoc service
+ * @name $monitor
+ * @description مدیریت تمام مانیتورها را ایجاد می‌کند
+ * 
+ * مانیتورها در واحد زمان باید به روز شوند. این سرویس نه تنها مانیتورها را ایجاد
+ * بلکه آنها را در واحد زمان به روز می‌کند.
+ * 
+ * در صورتی که استفاده از یک مانیتور تمام شود،‌این سرویس مانیتورهای ایجاد شده را
+ * حذف می‌کند تا میزان انتقال اطلاعات را کم کند.
+ * 
+ * @see PMonitor
+ * 
+ */
+.service('$collection', function($pluf, PCollection, PObjectFactory) {
+
+	var _cache = new PObjectFactory(function(data) {
+		return new PCollection(data);
+	});
+
+	/**
+	 * Creates new collection
+	 * 
+	 * @memberof $collection
+	 * @return Promise<PCollection>
+	 * createdreceipt
+	 * 
+	 */
+	this.newCollection = $pluf.createNew({
+		method : 'POST',
+		url : '/api/collection/new'
+	}, _cache);
+
+	/**
+	 * Gets collection detail
+	 * 
+	 * @memberof $collection
+	 * @return Promise<PCollection>
+	 * createdreceipt
+	 * 
+	 */
+	this.collection = $pluf.createGet({
+		method : 'GET',
+		url : '/api/collection/{id}',
+	}, _cache);
+
+	/**
+	 * Lists all collections
+	 * 
+	 * @memberof $collection
+	 * @return Promise<PaginatorPage<PCollection>>
+	 * createdreceipt
+	 * 
+	 */
+	this.collections = $pluf.createFind({
+		method : 'GET',
+		url : '/api/collection/find',
+	}, _cache);
+
+});
 
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -1498,6 +1968,17 @@ angular.module('pluf')
     this.items.push(h);
     return this;
   };
+
+  /**
+   * تمام منوهایی موجود را حذف می‌کند
+   * 
+   * @memberof PMenu
+   */
+  pMenu.prototype.clear = function(){
+      this.items.splice(0);
+      return this;
+  };
+  
   /**
    * یک برچسب جدید به منو اضافه می‌کند. مهم‌ترین کاربرد این برچسب‌ها فهرست کردن و نمایش دسته
    * بندی شده منوها است.
@@ -3016,9 +3497,7 @@ angular.module('pluf')
  * @example
  * // Assigne header menu into scope variable
  * angular.module('myApp').controller('SidebarController', function($scope, $menu){
- * 	$menu.menu('header').then(function(menu){
- * 		$scope.menu = menu;
- * 	})
+ * 	$scope.menu = $menu.menu('header');
  * });
  *
  * @example
@@ -3029,57 +3508,52 @@ angular.module('pluf')
  * </ul>
  */
 .service('$menu', function($q, $timeout, PMenu, PMenuItem) {
-	/**
-	 * مخزنی از تمام منوها ایجاد می‌کند. این مخزن می‌تواند به صورت مستقیم در سایر نمایش‌ها و سرویس‌ها
-	 * استفاده شود.
-	 *
-	 * @type {Array}
-	 */
-	this.menus = [];
+    /**
+     * مخزنی از تمام منوها ایجاد می‌کند. این مخزن می‌تواند به صورت مستقیم در سایر نمایش‌ها و سرویس‌ها
+     * استفاده شود.
+     *
+     * @type {Array}
+     */
+    this.menus = [];
 
-	/*
-	 * یک منوایتم رو به منوهای موجود اضافه می‌کند. در صورتی که منو معادل وجود نداشته باشد یک نمونه
-	 * جدید برای آن ایجاد خواهد کردم.
-	 */
-	this._addMenu = function(id, menu) {
-		if (!(id in this.menus)) {
-			this.menus[id] = new PMenu({'id': id});
-		}
-		this.menus[id].item(menu);
-	};
+    /*
+     * یک منوایتم رو به منوهای موجود اضافه می‌کند. در صورتی که منو معادل وجود نداشته باشد یک نمونه
+     * جدید برای آن ایجاد خواهد کردم.
+     */
+    this._addMenu = function(id, menu) {
+	if (!(id in this.menus)) {
+	    this.menus[id] = new PMenu({'id': id});
+	}
+	this.menus[id].item(menu);
+    };
 
-	/**
-	 * یک منو را با شناسه تعیین شده بازیابی می‌کند. در صورتی که منو با شناسه در مورد نظر موجود
-	 * نباشد یک نمونه برای آن ایجاد شده و به عنوان نتیجه برگردانده می‌شود.
-	 *
-	 * @memberof $menu
-	 * @param  {string} id شناسه منو مورد نظر
-	 * @return {promise(PMenu)} منوی ایجاد شده
-	 */
-	this.menu = function(id) {
-		var def = $q.defer();
-		var scope = this;
-		$timeout(function() {
-			if (!(id in scope.menus)) {
-				scope.menus[id] = new PMenu({'id':id});
-			}
-			def.resolve(scope.menus[id]);
-		}, 1);
-		return def.promise;
-	};
+    /**
+     * یک منو را با شناسه تعیین شده بازیابی می‌کند. در صورتی که منو با شناسه در مورد نظر موجود
+     * نباشد یک نمونه برای آن ایجاد شده و به عنوان نتیجه برگردانده می‌شود.
+     *
+     * @memberof $menu
+     * @param  {string} id شناسه منو مورد نظر
+     * @return {promise(PMenu)} منوی ایجاد شده
+     */
+    this.menu = function(id) {
+	if (!(id in this.menus)) {
+	    this.menus[id] = new PMenu({'id':id});
+	}
+	return this.menus[id];
+    };
 
-	/**
-	 * یک گزینه جدید به منو اضافه می‌کند. این روش اضافه کردن منو کلی است و همواره یک منوایتم
-	 * به عنوان گزینه جدید اضافه خواهد شد.
-	 *
-	 * @memberof $menu
-	 * @param {string} شناسه منو مورد نظر
-	 * @param {object} داده‌های مورد نیاز برای ایجاد منوایتم
-	 */
-	this.addItem = function(id, menu) {
-		this._addMenu(id, new PMenuItem(menu));
-		return this;
-	};
+    /**
+     * یک گزینه جدید به منو اضافه می‌کند. این روش اضافه کردن منو کلی است و همواره یک منوایتم
+     * به عنوان گزینه جدید اضافه خواهد شد.
+     *
+     * @memberof $menu
+     * @param {string} شناسه منو مورد نظر
+     * @param {object} داده‌های مورد نیاز برای ایجاد منوایتم
+     */
+    this.addItem = function(id, menu) {
+	this._addMenu(id, new PMenuItem(menu));
+	return this;
+    };
 });
 
 /*
@@ -3261,169 +3735,296 @@ angular.module('pluf')
  * @ngdoc service
  * @name $pluf
  * @description ابزارهای پایه‌ای
+ * 
+ * 
+ * 
+ * Object describing the request to be made and how it should be processed. The
+ * object has following properties:
+ * 
+ * method – {string} – HTTP method (e.g. 'GET', 'POST', etc)
+ * 
+ * url – {string|TrustedObject} – Absolute or relative URL of the resource that
+ * is being requested; or an object created by a call to
+ * $sce.trustAsResourceUrl(url).
+ * 
+ * params – {Object.<string|Object>} – Map of strings or objects which will be
+ * serialized with the paramSerializer and appended as GET parameters.
+ * 
+ * data – {string|Object} – Data to be sent as the request message data.
+ * 
+ * headers – {Object} – Map of strings or functions which return strings
+ * representing HTTP headers to send to the server. If the return value of a
+ * function is null, the header will not be sent. Functions accept a config
+ * object as an argument.
+ * 
+ * eventHandlers - {Object} - Event listeners to be bound to the XMLHttpRequest
+ * object. To bind events to the XMLHttpRequest upload object, use
+ * uploadEventHandlers. The handler will be called in the context of a $apply
+ * block.
+ * 
+ * uploadEventHandlers - {Object} - Event listeners to be bound to the
+ * XMLHttpRequest upload object. To bind events to the XMLHttpRequest object,
+ * use eventHandlers. The handler will be called in the context of a $apply
+ * block.
+ * 
+ * xsrfHeaderName – {string} – Name of HTTP header to populate with the XSRF
+ * token.
+ * 
+ * xsrfCookieName – {string} – Name of cookie containing the XSRF token.
+ * 
+ * transformRequest – {function(data, headersGetter)|Array.<function(data,
+ * headersGetter)>} – transform function or an array of such functions. The
+ * transform function takes the http request body and headers and returns its
+ * transformed (typically serialized) version. See Overriding the Default
+ * Transformations
+ * 
+ * transformResponse – {function(data, headersGetter, status)|Array.<function(data,
+ * headersGetter, status)>} – transform function or an array of such functions.
+ * The transform function takes the http response body, headers and status and
+ * returns its transformed (typically deserialized) version. See Overriding the
+ * Default Transformations
+ * 
+ * paramSerializer - {string|function(Object<string,string>):string} - A
+ * function used to prepare the string representation of request parameters
+ * (specified as an object). If specified as string, it is interpreted as
+ * function registered with the $injector, which means you can create your own
+ * serializer by registering it as a service. The default serializer is the
+ * $httpParamSerializer; alternatively, you can use the
+ * $httpParamSerializerJQLike
+ * 
+ * cache – {boolean|Object} – A boolean value or object created with
+ * $cacheFactory to enable or disable caching of the HTTP response. See $http
+ * Caching for more information.
+ * 
+ * timeout – {number|Promise} – timeout in milliseconds, or promise that should
+ * abort the request when resolved.
+ * 
+ * withCredentials - {boolean} - whether to set the withCredentials flag on the
+ * XHR object. See requests with credentials for more information.
+ * 
+ * responseType - {string} - see XMLHttpRequest.responseType.
+ * 
  */
 .service('$pluf',
-	function(PaginatorPage, $q, $http, $httpParamSerializerJQLike) {
+		function(PaginatorPage, $q, $http, $httpParamSerializerJQLike) {
 
-    /**
-     * مسیر رو بر اساس مقادیر ورودی تعیین می‌کنه
-     * 
-     * زمانی که بخواهیم مسیر برای اجرای یک تابع بر اساس پارامترهای خود موجودیت
-     * ایجاد بشه، با استفاده از روش زیر، مسیر رو تعیین می‌کنیم:
-     * 
-     * <pre><code>
-     * 	var path = '/path/:property/of/object';
-     * </code></pre>
-     * 
-     * مقادیری که که با : تعیین شده باشن با استفاده از خصوصیت‌هایی که توی خود 
-     * موجودیت باشه جایگزین می‌شه.
-     * 
-     * @param path
-     * @param object
-     * @returns
-     */
-    function createPath(path, object) {
-	if (path.indexOf(':') === 0) {
-	    return path;
-	}
-	var list = path.split('/');
-	var temp = path;
-	for (var i = 0; i < list.length; i++) {
-	    var id = list[i];
-	    if (id.indexOf(':') === 0) {
-		var key = id.substring(1, id.length);
-		temp = temp.replace(id, object[key]);
-	    }
-	}
-	return temp;
-    }
-
-    /**
-     * 
-     * @memberof $pluf
-     * @param {Object}
-     *                params
-     * @param {PObjectCache}
-     *                cache
-     * @return {function}
-     */
-    this.createFind = function(params, _cache) {
-	var urlTemplate = params.url;
-	return function(paginatorParameter) {
-	    if (paginatorParameter) {
-		params.params = paginatorParameter.getParameter();
-	    }
-	    params.url = createPath(urlTemplate, this);
-	    return $http(params)//
-	    .then(function(res) {
-		var page = new PaginatorPage(res.data);
-		var items = [];
-		for (var i = 0; i < page.counts; i++) {
-		    var item = page.items[i];
-		    items.push(_cache.restor(item.id, item));
+	/**
+	 * مسیر رو بر اساس مقادیر ورودی تعیین می‌کنه
+	 * 
+	 * زمانی که بخواهیم مسیر برای اجرای یک تابع بر اساس پارامترهای خود
+	 * موجودیت ایجاد بشه، با استفاده از روش زیر، مسیر رو تعیین می‌کنیم:
+	 * 
+	 * <pre><code>
+	 * var path = '/path/:property/of/object';
+	 * </code></pre>
+	 * 
+	 * مقادیری که که با : تعیین شده باشن با استفاده از خصوصیت‌هایی که
+	 * توی خود موجودیت باشه جایگزین می‌شه.
+	 * 
+	 * @param path
+	 * @param object
+	 * @returns
+	 */
+	function createPath(path, object) {
+		if (path.indexOf(':') === 0) {
+			return path;
 		}
-		page.items = items;
-		return page;
-	    });
-	};
-    };
+		var list = path.split('/');
+		var temp = path;
+		for (var i = 0; i < list.length; i++) {
+			var id = list[i];
+			if (id.indexOf(':') === 0) {
+				var key = id.substring(1, id.length);
+				temp = temp.replace(id, object[key]);
+			}
+		}
+		return temp;
+	}
 
-    /**
-     * 
-     * @memberof $pluf
-     * @param {Object}
-     *                params
-     * @param {PObjectCache}
-     *                cache
-     * @return {function}
-     */
-    this.createGet = function(params, _cache) {
-	var urlTemplate = params.url;
-	return function(id) {
-	    if (_cache.contains(id)) {
-		var deferred = $q.defer();
-		deferred.resolve(_cache.get(id));
-		return deferred.promise;
-	    }
-	    var temp = createPath(urlTemplate, this);
-	    params.url = temp.replace('{id}', id);
-	    return $http(params)//
-	    .then(function(res) {
-		return _cache.restor(res.data.id, res.data);
-	    });
+	/**
+	 * 
+	 * @memberof $pluf
+	 * @param {Object}
+	 *                params
+	 * @param {PObjectCache}
+	 *                cache
+	 * @return {function}
+	 */
+	this.createFind = function(params, _cache) {
+		var urlTemplate = params.url;
+		return function(paginatorParameter) {
+			if (paginatorParameter) {
+				params.params = paginatorParameter.getParameter();
+			}
+			params.url = createPath(urlTemplate, this);
+			return $http(params)//
+			.then(function(res) {
+				var page = new PaginatorPage(res.data);
+				var items = [];
+				for (var i = 0; i < page.counts; i++) {
+					var item = page.items[i];
+					items.push(_cache.restor(item.id, item));
+				}
+				page.items = items;
+				return page;
+			});
+		};
 	};
-    };
 
-    /**
-     * 
-     */
-    this.createUpdate = function(params) {
-	params.headers = {
-		'Content-Type' : 'application/x-www-form-urlencoded'
+	/**
+	 * 
+	 * @memberof $pluf
+	 * @param {Object}
+	 *                params
+	 * @param {PObjectCache}
+	 *                cache
+	 * @return {function}
+	 */
+	this.createGet = function(params, _cache) {
+		var urlTemplate = params.url;
+		return function(id) {
+			if (_cache.contains(id)) {
+				var deferred = $q.defer();
+				deferred.resolve(_cache.get(id));
+				return deferred.promise;
+			}
+			var temp = createPath(urlTemplate, this);
+			params.url = temp.replace('{id}', id);
+			return $http(params)//
+			.then(function(res) {
+				return _cache.restor(res.data.id, res.data);
+			});
+		};
 	};
-	var urlTemplate = params.url;
-	return function(objectData) {
-	    if(!objectData){
-		objectData = this;
-	    }
-	    var scope = this;
-	    params.url = createPath(urlTemplate, scope);
-	    params.data = $httpParamSerializerJQLike(objectData);
-	    return $http(params)//
-	    .then(function(res) {
-		scope.setData(res.data);
-		return scope;
-	    });
-	};
-    };
 
-    /**
-     * 
-     */
-    this.createDelete = function(params) {
-	var urlTemplate = params.url;
-	return function() {
-	    var scope = this;
-	    params.url = createPath(urlTemplate, scope);
-	    return $http(params)//
-	    .then(function(res) {
-		scope.setData(res.data);
-		return scope;
-	    });
+	/**
+	 * 
+	 */
+	this.createUpdate = function(params) {
+		params.headers = {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+		};
+		var urlTemplate = params.url;
+		return function(objectData) {
+			if (!objectData) {
+				objectData = this;
+			}
+			var scope = this;
+			params.url = createPath(urlTemplate, scope);
+			params.data = $httpParamSerializerJQLike(objectData);
+			return $http(params)//
+			.then(function(res) {
+				scope.setData(res.data);
+				return scope;
+			});
+		};
 	};
-    };
 
-    /**
-     * 
-     * @memberof $pluf
-     * @param {Object}
-     *                params
-     * @param {PObjectCache}
-     *                cache
-     * @return {function}
-     */
-    this.createNew = function(params, _cache) {
-	params.headers = {
-		'Content-Type' : 'application/x-www-form-urlencoded'
+	/**
+	 * 
+	 */
+	this.createDelete = function(params) {
+		var urlTemplate = params.url;
+		return function() {
+			var scope = this;
+			params.url = createPath(urlTemplate, scope);
+			return $http(params)//
+			.then(function(res) {
+				scope.setData(res.data);
+				return scope;
+			});
+		};
 	};
-	var urlTemplate = params.url;
-	return function(objectData) {
-	    params.url = createPath(urlTemplate, this);
-	    params.data = $httpParamSerializerJQLike(objectData);
-	    return $http(params)//
-	    .then(function(res) {
-		return _cache.restor(res.data.id, res.data);
-	    });
-	};
-    };
 
-    // this.inherit = function(object) {
-    // function F() {
-    // // Empty object
-    // }
-    // F.prototype = object.prototype;
-    // return new F;
-    // };
+	/**
+	 * Remove Association of a resource
+	 * 
+	 * @memberof $pluf
+	 * @param {Object}
+	 *                params
+	 * @param {PObjectCache}
+	 *                cache
+	 * @return {function}
+	 */
+	this.createDeleteAss = function(params, _cache) {
+		var urlTemplate = params.url;
+		return function(child) {
+			var scope = this;
+			params.url = createPath(urlTemplate, scope);
+			if(child.id){
+				params.url = params.url.replace('{id}', child.id);
+			}
+			return $http(params)//
+			.then(function(res) {
+				if (_cache) {
+					return _cache.restor(res.data.id, res.data);
+				}
+				return res.data;
+			});
+		};
+	};
+
+	/**
+	 * 
+	 * @memberof $pluf
+	 * @param {Object}
+	 *                params
+	 * @param {PObjectCache}
+	 *                cache
+	 * @return {function}
+	 */
+	this.createNew = function(params, _cache) {
+		params.headers = {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+		};
+		var urlTemplate = params.url;
+		return function(objectData) {
+			params.url = createPath(urlTemplate, this);
+			params.data = $httpParamSerializerJQLike(objectData);
+			return $http(params)//
+			.then(function(res) {
+				return _cache.restor(res.data.id, res.data);
+			});
+		};
+	};
+
+	/**
+	 * Create a get method
+	 */
+	this.get = function(params, _cache) {
+		params.method = 'GET';
+		if (params.url.indexOf(':') === 0) {
+			// No need to create path dynamically
+			return function(data) {
+				if (!data) {
+					data = {};
+				}
+				params.params = data;
+				return $http(params)//
+				.then(function(res) {
+					if (_cache) {
+						return _cache.restor(res.data.id, res.data);
+					}
+					return res.data;
+				});
+			};
+		}
+		var urlTemplate = params.url;
+		return function(data) {
+			if (!data) {
+				data = {};
+			}
+			params.url = createPath(urlTemplate, this);
+			params.params = data;
+			return $http(params)//
+			.then(function(res) {
+				if (_cache) {
+					return _cache.restor(res.data.id, res.data);
+				}
+				return res.data;
+			});
+		};
+	};
 
 });
 /*
@@ -3574,26 +4175,91 @@ angular.module('pluf')
  * @description
  * 
  */
-.factory('PMonitor', function(PObject, $rootScope, $http, PObjectFactory) {
+.factory('PMonitor', function(PObject, $rootScope, $http,PaginatorPage, PMonitorProperty) {
+
     /*
      * یک نمونه جدید از این موجودیت ایجاد می کند.
      */
-    var pMonitor = function(data) {
-	if (data) {
-	    this.setData(data);
-	    this.path = '/api/monitor/' + this.bean + '/' + this.property;
-	}
+    var pMonitor = function() {
+	PObject.apply(this, arguments);
     };
-
     pMonitor.prototype = new PObject();
 
-    // pMonitor._cache = new PObjectFactory(function(data) {
-    // pMonitor.setData(data);
-    // return pMonitor;
-    // });
 
-    pMonitor.prototype.refresh = function() {
+    pMonitor.prototype.properties = function(paginatorParameter) {
+	var params = {
+		'method' : 'GET',
+		'url': '/api/monitor/'+this.id+'/property/find'
+	}
+	if (paginatorParameter) {
+	    params.params = paginatorParameter.getParameter();
+	}
 	var scope = this;
+	return $http(params)//
+	.then(function(res) {
+	    var page = new PaginatorPage(res.data);
+	    var items = [];
+	    for (var i = 0; i < page.counts; i++) {
+		var item = page.items[i];
+		var p = new PMonitorProperty(item);
+		p.monitor = scope.id;
+		items.push(p);
+	    }
+	    page.items = items;
+	    return page;
+	});
+    };
+
+    return pMonitor;
+});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @ngdoc factory
+ * @name PGroup
+ * @memberof pluf
+ * 
+ * @description
+ * 
+ */
+.factory('PMonitorProperty', function(PObject, $rootScope, $http, PObjectFactory) {
+    /*
+     * یک نمونه جدید از این موجودیت ایجاد می کند.
+     */
+    var pMonitorProperty = function() {
+	PObject.apply(this, arguments);
+    };
+    pMonitorProperty.prototype = new PObject();
+
+    pMonitorProperty.prototype.refresh = function() {
+	var scope = this;
+	if(!this.path){
+	    this.path = '/api/monitor/'+this.monitor+'/property/'+this.id;
+	}
 	return $http.get(this.path)//
 	.then(function(res) {
 	    // XXX: maso, 1395: handle tablular and scalar types
@@ -3602,26 +4268,23 @@ angular.module('pluf')
 	    }
 	    scope.setData(res.data);
 	    return scope;
+	}, function(){
+		if(scope.value){
+			$rootScope.$emit(scope.path, scope.value, false);
+		}
+		scope.setData(false);
+		return scope;
 	});
     };
 
-    pMonitor.prototype.setBean = function(bean) {
-	this.bean = bean;
-	this.path = '/api/monitor/' + this.bean + '/' + this.property;
-	return this;
-    }
-
-    pMonitor.prototype.setProperty = function(property) {
-	this.property = property;
-	this.path = '/api/monitor/' + this.bean + '/' + this.property;
-	return this;
-    }
-
-    pMonitor.prototype.watch = function(callback) {
+    pMonitorProperty.prototype.watch = function(callback) {
+	if(!this.path){
+	    this.path = '/api/monitor/'+this.monitor+'/property/'+this.id;
+	}
 	return $rootScope.$on(this.path, callback);
     }
 
-    return pMonitor;
+    return pMonitorProperty;
 });
 
 /*
@@ -3664,103 +4327,172 @@ angular.module('pluf')
  * @see PMonitor
  * 
  */
-.service('$monitor', function($q, $timeout, $pluf, PMonitor, PObjectFactory) {
-    /*
-     * فهرستی از تمام مانیتورهای تعریف شده را نگهداری می ‌کند
-     */
-    var _monitors = [];
+.service('$monitor', function($q, $timeout, $pluf, PMonitor, PMonitorProperty, PObjectFactory) {
+	/*
+	 * فهرستی از تمام مانیتورهای تعریف شده را نگهداری می ‌کند
+	 */
+	var _monitors = [];
 
-    // XXX: maso, 1395: فعلا زیاد در نظر گرفتم تا ساختار سرور نهایی بشه
-    var _interval = 60000;
-    
-    var _cache = new PObjectFactory(function(data) {
-	return new this.PMonitor(data);
-    });
-    
-    function reaload(){
-	// XXX: maso, 1395: handle monitor interval
-	if(_monitors.length == 0){
-	    $timeout(reaload, _interval);
-	    return;
-	}
-	var promises = [];
-	for(var i = 0; i < _monitors.length; i++){
-	    var monitor = _monitors[i];
-	    promises.push(monitor.refresh());
-	}
-	return $q.all(promises)//
-	.finally(function(){
-	    $timeout(reaload, _interval);
+	// XXX: maso, 1395: فعلا زیاد در نظر گرفتم تا ساختار سرور نهایی بشه
+	var _interval = 60000;
+
+	var _cache = new PObjectFactory(function(data) {
+		return new this.PMonitor(data);
 	});
-    };
 
-    /**
-     * مانیتور معادل را تعیین می‌کند
-     * 
-     * با این فراخوانی مانیتور معادل ایجاد شده و به عنوان نتیجه برگردانده
-     * می‌شود.
-     * 
-     * <pre><code>
-     * $monitor.monitor('user', 'owner')//
-     * 	.then(function(monitor) {
-     * 	    // Do something with monitor
-     * 	    });
-     * </code></pre>
-     * 
-     * @memberof $monitor
-     * @param {string}
-     *                bean
-     * @param {string}
-     *                property
-     * @return {promise(PMonitor)}
-     */
-    this.monitor = function(bean, property) {
-	var def = $q.defer();
-	$timeout(function() {
-	    var monitor = null;
-	    angular.forEach(_monitors, function(element) {
-		if (element.bean === bean && element.property == property) {
-		    monitor = element;
+	function reaload(){
+		// XXX: maso, 1395: handle monitor interval
+		if(_monitors.length == 0){
+			$timeout(reaload, _interval);
+			return;
 		}
-	    });
-	    if(monitor){
-		def.resolve(monitor);
-		return;
-	    }
-	    monitor = new PMonitor();
-	    monitor//
-	    .setBean(bean)//
-	    .setProperty(property);
-	    _monitors.push(monitor);
-	    def.resolve(monitor);
-	}, 1);
-	return def.promise;
-    };
+		var promises = [];
+		for(var i = 0; i < _monitors.length; i++){
+			var monitor = _monitors[i];
+			promises.push(monitor.refresh());
+		}
+		return $q.all(promises)//
+		.finally(function(){
+			$timeout(reaload, _interval);
+		});
+	};
 
-    /**
-     * فهرستی از تمام مانیتورها
-     */
-    this.monitors = $pluf.createFind({
-	method : 'GET',
-	url : '/api/monitor/find',
-    }, _cache);
+	/**
+	 * مانیتور معادل را تعیین می‌کند
+	 * 
+	 * با این فراخوانی مانیتور معادل ایجاد شده و به عنوان نتیجه برگردانده
+	 * می‌شود.
+	 * 
+	 * <pre><code>
+	 * $monitor.monitor('user', 'owner')//
+	 * 		.then(function(monitor) {
+	 * 			// Do something with monitor
+	 * 			});
+	 * </code></pre>
+	 * 
+	 * @memberof $monitor
+	 * @param {string}
+	 *            bean
+	 * @param {string}
+	 *            property
+	 * @return {promise(PMonitor)}
+	 */
+	this.monitor = function(monitor, property) {
+		var def = $q.defer();
+		$timeout(function() {
+			var m = null;
+			angular.forEach(_monitors, function(element) {
+				if (element.monitor === monitor && element.property == property) {
+					m = element;
+				}
+			});
+			if(m){
+				def.resolve(m);
+				return;
+			}
+			m = new PMonitorProperty();
+			m.monitor = monitor;
+			m.id = property;
+			_monitors.push(m);
+			def.resolve(m);
+		}, 1);
+		return def.promise;
+	};
 
-    /**
-     * حدف یک مانیتور
-     * 
-     * @param {Object}
-     *                monitor
-     */
-    this.distroy = function(monitor) {
-	var def = $q.defer();
-	$timeout(function() {
-	    // XXX: maso, 1395: remove monitor
-	    def.resolve(monitor);
-	}, 1);
-	return def.promise;
-    };
-    
-    reaload();
+	/**
+	 * فهرستی از تمام مانیتورها
+	 */
+	this.monitors = $pluf.createFind({
+		method : 'GET',
+		url : '/api/monitor/find',
+	}, _cache);
+
+	/**
+	 * حدف یک مانیتور
+	 * 
+	 * @param {Object}
+	 *            monitor
+	 */
+	this.distroy = function(monitor) {
+		var def = $q.defer();
+		$timeout(function() {
+			// XXX: maso, 1395: remove monitor
+			def.resolve(monitor);
+		}, 1);
+		return def.promise;
+	};
+
+	reaload();
+	
+	/**
+	 * Query data
+	 * 
+	 * Query language expressions may be evaluated at a single instant or over a
+	 * range of time. The sections below describe the API endpoints for each
+	 * type of expression query.
+	 * 
+	 * URL query parameters:
+	 * <ul>
+	 * <li>query=<string>: Prometheus expression query string.</li>
+	 * <li>time=<rfc3339 | unix_timestamp>: Evaluation timestamp. Optional.</li>
+	 * <li>timeout=<duration>: Evaluation timeout. Optional. Defaults to and
+	 * is capped by the value of the -query.timeout flag.</li>
+	 * </ul>
+	 * The current server time is used if the time parameter is omitted.
+	 * 
+	 * The data section of the query result has the following format:
+	 * 
+	 * <pre><code>
+	 * {
+	 *   resultType: matrix | vector | scalar | string,
+	 *   result: value&gt;
+	 * }
+	 * </code></pre>
+	 * 
+	 * <value> refers to the query result data, which has varying formats
+	 * depending on the resultType
+	 * 
+	 * @see https://prometheus.io/docs/querying/api/
+	 */
+	this.query = $pluf.get({
+		url: '/api/v1/monitor/query'
+	});
+	
+	/**
+	 * Query range data
+	 * 
+	 * The following endpoint evaluates an expression query over a range of
+	 * time:
+	 * 
+	 * <ul>
+	 * <li></li>
+	 * <li>query=<string>: Prometheus expression query string.</li>
+	 * <li>start=<rfc3339 | unix_timestamp>: Start timestamp.</li>
+	 * <li>end=<rfc3339 | unix_timestamp>: End timestamp.</li>
+	 * <li>step=<duration>: Query resolution step width.</li>
+	 * <li>timeout=<duration>: Evaluation timeout. Optional. Defaults to and
+	 * is capped by the value of the -query.timeout flag.</li>
+	 * </ul>
+	 * The data section of the query result has the following format:
+	 * 
+	 * <pre><code>
+	 * {
+	 * 	resultType : matrix,
+	 * 	result : value
+	 * }
+	 * </code></pre>
+	 * 
+	 * For the format of the <value> placeholder, see the range-vector result
+	 * format.
+	 * 
+	 * The following example evaluates the expression up over a 30-second range
+	 * with a query resolution of 15 seconds.
+	 * 
+	 * @see https://prometheus.io/docs/querying/api/
+	 */
+	this.queryRange = $pluf.get({
+		url: '/api/v1/monitor/query_range'
+	});
 
 });
 
@@ -4025,7 +4757,7 @@ angular.module('pluf')
  * @name PTenant
  * @description ساختار داده‌ای یک ملک را تعیین می‌کنه
  */
-.factory('PTenant', function($pluf, PObject) {
+.factory('PTenant', function($pluf, $injector, PObject) {
 
     var pTenant = function() {
 	PObject.apply(this, arguments);
@@ -4053,19 +4785,20 @@ angular.module('pluf')
 	method : 'POST',
 	url : '/api/tenant/:id',
     });
-    
+
     /**
      * تعیین نرم افزار پیش‌فرض
      * 
      * نرم افزار پیش‌فرض برای سیستم را تعیین می‌کند.
      * 
      * @memberof PTenant
-     * @param {PSpa} spa
+     * @param {PSpa}
+     *                spa
      * @return {promise{tenant}}
      */
     pTenant.prototype.defaultSpa = function(spa){
-	this.spa = spa.id;
-	return this.update();
+	var $saas = $injector.get('$saas');
+	return $saas.setting('spa.default', spa.name);
     }
 
     return pTenant;
@@ -4101,7 +4834,7 @@ angular.module('pluf')
  * @memberof pluf.saas
  * @description مدیریت ملک و نرم افزارها را انجام می‌دهد.
  */
-.service('$saas', function($http, PTenant, PSpa, PObjectCache, $pluf) {
+.service('$saas', function($http, PTenant, PSpa, PObjectCache, $pluf, $httpParamSerializerJQLike) {
 
     var _tenantCache = new PObjectCache(function(data) {
 	return new PTenant(data);
@@ -4215,6 +4948,50 @@ angular.module('pluf')
 	});
     };
 
+    /**
+     * Sets or Gets setting value
+     * 
+     * Each teanant is contains of severall settings. This method allow you to
+     * set or get value.
+     * 
+     * <code>
+     * 	$saas.setting('key', 'value')//
+     * 		.then(function(){
+     * 			// value is set
+     * 		});
+     * </code>
+     * 
+     * And getting the value:
+     * 
+     * <code>
+     * 	$saas.setting('key')//
+     * 		.then(function(value){
+     * 			// access value
+     * 		});
+     * </code>
+     */
+    this.setting = function(key, value) {
+	if (angular.isDefined(value)) {
+	    // Setting value
+	    return $http({
+		method : 'POST',
+		url : '/api/setting/spa.default',
+		headers : {
+		    'Content-Type' : 'application/x-www-form-urlencoded'
+		},
+		data : $httpParamSerializerJQLike({
+		    'value' : value
+		})
+	    })
+	}
+	// getting value
+	return $http({
+	    method : 'GET',
+	    url : '/api/setting/spa.default'
+	}).then(function(res) {
+	    return res.data.value;
+	});
+    }
 });
 
 /*
@@ -4483,157 +5260,127 @@ angular.module('pluf')
  * @description
  * 
  */
-.factory(
-	'PGroup',
-	function(PObject, $http, $httpParamSerializerJQLike, $q, $injector,
-		PaginatorPage) {
-	    /*
-	     * یک نمونه جدید از این موجودیت ایجاد می کند.
-	     */
-	    var pGroup = function(data) {
-		if (data) {
-		    this.setData(data);
+.factory('PGroup',function(PObject,PObjectFactory, $injector, $pluf) {
+
+	var _roleCache = new PObjectFactory(function(data) {
+		if (!this.PRole) {
+			this.PRole = $injector.get('PRole');
 		}
-	    };
-
-	    pGroup.prototype = new PObject();
-
-	    /**
-	     * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور
-	     * انتقال می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
-	     * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
-	     * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
-	     * 
-	     * @memberof PProfile
-	     * 
-	     * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
-	     */
-	    pGroup.prototype.update = function() {
-		if (this.isAnonymous()) {
-		    var deferred = $q.defer();
-		    deferred.reject();
-		    return deferred.promise;
-		}
-		var scope = this;
-		return $http({
-		    method : 'POST',
-		    url : '/api/group/' + this.id,
-		    data : $httpParamSerializerJQLike(scope),
-		    headers : {
-			'Content-Type' : 'application/x-www-form-urlencoded'
-		    }
-		}).then(function(res) {
-		    scope.setData(res.data);
-		    return scope;
-		});
-	    };
-
-	    /**
-	     * پروفایل کاربری را حذف می کند
-	     * 
-	     * @memberof PProfile
-	     * 
-	     * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف
-	     *          شده
-	     */
-	    pGroup.prototype.remove = function() {
-		var scope = this;
-		return $http({
-		    method : 'DELETE',
-		    url : '/api/group/' + this.id,
-		}).then(function(data) {
-		    scope.setData(data.data);
-		    return scope;
-		});
-	    };
-
-	    /**
-	     * حذف یک رول
-	     * 
-	     * برای حذف نقش باید خود نقش را داشته باشید.
-	     * 
-	     * @param {PRole}
-	     *                نقش مورد نظر
-	     * @return promise پارامتری برای خروجی در نظر گرفته نشده
-	     */
-	    pGroup.prototype.removeRole = function(role) {
-		return $http({
-		    method : 'DELETE',
-		    url : '/api/group/' + this.id + '/role/' + role.id,
-		});
-	    };
-
-	    /**
-	     * فهرست نقش‌های گروه را تعیین می‌کند
-	     * 
-	     * @param PaginationParameter
-	     * @return promise(PaginatedPage(Role))
-	     */
-	    pGroup.prototype.roles = function(paginationParam) {
-		var params = {};
-		if (paginationParam) {
-		    params = paginationParam.getParameter();
-		}
-		return $http({
-		    method : 'GET',
-		    url : '/api/group/' + this.id + '/role/find',
-		    params : params
-		}).then(function(res) {
-		    var $usr = $injector.get('$usr');
-		    var page = new PaginatorPage(res.data);
-		    var items = [];
-		    for (var i = 0; i < page.counts; i++) {
-			var item = page.items[i];
-			items.push($usr._roleCache.restor(item.id, item));
-		    }
-		    page.items = items;
-		    return page;
-		});
-	    };
-
-	    /**
-	     * کاربر رو حذف می‌کنه
-	     * 
-	     * معادل با حذف نقش کاربر هست.
-	     * 
-	     * @param {PUser}
-	     *                کاربر مورد نظر
-	     */
-	    pGroup.prototype.removeUser = function(user) {
-		return $http({
-		    method : 'DELETE',
-		    url : '/api/group/' + this.id + '/user/' + user.id,
-		});
-	    };
-
-	    /**
-	     * فهرست کاربران را تعیین می‌کند
-	     * 
-	     */
-	    pGroup.prototype.users = function(paginationParam) {
-		var params = {};
-		if (paginationParam) {
-		    params = paginationParam.getParameter();
-		}
-		return $http({
-		    method : 'GET',
-		    url : '/api/group/' + this.id + '/user/find',
-		    params : params
-		}).then(function(res) {
-		    var $usr = $injector.get('$usr');
-		    var page = new PaginatorPage(res.data);
-		    var items = [];
-		    for (var i = 0; i < page.counts; i++) {
-			var item = page.items[i];
-			items.push($usr._userCache.restor(item.id, item));
-		    }
-		    page.items = items;
-		    return page;
-		});
-	    };
-
-	    return pGroup;
+		return new this.PRole(data);
 	});
+	var _userCache = new PObjectFactory(function(data) {
+		if (!this.PGroup) {
+			this.PUser = $injector.get('PUser');
+		}
+		return new this.PUser(data);
+	});
+
+	/*
+	 * یک نمونه جدید از این موجودیت ایجاد می کند.
+	 */
+	var pGroup = function(data) {
+		if (data) {
+			this.setData(data);
+		}
+	};
+
+	pGroup.prototype = new PObject();
+
+	/**
+	 * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور انتقال
+	 * می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای اعمال شده در
+	 * این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و با بارگذاری دوباره
+	 * سیستم، به حالت اولیه برگردانده خواهد شد
+	 * 
+	 * @memberof PProfile
+	 * 
+	 * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
+	 */
+	pGroup.prototype.update = $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/group/:id',
+	});
+
+
+	/**
+	 * پروفایل کاربری را حذف می کند
+	 * 
+	 * @memberof PProfile
+	 * 
+	 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف شده
+	 */
+	pGroup.prototype.remove = $pluf.createDelete({
+		method : 'DELETE',
+		url : '/api/group/:id'
+	});
+	pGroup.prototype.delete = pGroup.prototype.remove;
+
+	/**
+	 * حذف یک رول
+	 * 
+	 * برای حذف نقش باید خود نقش را داشته باشید.
+	 * 
+	 * @param {PRole}
+	 *            نقش مورد نظر
+	 * @return promise پارامتری برای خروجی در نظر گرفته نشده
+	 */
+	pGroup.prototype.removeRole = $pluf.createDeleteAss({
+		method : 'DELETE',
+		url : '/api/group/:id/role/{id}',
+	}, _roleCache);
+
+	/**
+	 * فهرست نقش‌های گروه را تعیین می‌کند
+	 * 
+	 * @param PaginationParameter
+	 * @return promise(PaginatedPage(Role))
+	 */
+	pGroup.prototype.roles = $pluf.createFind({
+		method : 'GET',
+		url : '/api/group/:id/role/find',
+	}, _roleCache);
+
+
+	/**
+	 * Adds a role into the role list of a group
+	 */
+	pGroup.prototype.newRole = $pluf.createNew({
+		method : 'POST',
+		url : '/api/group/:id/role/new'
+	}, _roleCache);
+
+	/**
+	 * کاربر رو حذف می‌کنه
+	 * 
+	 * معادل با حذف نقش کاربر هست.
+	 * 
+	 * @param {PUser}
+	 *            کاربر مورد نظر
+	 */
+	pGroup.prototype.removeUser = $pluf.createDeleteAss({
+		method : 'DELETE',
+		url : '/api/group/:id/user/{id}',
+	}, _userCache);
+
+	/**
+	 * فهرست کاربران را تعیین می‌کند
+	 * 
+	 */
+	pGroup.prototype.users = $pluf.createFind({
+		method : 'GET',
+		url : '/api/group/:id/user/find',
+	}, _userCache);
+
+	/**
+	 * Adds a user
+	 */
+	pGroup.prototype.newUser = $pluf.createNew({
+		method : 'POST',
+		url : '/api/group/:id/user/new'
+	}, _userCache);
+
+	return pGroup;
+});
 
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -4781,7 +5528,7 @@ angular.module('pluf')
      * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
      */
     pProfile.prototype.update = function() {
-	if (this.user.isAnonymous()) {
+	if (!(this.user && this.user > 0)) {
 	    var deferred = $q.defer();
 	    deferred.reject();
 	    return deferred.promise;
@@ -4789,7 +5536,7 @@ angular.module('pluf')
 	var scope = this;
 	return $http({
 	    method : 'POST',
-	    url : '/api/user/' + this.user.id + '/profile',
+	    url : '/api/user/' + this.user + '/profile',
 	    data : $httpParamSerializerJQLike(scope),
 	    headers : {
 		'Content-Type' : 'application/x-www-form-urlencoded'
@@ -4878,156 +5625,128 @@ angular.module('pluf')
  * @attr {Datetime} creation_dtime تاریخ و زمان ایجاد پروفایل
  * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
-.factory(
-	'PRole',
-	function(PObject, $http, $httpParamSerializerJQLike, $q, $injector,
-		PaginatorPage) {
-	    /*
-	     * یک نمونه جدید از این موجودیت ایجاد می کند.
-	     */
-	    var pRole = function(data) {
-		if (data) {
-		    this.setData(data);
+.factory('PRole', function(PObject, PObjectFactory, $pluf, $injector) {
+
+	var _userCache = new PObjectFactory(function(data) {
+		if (!this.PGroup) {
+			this.PUser = $injector.get('PUser');
 		}
-	    };
-
-	    pRole.prototype = new PObject();
-
-	    /**
-	     * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور
-	     * انتقال می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
-	     * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
-	     * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
-	     * 
-	     * @memberof PProfile
-	     * 
-	     * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
-	     */
-	    pRole.prototype.update = function() {
-		if (this.isAnonymous()) {
-		    var deferred = $q.defer();
-		    deferred.reject();
-		    return deferred.promise;
-		}
-		var scope = this;
-		return $http({
-		    method : 'POST',
-		    url : '/api/role/' + this.id,
-		    data : $httpParamSerializerJQLike(this),
-		    headers : {
-			'Content-Type' : 'application/x-www-form-urlencoded'
-		    }
-		}).then(function(res) {
-		    scope.setData(res.data);
-		    return scope;
-		});
-	    };
-
-	    /**
-	     * پروفایل کاربری را حذف می کند
-	     * 
-	     * @memberof PProfile
-	     * 
-	     * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف
-	     *          شده
-	     */
-	    pRole.prototype.remove = function() {
-		var scope = this;
-		return $http({
-		    method : 'DELETE',
-		    url : '/api/role/' + this.id,
-		    data : $httpParamSerializerJQLike(scope),
-		    headers : {
-			'Content-Type' : 'application/x-www-form-urlencoded'
-		    }
-		}).then(function(data) {
-		    scope.setData(data.data);
-		    return scope;
-		});
-	    };
-
-	    /**
-	     * کاربر رو حذف می‌کنه
-	     * 
-	     * معادل با حذف نقش کاربر هست.
-	     * 
-	     * @param {PUser}
-	     *                کاربر مورد نظر
-	     */
-	    pRole.prototype.removeUser = function(user) {
-		return $http({
-		    method : 'DELETE',
-		    url : '/api/role/' + this.id + '/user/' + user.id,
-		});
-	    };
-
-	    /**
-	     * فهرست کاربران را تعیین می‌کند
-	     * 
-	     */
-	    pRole.prototype.users = function(paginationParam) {
-		// TODO: mao, 1395: replase with $pluf service
-		var params = {};
-		if (paginationParam) {
-		    params = paginationParam.getParameter();
-		}
-		return $http({
-		    method : 'GET',
-		    url : '/api/role/' + this.id + '/user/find',
-		    params : params
-		}).then(function(res) {
-		    var $usr = $injector.get('$usr');
-		    var page = new PaginatorPage(res.data);
-		    var items = [];
-		    for (var i = 0; i < page.counts; i++) {
-			var item = page.items[i];
-			items.push($usr._userCache.restor(item.id, item));
-		    }
-		    page.items = items;
-		    return page;
-		});
-	    };
-
-	    /**
-	     * گروه رو حذف می‌کنه
-	     * 
-	     * این فراخوانی معادل با حذف یک نقش از یک گروه هست.
-	     * 
-	     * 
-	     */
-	    pRole.prototype.removeGroup = function(group) {
-		return $http({
-		    method : 'DELETE',
-		    url : '/api/role/' + this.id + '/group/' + group.id,
-		});
-	    };
-
-	    /**
-	     * فهرست گوره‌هایی که در این نقش هستند
-	     */
-	    pRole.prototype.groups = function(paginationParam) {
-		var params = {};
-		if (paginationParam) {
-		    params = paginationParam.getParameter();
-		}
-		return $http({
-		    method : 'GET',
-		    url : '/api/role/' + this.id + '/group/find',
-		    params : params
-		}).then(function(res) {
-		    var $usr = $injector.get('$usr');
-		    var page = new PaginatorPage(res.data);
-		    var items = [];
-		    for (var i = 0; i < page.counts; i++) {
-			var item = page.items[i];
-			items.push($usr._groupCache.restor(item.id, item));
-		    }
-		    page.items = items;
-		    return page;
-		});
-	    };
-	    return pRole;
+		return new this.PUser(data);
 	});
+
+	var _groupCache = new PObjectFactory(function(data) {
+		if (!this.PGroup) {
+			this.PGroup = $injector.get('PGroup');
+		}
+		return new this.PGroup(data);
+	});
+
+	/*
+	 * یک نمونه جدید از این موجودیت ایجاد می کند.
+	 */
+	var pRole = function(data) {
+		if (data) {
+			this.setData(data);
+		}
+	};
+
+	pRole.prototype = new PObject();
+
+	/**
+	 * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور
+	 * انتقال می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
+	 * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
+	 * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد
+	 * 
+	 * @memberof PProfile
+	 * 
+	 * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
+	 */
+	pRole.prototype.update = $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/role/:id'
+	});
+
+	/**
+	 * پروفایل کاربری را حذف می کند
+	 * 
+	 * @memberof PProfile
+	 * 
+	 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف
+	 *          شده
+	 */
+	pRole.prototype.remove = $pluf.createDelete({
+		method : 'DELETE',
+		url : '/api/role/:id' 
+	});
+
+
+	/**
+	 * کاربر رو حذف می‌کنه
+	 * 
+	 * معادل با حذف نقش کاربر هست.
+	 * 
+	 * @param {PUser}
+	 *            کاربر مورد نظر
+	 */
+	pRole.prototype.removeUser = $pluf.createDeleteAss({
+		method : 'DELETE',
+		url : '/api/role/:id/user/{id}',
+	}, _userCache);
+
+	/**
+	 * فهرست کاربران را تعیین می‌کند
+	 * 
+	 */
+	pRole.prototype.users = $pluf.createFind({
+		method : 'GET',
+		url : '/api/role/:id/user/find',
+	}, _userCache);
+
+	/**
+	 * Adds a user
+	 */
+	pRole.prototype.newUser = $pluf.createNew({
+		method : 'POST',
+		url : '/api/role/:id/user/new'
+	}, _userCache);
+
+
+	/**
+	 * Deletes group ass.
+	 * 
+	 * @param {PGroup}
+	 *                گروه مورد نظر
+	 * @return {Promise<PGroup>}
+	 */
+	pRole.prototype.removeGroup = $pluf.createDeleteAss({
+		method : 'DELETE',
+		url : '/api/role/:id/group/{id}',
+	});
+
+	/**
+	 * Lists all groups
+	 * 
+	 * @param {PaginationParameter}
+	 * @return {Promise<PaginatedPage<PGroup>>}
+	 */
+	pRole.prototype.groups = $pluf.createGet({
+		method : 'GET',
+		url : '/api/role/:id/group/find',
+	}, _groupCache);
+
+	/**
+	 * Adds new group
+	 */
+	pRole.prototype.newGroup = $pluf.createNew({
+		method : 'POST',
+		url : '/api/role/:id/group/new'
+	}, _groupCache);
+
+
+
+	return pRole;
+});
 
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -5095,206 +5814,217 @@ angular.module('pluf')
  * اعمال خواهد شد.
  */
 .factory('PUser',
-	function($http, $q, $pluf, PObject, PObjectFactory, $injector) {
+		function($http, $q, $pluf, PObject, PObjectFactory, $injector) {
 
-    var _profileCache = new PObjectFactory(function(data) {
-	if (!this.PRole) {
-	    this.PProfile = $injector.get('PProfile');
-	}
-	return new this.PProfile(data);
-    });
-    var _roleCache = new PObjectFactory(function(data) {
-	if (!this.PRole) {
-	    this.PRole = $injector.get('PRole');
-	}
-	return new this.PRole(data);
-    });
-    var _groupCache = new PObjectFactory(function(data) {
-	if (!this.PGroup) {
-	    this.PGroup = $injector.get('PGroup');
-	}
-	return new this.PGroup(data);
-    });
-    var _messageCache = new PObjectFactory(function(data) {
-	if (!this.PMessage) {
-	    this.PProfile = $injector.get('PMessage');
-	}
-	return new this.PMessage(data);
-    });
-
-    var pUser = function(data) {
-	if (data) {
-	    this.setData(data);
-	    /*
-	     * NOTE: فرض ما این هست که شناسه داره و این شناسه تغییر
-	     * نمی‌کنه
-	     */
-	    this.avatar = '/api/user/' + this.id + '/avatar';
-	}
-    };
-
-    pUser.prototype = new PObject();
-
-    /**
-     * اطلاعات حساب کاربری را به‌روزرسانی می‌کند
-     * 
-     * تغییراتی که در ساختارهای داده‌ای اعمال شده است را در سرور نیز
-     * اعمال می‌کند. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
-     * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
-     * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد.
-     * 
-     * @memberof PUser
-     * 
-     * @return {promise(PUser)} ساختار داده‌ای به‌روز شده‌ی حساب کاربری
-     */
-    pUser.prototype.update = $pluf.createUpdate({
-	method : 'POST',
-	url : '/api/user/:id',
-    });
-
-    // TODO: maso, document: پارامتر ورودی ساختاری با داده گذرواژه
-    pUser.prototype.newPassword = $pluf.createUpdate({
-	method : 'POST',
-	url : '/api/user/:id/password',
-    });
-    
-    // TODO: maso, document
-    pUser.prototype.newAvatar = function(file){
-	var fd = new FormData();
-	fd.append('file', file);
-	return $http.post('/api/user/'+this.id+'/avatar', fd, {
-	    transformRequest : angular.identity,
-	    headers : {
-		'Content-Type' : undefined
-	    }
+	var _profileCache = new PObjectFactory(function(data) {
+		if (!this.PRole) {
+			this.PProfile = $injector.get('PProfile');
+		}
+		return new this.PProfile(data);
 	});
-    };
-
-    /**
-     * حساب کاربری را حذف می‌کند
-     * 
-     * @memberof PUser
-     * 
-     * @return {promise(PUser)} ساختار داده‌ای حساب کاربری حذف شده
-     */
-    pUser.prototype.delete = $pluf.createDelete({
-	method : 'DELETE',
-	url : '/api/user/:id'
-    });
-
-    /**
-     * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی
-     * به صورت هم زمان انجام می‌شود.
-     * 
-     * @memberof PUser
-     * 
-     * @return {boolean} حالت مدیر بودن کاربر
-     */
-    pUser.prototype.isAdministrator = function() {
-	return (this.id && this.id > 0 && this.administrator);
-    };
-
-    /**
-     * تعیین می‌کند که آیا کاربر جاری staff است یا نه. این فراخوانی به
-     * صورت هم زمان انجام می‌شود.
-     * 
-     * @memberof PUser
-     * 
-     * @return {boolean} حالت staff بودن کاربر
-     */
-    pUser.prototype.isStaff = function() {
-	return (this.id && this.id > 0 && this.staff);
-    };
-
-    /**
-     * پروفایل کاربر را تعیین می‌کند.
-     * 
-     * @memberof PUser
-     * 
-     * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری مربوط
-     *          به این حساب کاربری
-     */
-    pUser.prototype.profile = $pluf.createGet({
-	method : 'GET',
-	url : '/api/user/:id/profile',
-    }, _profileCache);
-
-    /**
-     * حذف یک رول از کاربر
-     * 
-     * برای حذف نقش باید خود نقش را داشته باشید.
-     * 
-     * @param {PRole}
-     *                نقش مورد نظر
-     * @return promise پارامتری برای خروجی در نظر گرفته نشده
-     */
-    pUser.prototype.removeRole = function(role) {
-	return $http({
-	    method : 'DELETE',
-	    url : '/api/user/' + this.id + '/role/' + role.id,
+	var _roleCache = new PObjectFactory(function(data) {
+		if (!this.PRole) {
+			this.PRole = $injector.get('PRole');
+		}
+		return new this.PRole(data);
 	});
-    };
-
-    /**
-     * فهرست نقش‌های کاربر را تعیین می‌کند
-     * 
-     * @param PaginationParameter
-     * @return promise(PaginatedPage(Role))
-     */
-    pUser.prototype.roles = $pluf.createFind({
-	method : 'GET',
-	url : '/api/user/:id/role/find',
-    }, _roleCache);
-    
-    /**
-     * Crate a new role 
-     */
-    pUser.prototype.newRole = $pluf.createNew({
-	method : 'POST',
-	url : '/api/user/:id/role/new'
-    }, _roleCache);
-
-    /**
-     * رابطه میان گروه و کاربر را حذف می کند.
-     * 
-     * پارامتر ورودی باید یک گروه باشد.
-     * 
-     * @param {PGroup}
-     *                گروه مورد نظر
-     * @return {Promise<PGroup>}
-     */
-    pUser.prototype.removeGroup = function(group) {
-	return $http({
-	    method : 'DELETE',
-	    url : '/api/user/' + this.id + '/group/' + group.id,
+	var _groupCache = new PObjectFactory(function(data) {
+		if (!this.PGroup) {
+			this.PGroup = $injector.get('PGroup');
+		}
+		return new this.PGroup(data);
 	});
-    };
+	var _messageCache = new PObjectFactory(function(data) {
+		if (!this.PMessage) {
+			this.PProfile = $injector.get('PMessage');
+		}
+		return new this.PMessage(data);
+	});
 
-    /**
-     * فهرست گروه‌هایی را تعیین می‌کند که کاربر در آنها است
-     * 
-     * @param {PaginationParameter}
-     * @return {Promise<PaginatedPage<PGroup>>}
-     */
-    pUser.prototype.groups = $pluf.createGet({
-	method : 'GET',
-	url : '/api/user/:id/group/find',
-    }, _groupCache);
+	var pUser = function(data) {
+		if (data) {
+			this.setData(data);
+			/*
+			 * NOTE: فرض ما این هست که شناسه داره و این شناسه تغییر
+			 * نمی‌کنه
+			 */
+			this.avatar = '/api/user/' + this.id + '/avatar';
+		}
+	};
 
-    pUser.prototype.newGroup = $pluf.createNew({
-	method : 'POST',
-	url : '/api/user/:id/group/new'
-    }, _roleCache);
+	pUser.prototype = new PObject();
 
-    /**
-     * 
-     */
-    pUser.prototype.messages = $pluf.createFind({
-	method : 'GET',
-	url : '/api/user/:id/message/find',
-    }, _messageCache);
+	/**
+	 * اطلاعات حساب کاربری را به‌روزرسانی می‌کند
+	 * 
+	 * تغییراتی که در ساختارهای داده‌ای اعمال شده است را در سرور نیز
+	 * اعمال می‌کند. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای
+	 * اعمال شده در این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و
+	 * با بارگذاری دوباره سیستم، به حالت اولیه برگردانده خواهد شد.
+	 * 
+	 * @memberof PUser
+	 * 
+	 * @return {promise(PUser)} ساختار داده‌ای به‌روز شده‌ی حساب کاربری
+	 */
+	pUser.prototype.update = $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/user/:id',
+	});
 
-    return pUser;
+	// TODO: maso, document: پارامتر ورودی ساختاری با داده گذرواژه
+	pUser.prototype.newPassword = $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/user/:id/password',
+	});
+
+	// TODO: maso, document
+	pUser.prototype.newAvatar = function(file){
+		var fd = new FormData();
+		fd.append('file', file);
+		return $http.post('/api/user/'+this.id+'/avatar', fd, {
+			transformRequest : angular.identity,
+			headers : {
+				'Content-Type' : undefined
+			}
+		});
+	};
+
+	/**
+	 * حساب کاربری را حذف می‌کند
+	 * 
+	 * @memberof PUser
+	 * 
+	 * @return {promise(PUser)} ساختار داده‌ای حساب کاربری حذف شده
+	 */
+	pUser.prototype.delete = $pluf.createDelete({
+		method : 'DELETE',
+		url : '/api/user/:id'
+	});
+
+	/**
+	 * تعیین می‌کند که آیا کاربر جاری مدیر سیستم است یا نه. این فراخوانی
+	 * به صورت هم زمان انجام می‌شود.
+	 * 
+	 * @memberof PUser
+	 * 
+	 * @return {boolean} حالت مدیر بودن کاربر
+	 */
+	pUser.prototype.isAdministrator = function() {
+		return (this.id && this.id > 0 && this.administrator);
+	};
+
+	/**
+	 * تعیین می‌کند که آیا کاربر جاری یک کاربر ثبت شده است یا نه. این فراخوانی
+	 * به صورت هم زمان انجام می‌شود.
+	 * 
+	 * @memberof PUser
+	 * 
+	 * @return {boolean} 
+	 */
+	pUser.prototype.isAnonymous = function() {
+		return !(this.id && this.id > 0);
+	};
+
+	/**
+	 * تعیین می‌کند که آیا کاربر جاری staff است یا نه. این فراخوانی به
+	 * صورت هم زمان انجام می‌شود.
+	 * 
+	 * @memberof PUser
+	 * 
+	 * @return {boolean} حالت staff بودن کاربر
+	 */
+	pUser.prototype.isStaff = function() {
+		return (this.id && this.id > 0 && this.staff);
+	};
+
+	/**
+	 * پروفایل کاربر را تعیین می‌کند.
+	 * 
+	 * @memberof PUser
+	 * 
+	 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری مربوط
+	 *          به این حساب کاربری
+	 */
+	pUser.prototype.profile = $pluf.createGet({
+		method : 'GET',
+		url : '/api/user/:id/profile',
+	}, _profileCache);
+
+	/**
+	 * حذف یک رول از کاربر
+	 * 
+	 * برای حذف نقش باید خود نقش را داشته باشید.
+	 * 
+	 * @param {PRole}
+	 *                نقش مورد نظر
+	 * @return promise پارامتری برای خروجی در نظر گرفته نشده
+	 */
+	pUser.prototype.removeRole = function(role) {
+		return $http({
+			method : 'DELETE',
+			url : '/api/user/' + this.id + '/role/' + role.id,
+		});
+	};
+
+	/**
+	 * فهرست نقش‌های کاربر را تعیین می‌کند
+	 * 
+	 * @param PaginationParameter
+	 * @return promise(PaginatedPage(Role))
+	 */
+	pUser.prototype.roles = $pluf.createFind({
+		method : 'GET',
+		url : '/api/user/:id/role/find',
+	}, _roleCache);
+
+	/**
+	 * Crate a new role 
+	 */
+	pUser.prototype.newRole = $pluf.createNew({
+		method : 'POST',
+		url : '/api/user/:id/role/new'
+	}, _roleCache);
+
+	/**
+	 * Deletes group ass.
+	 * 
+	 * @param {PGroup}
+	 *                گروه مورد نظر
+	 * @return {Promise<PGroup>}
+	 */
+	pUser.prototype.removeGroup = $pluf.createDeleteAss({
+		method : 'DELETE',
+		url : '/api/user/:id/group/{id}',
+	});
+
+	/**
+	 * Lists all groups
+	 * 
+	 * @param {PaginationParameter}
+	 * @return {Promise<PaginatedPage<PGroup>>}
+	 */
+	pUser.prototype.groups = $pluf.createGet({
+		method : 'GET',
+		url : '/api/user/:id/group/find',
+	}, _groupCache);
+
+	/**
+	 * Adds new group
+	 */
+	pUser.prototype.newGroup = $pluf.createNew({
+		method : 'POST',
+		url : '/api/user/:id/group/new'
+	}, _groupCache);
+
+	/**
+	 * 
+	 */
+	pUser.prototype.messages = $pluf.createFind({
+		method : 'GET',
+		url : '/api/user/:id/message/find',
+	}, _messageCache);
+
+	return pUser;
 });
 
 /*

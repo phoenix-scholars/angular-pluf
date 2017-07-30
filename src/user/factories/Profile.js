@@ -74,7 +74,7 @@ angular.module('pluf')
      * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
      */
     pProfile.prototype.update = function() {
-	if (this.user.isAnonymous()) {
+	if (!(this.user && this.user > 0)) {
 	    var deferred = $q.defer();
 	    deferred.reject();
 	    return deferred.promise;
@@ -82,7 +82,7 @@ angular.module('pluf')
 	var scope = this;
 	return $http({
 	    method : 'POST',
-	    url : '/api/user/' + this.user.id + '/profile',
+	    url : '/api/user/' + this.user + '/profile',
 	    data : $httpParamSerializerJQLike(scope),
 	    headers : {
 		'Content-Type' : 'application/x-www-form-urlencoded'

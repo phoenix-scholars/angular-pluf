@@ -31,48 +31,32 @@ angular.module('pluf')
  * 
  * 
  */
-.factory('PBank', function(PObject, $http, $httpParamSerializerJQLike) {
+.factory('PBank', function(PObject, $pluf) {
 
-	/*
-	 * Creates new instance
-	 */
-	var pBank = function() {
-		PObject.apply(this, arguments);
-	};
-	// Extends it from PObject
-	pBank.prototype = new PObject();
+    /*
+     * Creates new instance
+     */
+    var pBank = function() {
+	PObject.apply(this, arguments);
+    };
+    // Extends it from PObject
+    pBank.prototype = new PObject();
 
-	/**
-	 * Updates bank
-	 */
-	pBank.prototype.update = function() {
-		var scope = this;
-		return $http({
-			method : 'POST',
-			url : '/api/bank/engine/' + scope.id,
-			data : $httpParamSerializerJQLike(scope),
-			headers : {
-				'Content-Type' : 'application/x-www-form-urlencoded'
-			}
-		}).then(function(result) {
-			scope.setData(result.data);
-			return scope;
-		});
-	};
+    /**
+     * Updates bank
+     */
+    pBank.prototype.update = $pluf.createUpdate({
+	method : 'POST',
+	url : '/api/bank/engine/:id'
+    });
 
-	/**
-	 * remove bank
-	 */
-	pBank.prototype.remove = function() {
-		var scope = this;
-		return $http({
-			method : 'DELETE',
-			url : '/api/bank/engine/' + this.id,
-		}).then(function(result) {
-			scope.setData(result.data);
-			return scope;
-		});
-	};
-	//
-	return pBank;
+    /**
+     * remove bank
+     */
+    pBank.prototype.remove = $pluf.createDelete({
+	method: 'DELETE',
+	url : '/api/bank/engine/:id',
+    });
+    //
+    return pBank;
 });

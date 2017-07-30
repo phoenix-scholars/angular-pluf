@@ -31,52 +31,40 @@ angular.module('pluf')
  * @description
  * 
  */
-.factory('PMonitor', function(PObject, $rootScope, $http, PObjectFactory) {
+.factory('PMonitor', function(PObject, $rootScope, $http,PaginatorPage, PMonitorProperty) {
+
     /*
      * یک نمونه جدید از این موجودیت ایجاد می کند.
      */
-    var pMonitor = function(data) {
-	if (data) {
-	    this.setData(data);
-	    this.path = '/api/monitor/' + this.bean + '/' + this.property;
-	}
+    var pMonitor = function() {
+	PObject.apply(this, arguments);
     };
-
     pMonitor.prototype = new PObject();
 
-    // pMonitor._cache = new PObjectFactory(function(data) {
-    // pMonitor.setData(data);
-    // return pMonitor;
-    // });
 
-    pMonitor.prototype.refresh = function() {
+    pMonitor.prototype.properties = function(paginatorParameter) {
+	var params = {
+		'method' : 'GET',
+		'url': '/api/monitor/'+this.id+'/property/find'
+	}
+	if (paginatorParameter) {
+	    params.params = paginatorParameter.getParameter();
+	}
 	var scope = this;
-	return $http.get(this.path)//
+	return $http(params)//
 	.then(function(res) {
-	    // XXX: maso, 1395: handle tablular and scalar types
-	    if (res.data.value !== scope.value) {
-		$rootScope.$emit(scope.path, scope.value, res.data.value);
+	    var page = new PaginatorPage(res.data);
+	    var items = [];
+	    for (var i = 0; i < page.counts; i++) {
+		var item = page.items[i];
+		var p = new PMonitorProperty(item);
+		p.monitor = scope.id;
+		items.push(p);
 	    }
-	    scope.setData(res.data);
-	    return scope;
+	    page.items = items;
+	    return page;
 	});
     };
-
-    pMonitor.prototype.setBean = function(bean) {
-	this.bean = bean;
-	this.path = '/api/monitor/' + this.bean + '/' + this.property;
-	return this;
-    }
-
-    pMonitor.prototype.setProperty = function(property) {
-	this.property = property;
-	this.path = '/api/monitor/' + this.bean + '/' + this.property;
-	return this;
-    }
-
-    pMonitor.prototype.watch = function(callback) {
-	return $rootScope.$on(this.path, callback);
-    }
 
     return pMonitor;
 });

@@ -24,34 +24,70 @@
 angular.module('pluf')
 
 /**
- * @memberof pluf
- * @ngdoc service
- * @name $act
+ * @memberof $calendar
+ * @ngdoc Facotyr
+ * @name PEvent
  * @description
  * 
  * 
  */
-.factory('PGate', function(PObject, $pluf) {
-
+.factory('PCalendar', function(PObject, $pluf, PObjectFactory) {
+    
+    // Object factory
+    var _eventCache = new PObjectFactory(function(data) {
+	if (!this.PEvent) {
+	    this.PEvent = $injector.get('PEvent');
+	}
+	return new this.PEvent(data);
+    });
+    
     /*
      * Creates new instance
      */
-    var pGate = function() {
+    var pCalendar = function() {
 	PObject.apply(this, arguments);
     };
     // Extends it from PObject
-    pGate.prototype = new PObject();
+    pCalendar.prototype = new PObject();
 
-    pGate.prototype.update = $pluf.createUpdate({
+    /**
+     * Updates bank
+     */
+    pCalendar.prototype.update = $pluf.createUpdate({
 	method : 'POST',
-	url : '/api/bank/backend/:id'
+	url : '/api/calendar/calendars/:id'
     });
 
-    pGate.prototype.remove = $pluf.createDelete({
+    /**
+     * remove bank
+     */
+    pCalendar.prototype.remove = $pluf.createDelete({
 	method: 'DELETE',
-	url : '/api/bank/backend/:id',
+	url : '/api/calendar/calendars/:id',
     });
+    pCalendar.prototype.delete = pCalendar.prototype.remove;
+    
+    /**
+     * Fetchs event list
+     * 
+     * @param {PaginationParameter}
+     * @return {Promise<PaginatedPage<PEvent>>}
+     */
+    pCalendar.prototype.events = $pluf.createGet({
+	method : 'GET',
+	url : '/api/calendars/calendar/:id/events/find',
+    }, _eventCache);
 
-    pGate.prototype.delete = pGate.prototype.remove;
-    return pGate;
+    /**
+     * Creates new event
+     *
+     * @param {PEvent data}
+     * @return {Promise<PEvent>}
+     */
+    pCalendar.prototype.newGroup = $pluf.createNew({
+	method : 'POST',
+	url : '/api/calendars/calendar/:id/events/new'
+    }, _eventCache);
+    //
+    return pCalendar;
 });
