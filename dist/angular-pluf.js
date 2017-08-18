@@ -4026,6 +4026,38 @@ angular.module('pluf')
 		};
 	};
 
+	/**
+	 * Post data
+	 * 
+	 * @memberof $pluf
+	 * @param {Object}
+	 *                params
+	 * @param {PObjectCache}
+	 *                _cache
+	 * @return {function}
+	 */
+	this.post = function(params, _cache){
+		params.method = 'POST';
+		params.headers = {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+		};
+		var urlTemplate = params.url;
+		return function(data) {
+			if (!data) {
+				data = this;
+			}
+			params.url = createPath(urlTemplate, this);
+			params.data = $httpParamSerializerJQLike(data);
+			return $http(params)//
+			.then(function(res) {
+				if (_cache) {
+					return _cache.restor(res.data.id, res.data);
+				}
+				return res.data;
+			});
+		};
+	};
+	
 });
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
