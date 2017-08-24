@@ -133,6 +133,12 @@ angular.module('pluf')
 		}
 		return temp;
 	}
+	
+	// FIXME: 
+	function createPathParam(path, object) {
+		path = path.replace('{id}', object.id);
+		return path;
+	}
 
 	/**
 	 * 
@@ -341,6 +347,31 @@ angular.module('pluf')
 			}
 			params.url = createPath(urlTemplate, this);
 			params.data = $httpParamSerializerJQLike(data);
+			return $http(params)//
+			.then(function(res) {
+				if (_cache) {
+					return _cache.restor(res.data.id, res.data);
+				}
+				return res.data;
+			});
+		};
+	};
+	
+	/**
+	 * 
+	 */
+	this.put = function (params, _cache){
+		params.method = 'PUT';
+		var urlTemplate = params.url;
+		return function(data, pathParam) {
+			if (!data) {
+				data = this;
+			}
+			params.url = createPath(urlTemplate, this);
+			if(pathParam){
+				params.url = createPathParam(params.url, pathParam);
+			}
+			params.data = data;
 			return $http(params)//
 			.then(function(res) {
 				if (_cache) {
