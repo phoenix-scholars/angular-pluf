@@ -4780,6 +4780,17 @@ angular.module('pluf')
 	});
 
 	/**
+	 * 
+	 * <pre><code>
+	 * 	spa.gotState(data, state).then(function(result){});
+	 * </code></pre>
+	 */
+	pSpa.prototype.gotoState = $pluf.put({
+		url: '/api/spa/:id/states/{id}'
+	});
+
+
+	/**
 	 * اجرای نرم افزار.
 	 * 
 	 * @memberof PSpa
