@@ -4518,7 +4518,7 @@ angular.module('pluf')
 	 * @see https://prometheus.io/docs/querying/api/
 	 */
 	this.query = $pluf.get({
-		url: '/api/v1/monitor/query'
+		url: '/api/monitor/query'
 	});
 	
 	/**
@@ -4554,7 +4554,7 @@ angular.module('pluf')
 	 * @see https://prometheus.io/docs/querying/api/
 	 */
 	this.queryRange = $pluf.get({
-		url: '/api/v1/monitor/query_range'
+		url: '/api/monitor/query_range'
 	});
 
 });
