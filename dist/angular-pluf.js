@@ -4205,6 +4205,189 @@ angular.module('pluf')
   this.process = function(){};
 });
 
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+'use strict';
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @ngdoc factory
+ * @name PDiscount
+ * @description ساختار داده‌ای تخفیف را ایجاد می‌کند. این ساختار داده‌ای شامل
+ *              اطلاعات کلی از تخفیف است که از این میان می‌توان به موارد زیر
+ *              اشاره کرد:
+ * 
+ * @attr {integer} id
+ * @attr {string} code
+ * @attr {string} discount_value
+ * @attr {integer} valid_day
+ * @attr {integer} count
+ * @attr {integer} tenant
+ */
+.factory('PDiscount', function(PObject, $pluf) {
+
+	var pDiscount = function() {
+		PObject.apply(this, arguments);
+	};
+	pDiscount.prototype = new PObject();
+
+	/**
+	 * اطلاعات تخفیف را به روز می‌کند
+	 * 
+	 * @memberof PDiscount
+	 * @return {promise} تخفیف جدید ایجاد شده
+	 */
+	pDiscount.prototype.update = $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/discount/:id',
+	});
+
+	/**
+	 * تخفیف را حذف می‌کند
+	 * 
+	 * @memberof PDiscount
+	 * @return {promise} تخفیف حذف شده
+	 */
+	pDiscount.prototype.delete = $pluf.createDelete({
+		method : 'DELETE',
+		url : '/api/discount/:id'
+	});
+
+	return pDiscount;
+});
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+'use strict';
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @ngdoc factory
+ * @name PDiscountTypeType
+ * @description ساختار داده‌ای برای نوع تخفیف (یا موتور تخفیف) را ایجاد می‌کند. این ساختار داده‌ای شامل
+ *              اطلاعات کلی از یک نوع تخفیف است که از این میان می‌توان به موارد زیر
+ *              اشاره کرد:
+ * 
+ * @attr {integer} id
+ * @attr {string} type
+ * @attr {string} title
+ * @attr {integer} description
+ */
+.factory('PDiscountType', function(PObject) {
+
+	var pDiscountType = function() {
+		PObject.apply(this, arguments);
+	};
+	pDiscountType.prototype = new PObject();
+
+	return pDiscountType;
+});
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+'use strict';
+angular.module('pluf')
+/**
+ * @memberof pluf
+ * @ngdoc service
+ * @name $cms
+ * 
+ * @description این سرویس برای کار با تخفیف‌هاست. این سرویس برای جستجو و یا گرفتن
+ *              اطلاعات تخفیف‌های مختلف کاربرد دارد.
+ *               
+ * هر تخفیف یک کد تخفیف دارد. برای گرفتن اطلاعات یک تخفیف می‌تونید موجودیت تخفیف رو به صورت زیر بگیرید:
+ * 
+ * <pre><code>
+ * $discount.discount('discount_code').then(function(di) {
+ * 	...
+ * });
+ * </code></pre>
+ */ 
+.service(
+		'$discount',
+		function($http, $httpParamSerializerJQLike, $q, $timeout, PDiscount,
+				PaginatorPage, PObjectCache, $pluf) {
+			var _cache = new PObjectCache(function(data) {
+				return new PDiscount(data);
+			});
+			this._cache = _cache;
+
+			var _discountTypeCache = new PObjectCache(function(data) {
+				return new PDiscountType(data);
+			});
+
+			/**
+			 * این فراخوانی یک ساختار داده‌ای جدید ایجاد می‌کند.
+			 * 
+			 * @memberof $discount
+			 * @param {PDiscount}
+			 *            discount ساختار داده‌ای تخفیف برای ایجاد
+			 * @return {promise(PDiscount)}
+			 */
+			this.newDiscount = $pluf.createNew({
+				method : 'POST',
+				url : '/api/discount/new'
+			}, _cache);
+
+			/**
+			 * یک تخفیف با شناسه یا کد خاص را برمی گرداند.
+			 * 
+			 * @memberof $discount
+			 * @param {Integer | String}
+			 *            شناسه یا کد تخفیف
+			 * @return {promise(PDiscount)} تخفیف معادل
+			 */
+			this.discount = $pluf.createGet({
+				method : 'GET',
+				url : '/api/discount/{id}'
+			}, _cache);
+
+			/**
+			 * فهرست تمام تخفیف‌های موجود را تعیین می‌کند
+			 * 
+			 * @memberof $discount
+			 * @param {PaginatorParameter}
+			 *            param پارامترهای جستجو
+			 * @return {promise(PaginatorPage(PDiscount))} نتیجه جستجو
+			 */
+			this.discounts = $pluf.createFind({
+				method : 'GET',
+				url : '/api/discount/find'
+			}, _cache);
+			
+			/**
+			 * یک نوع تخفیف را با نوع تعیین شده را برمی گرداند.
+			 * 
+			 * @memberof $discount
+			 * @param {String}
+			 *            نوع تخفیف
+			 * @return {promise(PDiscountType)} نوع تخفیف معادل
+			 */
+			this.discountType = $pluf.createGet({
+				method : 'GET',
+				url : '/api/discount/type/{id}'
+			}, _cache);
+			
+			/**
+			 * فهرست تمام تخفیف‌های موجود را تعیین می‌کند
+			 * 
+			 * @memberof $discount
+			 * @param {PaginatorParameter}
+			 *            param پارامترهای جستجو
+			 * @return {promise(PaginatorPage(PDiscount))} نتیجه جستجو
+			 */
+			this.discountTypes = $pluf.createFind({
+				method : 'GET',
+				url : '/api/discount/type/find'
+			}, _cache);
+			
+		});
+
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
  * 
