@@ -58,7 +58,7 @@ angular.module('pluf')
 	}, _cache);
 
 	/**
-	 * Gets collection detail
+	 * Gets collection detail. Input could be id or name of collection.
 	 * 
 	 * @memberof $collection
 	 * @return Promise<PCollection>
