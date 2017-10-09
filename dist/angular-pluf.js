@@ -3840,6 +3840,12 @@ angular.module('pluf')
 		}
 		return temp;
 	}
+	
+	// FIXME: 
+	function createPathParam(path, object) {
+		path = path.replace('{id}', object.id);
+		return path;
+	}
 
 	/**
 	 * 
@@ -4026,6 +4032,63 @@ angular.module('pluf')
 		};
 	};
 
+	/**
+	 * Post data
+	 * 
+	 * @memberof $pluf
+	 * @param {Object}
+	 *                params
+	 * @param {PObjectCache}
+	 *                _cache
+	 * @return {function}
+	 */
+	this.post = function(params, _cache){
+		params.method = 'POST';
+		params.headers = {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+		};
+		var urlTemplate = params.url;
+		return function(data) {
+			if (!data) {
+				data = this;
+			}
+			params.url = createPath(urlTemplate, this);
+			params.data = $httpParamSerializerJQLike(data);
+			return $http(params)//
+			.then(function(res) {
+				if (_cache) {
+					return _cache.restor(res.data.id, res.data);
+				}
+				return res.data;
+			});
+		};
+	};
+	
+	/**
+	 * 
+	 */
+	this.put = function (params, _cache){
+		params.method = 'PUT';
+		var urlTemplate = params.url;
+		return function(data, pathParam) {
+			if (!data) {
+				data = this;
+			}
+			params.url = createPath(urlTemplate, this);
+			if(pathParam){
+				params.url = createPathParam(params.url, pathParam);
+			}
+			params.data = data;
+			return $http(params)//
+			.then(function(res) {
+				if (_cache) {
+					return _cache.restor(res.data.id, res.data);
+				}
+				return res.data;
+			});
+		};
+	};
+	
 });
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -4141,6 +4204,189 @@ angular.module('pluf')
    */
   this.process = function(){};
 });
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+'use strict';
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @ngdoc factory
+ * @name PDiscount
+ * @description ساختار داده‌ای تخفیف را ایجاد می‌کند. این ساختار داده‌ای شامل
+ *              اطلاعات کلی از تخفیف است که از این میان می‌توان به موارد زیر
+ *              اشاره کرد:
+ * 
+ * @attr {integer} id
+ * @attr {string} code
+ * @attr {string} discount_value
+ * @attr {integer} valid_day
+ * @attr {integer} count
+ * @attr {integer} tenant
+ */
+.factory('PDiscount', function(PObject, $pluf) {
+
+	var pDiscount = function() {
+		PObject.apply(this, arguments);
+	};
+	pDiscount.prototype = new PObject();
+
+	/**
+	 * اطلاعات تخفیف را به روز می‌کند
+	 * 
+	 * @memberof PDiscount
+	 * @return {promise} تخفیف جدید ایجاد شده
+	 */
+	pDiscount.prototype.update = $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/discount/:id',
+	});
+
+	/**
+	 * تخفیف را حذف می‌کند
+	 * 
+	 * @memberof PDiscount
+	 * @return {promise} تخفیف حذف شده
+	 */
+	pDiscount.prototype.delete = $pluf.createDelete({
+		method : 'DELETE',
+		url : '/api/discount/:id'
+	});
+
+	return pDiscount;
+});
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+'use strict';
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @ngdoc factory
+ * @name PDiscountTypeType
+ * @description ساختار داده‌ای برای نوع تخفیف (یا موتور تخفیف) را ایجاد می‌کند. این ساختار داده‌ای شامل
+ *              اطلاعات کلی از یک نوع تخفیف است که از این میان می‌توان به موارد زیر
+ *              اشاره کرد:
+ * 
+ * @attr {integer} id
+ * @attr {string} type
+ * @attr {string} title
+ * @attr {integer} description
+ */
+.factory('PDiscountType', function(PObject) {
+
+	var pDiscountType = function() {
+		PObject.apply(this, arguments);
+	};
+	pDiscountType.prototype = new PObject();
+
+	return pDiscountType;
+});
+
+/* jslint todo: true */
+/* jslint xxx: true */
+/* jshint -W100 */
+'use strict';
+angular.module('pluf')
+/**
+ * @memberof pluf
+ * @ngdoc service
+ * @name $cms
+ * 
+ * @description این سرویس برای کار با تخفیف‌هاست. این سرویس برای جستجو و یا گرفتن
+ *              اطلاعات تخفیف‌های مختلف کاربرد دارد.
+ *               
+ * هر تخفیف یک کد تخفیف دارد. برای گرفتن اطلاعات یک تخفیف می‌تونید موجودیت تخفیف رو به صورت زیر بگیرید:
+ * 
+ * <pre><code>
+ * $discount.discount('discount_code').then(function(di) {
+ * 	...
+ * });
+ * </code></pre>
+ */ 
+.service(
+		'$discount',
+		function($http, $httpParamSerializerJQLike, $q, $timeout, PDiscount, PDiscountType,
+				PaginatorPage, PObjectCache, $pluf) {
+			var _cache = new PObjectCache(function(data) {
+				return new PDiscount(data);
+			});
+			this._cache = _cache;
+
+			var _discountTypeCache = new PObjectCache(function(data) {
+				return new PDiscountType(data);
+			});
+
+			/**
+			 * این فراخوانی یک ساختار داده‌ای جدید ایجاد می‌کند.
+			 * 
+			 * @memberof $discount
+			 * @param {PDiscount}
+			 *            discount ساختار داده‌ای تخفیف برای ایجاد
+			 * @return {promise(PDiscount)}
+			 */
+			this.newDiscount = $pluf.createNew({
+				method : 'POST',
+				url : '/api/discount/new'
+			}, _cache);
+
+			/**
+			 * یک تخفیف با شناسه یا کد خاص را برمی گرداند.
+			 * 
+			 * @memberof $discount
+			 * @param {Integer | String}
+			 *            شناسه یا کد تخفیف
+			 * @return {promise(PDiscount)} تخفیف معادل
+			 */
+			this.discount = $pluf.createGet({
+				method : 'GET',
+				url : '/api/discount/{id}'
+			}, _cache);
+
+			/**
+			 * فهرست تمام تخفیف‌های موجود را تعیین می‌کند
+			 * 
+			 * @memberof $discount
+			 * @param {PaginatorParameter}
+			 *            param پارامترهای جستجو
+			 * @return {promise(PaginatorPage(PDiscount))} نتیجه جستجو
+			 */
+			this.discounts = $pluf.createFind({
+				method : 'GET',
+				url : '/api/discount/find'
+			}, _cache);
+			
+			/**
+			 * یک نوع تخفیف را با نوع تعیین شده را برمی گرداند.
+			 * 
+			 * @memberof $discount
+			 * @param {String}
+			 *            نوع تخفیف
+			 * @return {promise(PDiscountType)} نوع تخفیف معادل
+			 */
+			this.discountType = $pluf.createGet({
+				method : 'GET',
+				url : '/api/discount/type/{id}'
+			}, _cache);
+			
+			/**
+			 * فهرست تمام تخفیف‌های موجود را تعیین می‌کند
+			 * 
+			 * @memberof $discount
+			 * @param {PaginatorParameter}
+			 *            param پارامترهای جستجو
+			 * @return {promise(PaginatorPage(PDiscount))} نتیجه جستجو
+			 */
+			this.discountTypes = $pluf.createFind({
+				method : 'GET',
+				url : '/api/discount/type/find'
+			}, _cache);
+			
+		});
 
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
@@ -4455,7 +4701,7 @@ angular.module('pluf')
 	 * @see https://prometheus.io/docs/querying/api/
 	 */
 	this.query = $pluf.get({
-		url: '/api/v1/monitor/query'
+		url: '/api/monitor/query'
 	});
 	
 	/**
@@ -4491,7 +4737,7 @@ angular.module('pluf')
 	 * @see https://prometheus.io/docs/querying/api/
 	 */
 	this.queryRange = $pluf.get({
-		url: '/api/v1/monitor/query_range'
+		url: '/api/monitor/query_range'
 	});
 
 });
@@ -4683,48 +4929,66 @@ angular.module('pluf')
  */
 .factory('PSpa', function($pluf, $window, PObject) {
 
-    var pSpa = function() {
-	PObject.apply(this, arguments);
-    };
-    pSpa.prototype = new PObject();
+	var pSpa = function() {
+		PObject.apply(this, arguments);
+	};
+	pSpa.prototype = new PObject();
 
-    /**
-     * نرم افزار را به روز رسانی می‌کنند.
-     * 
-     * @memberof PSpa
-     * @return {promise<PSpa>} نرم افزار به روز شده
-     */
-    pSpa.prototype.update = $pluf.createUpdate({
-	method : 'POST',
-	url : '/api/spa/:id',
-    });
+	/**
+	 * نرم افزار را به روز رسانی می‌کنند.
+	 * 
+	 * @memberof PSpa
+	 * @return {promise<PSpa>} نرم افزار به روز شده
+	 */
+	pSpa.prototype.update = $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/spa/:id',
+	});
 
-    /**
-     * نرم افزار را حذف می‌کند.
-     * 
-     * @return {PSpa} نرم افزار حذف شده
-     */
-    pSpa.prototype.delete = $pluf.createDelete({
-	method : 'DELETE',
-	url : '/api/spa/:id'
-    });
+	/**
+	 * نرم افزار را حذف می‌کند.
+	 * 
+	 * @return {PSpa} نرم افزار حذف شده
+	 */
+	pSpa.prototype.delete = $pluf.createDelete({
+		method : 'DELETE',
+		url : '/api/spa/:id'
+	});
+	
+	/**
+	 * List of all states
+	 */
+	pSpa.prototype.states = $pluf.get({
+		url: '/api/spa/:id/states/find'
+	});
 
-    /**
-     * اجرای نرم افزار.
-     * 
-     * @memberof PSpa
-     * @param {Boolean} newTab تعیین می‌کنه که آیا نرم افزار توی یک برگه جدید باز بشه
-     */
-    pSpa.prototype.run = function(newTab) {
-	var location = $window.location.origin + '/' + this.name + '/';
-	if(newTab){
-	    $window.open(location, '_blank');
-	} else {
-	    $window.location = location;
-	}
-    };
+	/**
+	 * 
+	 * <pre><code>
+	 * 	spa.gotState(data, state).then(function(result){});
+	 * </code></pre>
+	 */
+	pSpa.prototype.gotoState = $pluf.put({
+		url: '/api/spa/:id/states/{id}'
+	});
 
-    return pSpa;
+
+	/**
+	 * اجرای نرم افزار.
+	 * 
+	 * @memberof PSpa
+	 * @param {Boolean} newTab تعیین می‌کنه که آیا نرم افزار توی یک برگه جدید باز بشه
+	 */
+	pSpa.prototype.run = function(newTab) {
+		var location = $window.location.origin + '/' + this.name + '/';
+		if(newTab){
+			$window.open(location, '_blank');
+		} else {
+			$window.location = location;
+		}
+	};
+
+	return pSpa;
 });
 
 /*
@@ -4834,164 +5098,164 @@ angular.module('pluf')
  * @memberof pluf.saas
  * @description مدیریت ملک و نرم افزارها را انجام می‌دهد.
  */
-.service('$saas', function($http, PTenant, PSpa, PObjectCache, $pluf, $httpParamSerializerJQLike) {
+.service('$saas', function($http, PTenant, PSpa, PObjectFactory, $pluf, $httpParamSerializerJQLike) {
 
-    var _tenantCache = new PObjectCache(function(data) {
-	return new PTenant(data);
-    });
-
-    var _spaCache = new PObjectCache(function(data) {
-	return new PSpa(data);
-    });
-
-    /**
-     * نمونه جاری را تعیین می‌کند. به صورت پیش فرض اجرای هر نرم افزار روی یک ملک
-     * اجرا می‌شود این فراخوانی ملکی را تعیین می‌کند که نرم افزار جاری روی آن
-     * کار می‌کند.
-     * 
-     * @memberof $saas
-     * @return {permision(PTenant)} ملک جاری را تعیین می‌کند.
-     */
-    this.session = function() {
-	return $http.get('/api/tenant')//
-	.then(function(res) {
-	    return _tenantCache.restor(res.data.id, res.data);
+	var _tenantCache = new PObjectFactory(function(data) {
+		return new PTenant(data);
 	});
-    };
 
-    /**
-     * فهرست تمام ملک‌هایی را که کاربر به آنها دسترسی دارد را تعیین می‌کند.
-     * 
-     * @memberof $saas
-     * @param {PaginatorParameter}
-     *                paginatorParameter پارامترهای مورد استفاده در صفحه بندی
-     * @return {promise<PaginatorPage<PTenant>>} فهرست ملک‌ها به صورت صفحه
-     *         بندی
-     */
-    this.tenants = $pluf.createFind({
-	method : 'GET',
-	url : '/api/tenant/find',
-    }, _tenantCache);
-
-    /**
-     * ملک تعیین شده با شناسه را برمی‌گرداند.
-     * 
-     * @memberof $saas
-     * @param {integer}
-     *                id شناسه ملک مورد نظر
-     * @return {promise<PTenant>} ملک تعیین شده.
-     */
-    this.tenant = $pluf.createGet({
-	url : '/api/tenant/{id}',
-	method : 'GET'
-    }, _tenantCache);
-
-    /**
-     * یک ملک جدید ایجاد می‌کند و ساختار ایجاد شده برای آنرا به عنوان نتیجه
-     * برمی‌گرداند.
-     * 
-     * @memberof $saas
-     * @param {Struct}
-     *                tenantData ساختار داده‌ای ملک
-     * @return {promise<PTenant>} مکل ایجاد شده
-     */
-    this.newTenant = $pluf.createNew({
-	method : 'POST',
-	url : '/api/tenant/new',
-    }, _tenantCache);
-
-    /**
-     * فهرست تمام نرم افزارهایی را تعیین می‌کند که برای ملک جاری در دسترس است.
-     * 
-     * @memberof $saas
-     * @param {PaginatorParameter}
-     *                paginatorParameter پارامترهای مورد استفاده در صفحه بندی
-     * @return {promise<PaginatorPage<PSpa>>} فهرست نرم افزارها
-     */
-    this.spas = $pluf.createFind({
-	method : 'GET',
-	url : '/api/spa/find',
-    }, _spaCache);
-
-    /**
-     * نرم افزار معادل با شناسه ورودی را بازیابی می‌کند.
-     * 
-     * @memberof $saas
-     * @param {integer}
-     *                id شناسه نرم افزار
-     * @return {promise<PSpa>} نرم‌افزار معادل
-     */
-    this.spa = $pluf.createGet({
-	url : '/api/spa/{id}',
-	method : 'GET'
-    }, _spaCache);
-
-    /**
-     * یک نرم افزار جدید در سیستم ایجاد می‌کند.
-     * 
-     * @memberof $saas
-     * @param {Struct}
-     *                spa ساختار داده‌ای یک spa
-     * @return {promise<PSpa} نرم‌افزار معادل ایجاد شده
-     */
-    this.newSpa = function(file) {
-	var fd = new FormData();
-	fd.append('file', file);
-	return $http.post('/api/spa/new', fd, {
-	    transformRequest : angular.identity,
-	    headers : {
-		'Content-Type' : undefined
-	    }
-	})//
-	.then(function(res) {
-	    return new PSpa(res.data);
+	var _spaCache = new PObjectFactory(function(data) {
+		return new PSpa(data);
 	});
-    };
 
-    /**
-     * Sets or Gets setting value
-     * 
-     * Each teanant is contains of severall settings. This method allow you to
-     * set or get value.
-     * 
-     * <code>
-     * 	$saas.setting('key', 'value')//
-     * 		.then(function(){
-     * 			// value is set
-     * 		});
-     * </code>
-     * 
-     * And getting the value:
-     * 
-     * <code>
-     * 	$saas.setting('key')//
-     * 		.then(function(value){
-     * 			// access value
-     * 		});
-     * </code>
-     */
-    this.setting = function(key, value) {
-	if (angular.isDefined(value)) {
-	    // Setting value
-	    return $http({
+	/**
+	 * نمونه جاری را تعیین می‌کند. به صورت پیش فرض اجرای هر نرم افزار روی یک ملک
+	 * اجرا می‌شود این فراخوانی ملکی را تعیین می‌کند که نرم افزار جاری روی آن
+	 * کار می‌کند.
+	 * 
+	 * @memberof $saas
+	 * @return {permision(PTenant)} ملک جاری را تعیین می‌کند.
+	 */
+	this.session = function() {
+		return $http.get('/api/tenant')//
+		.then(function(res) {
+			return _tenantCache.restor(res.data.id, res.data);
+		});
+	};
+
+	/**
+	 * فهرست تمام ملک‌هایی را که کاربر به آنها دسترسی دارد را تعیین می‌کند.
+	 * 
+	 * @memberof $saas
+	 * @param {PaginatorParameter}
+	 *                paginatorParameter پارامترهای مورد استفاده در صفحه بندی
+	 * @return {promise<PaginatorPage<PTenant>>} فهرست ملک‌ها به صورت صفحه
+	 *         بندی
+	 */
+	this.tenants = $pluf.createFind({
+		method : 'GET',
+		url : '/api/tenant/find',
+	}, _tenantCache);
+
+	/**
+	 * ملک تعیین شده با شناسه را برمی‌گرداند.
+	 * 
+	 * @memberof $saas
+	 * @param {integer}
+	 *                id شناسه ملک مورد نظر
+	 * @return {promise<PTenant>} ملک تعیین شده.
+	 */
+	this.tenant = $pluf.createGet({
+		url : '/api/tenant/{id}',
+		method : 'GET'
+	}, _tenantCache);
+
+	/**
+	 * یک ملک جدید ایجاد می‌کند و ساختار ایجاد شده برای آنرا به عنوان نتیجه
+	 * برمی‌گرداند.
+	 * 
+	 * @memberof $saas
+	 * @param {Struct}
+	 *                tenantData ساختار داده‌ای ملک
+	 * @return {promise<PTenant>} مکل ایجاد شده
+	 */
+	this.newTenant = $pluf.createNew({
 		method : 'POST',
-		url : '/api/setting/spa.default',
-		headers : {
-		    'Content-Type' : 'application/x-www-form-urlencoded'
-		},
-		data : $httpParamSerializerJQLike({
-		    'value' : value
-		})
-	    })
+		url : '/api/tenant/new',
+	}, _tenantCache);
+
+	/**
+	 * فهرست تمام نرم افزارهایی را تعیین می‌کند که برای ملک جاری در دسترس است.
+	 * 
+	 * @memberof $saas
+	 * @param {PaginatorParameter}
+	 *                paginatorParameter پارامترهای مورد استفاده در صفحه بندی
+	 * @return {promise<PaginatorPage<PSpa>>} فهرست نرم افزارها
+	 */
+	this.spas = $pluf.createFind({
+		method : 'GET',
+		url : '/api/spa/find',
+	}, _spaCache);
+
+	/**
+	 * نرم افزار معادل با شناسه ورودی را بازیابی می‌کند.
+	 * 
+	 * @memberof $saas
+	 * @param {integer}
+	 *                id شناسه نرم افزار
+	 * @return {promise<PSpa>} نرم‌افزار معادل
+	 */
+	this.spa = $pluf.createGet({
+		url : '/api/spa/{id}',
+		method : 'GET'
+	}, _spaCache);
+
+	/**
+	 * یک نرم افزار جدید در سیستم ایجاد می‌کند.
+	 * 
+	 * @memberof $saas
+	 * @param {Struct}
+	 *                spa ساختار داده‌ای یک spa
+	 * @return {promise<PSpa} نرم‌افزار معادل ایجاد شده
+	 */
+	this.newSpa = function(file) {
+		var fd = new FormData();
+		fd.append('file', file);
+		return $http.post('/api/spa/new', fd, {
+			transformRequest : angular.identity,
+			headers : {
+				'Content-Type' : undefined
+			}
+		})//
+		.then(function(res) {
+			return new PSpa(res.data);
+		});
+	};
+
+	/**
+	 * Sets or Gets setting value
+	 * 
+	 * Each teanant is contains of severall settings. This method allow you to
+	 * set or get value.
+	 * 
+	 * <code>
+	 * 	$saas.setting('key', 'value')//
+	 * 		.then(function(){
+	 * 			// value is set
+	 * 		});
+	 * </code>
+	 * 
+	 * And getting the value:
+	 * 
+	 * <code>
+	 * 	$saas.setting('key')//
+	 * 		.then(function(value){
+	 * 			// access value
+	 * 		});
+	 * </code>
+	 */
+	this.setting = function(key, value) {
+		if (angular.isDefined(value)) {
+			// Setting value
+			return $http({
+				method : 'POST',
+				url : '/api/setting/spa.default',
+				headers : {
+					'Content-Type' : 'application/x-www-form-urlencoded'
+				},
+				data : $httpParamSerializerJQLike({
+					'value' : value
+				})
+			})
+		}
+		// getting value
+		return $http({
+			method : 'GET',
+			url : '/api/setting/spa.default'
+		}).then(function(res) {
+			return res.data.value;
+		});
 	}
-	// getting value
-	return $http({
-	    method : 'GET',
-	    url : '/api/setting/spa.default'
-	}).then(function(res) {
-	    return res.data.value;
-	});
-    }
 });
 
 /*
