@@ -10,6 +10,7 @@
 
 # NodeJS
 /node_modules/
+/package-lock.json
 
 # bower
 /bower_components/
