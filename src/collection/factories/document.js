@@ -57,6 +57,9 @@ angular.module('pluf')
 		method: 'DELETE',
 		url : '/api/collection/:collection/document/:id',
 	});
+	
+	document.prototype.delete = document.prototype.remove;
+	
 	//
 	return document;
 });
