@@ -34,46 +34,64 @@ angular.module('pluf')
  */
 .factory('PSpa', function($pluf, $window, PObject) {
 
-    var pSpa = function() {
-	PObject.apply(this, arguments);
-    };
-    pSpa.prototype = new PObject();
+	var pSpa = function() {
+		PObject.apply(this, arguments);
+	};
+	pSpa.prototype = new PObject();
 
-    /**
-     * نرم افزار را به روز رسانی می‌کنند.
-     * 
-     * @memberof PSpa
-     * @return {promise<PSpa>} نرم افزار به روز شده
-     */
-    pSpa.prototype.update = $pluf.createUpdate({
-	method : 'POST',
-	url : '/api/spa/:id',
-    });
+	/**
+	 * نرم افزار را به روز رسانی می‌کنند.
+	 * 
+	 * @memberof PSpa
+	 * @return {promise<PSpa>} نرم افزار به روز شده
+	 */
+	pSpa.prototype.update = $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/spa/:id',
+	});
 
-    /**
-     * نرم افزار را حذف می‌کند.
-     * 
-     * @return {PSpa} نرم افزار حذف شده
-     */
-    pSpa.prototype.delete = $pluf.createDelete({
-	method : 'DELETE',
-	url : '/api/spa/:id'
-    });
+	/**
+	 * نرم افزار را حذف می‌کند.
+	 * 
+	 * @return {PSpa} نرم افزار حذف شده
+	 */
+	pSpa.prototype.delete = $pluf.createDelete({
+		method : 'DELETE',
+		url : '/api/spa/:id'
+	});
+	
+	/**
+	 * List of all states
+	 */
+	pSpa.prototype.states = $pluf.get({
+		url: '/api/spa/:id/states/find'
+	});
 
-    /**
-     * اجرای نرم افزار.
-     * 
-     * @memberof PSpa
-     * @param {Boolean} newTab تعیین می‌کنه که آیا نرم افزار توی یک برگه جدید باز بشه
-     */
-    pSpa.prototype.run = function(newTab) {
-	var location = $window.location.origin + '/' + this.name + '/';
-	if(newTab){
-	    $window.open(location, '_blank');
-	} else {
-	    $window.location = location;
-	}
-    };
+	/**
+	 * 
+	 * <pre><code>
+	 * 	spa.gotState(data, state).then(function(result){});
+	 * </code></pre>
+	 */
+	pSpa.prototype.gotoState = $pluf.put({
+		url: '/api/spa/:id/states/{id}'
+	});
 
-    return pSpa;
+
+	/**
+	 * اجرای نرم افزار.
+	 * 
+	 * @memberof PSpa
+	 * @param {Boolean} newTab تعیین می‌کنه که آیا نرم افزار توی یک برگه جدید باز بشه
+	 */
+	pSpa.prototype.run = function(newTab) {
+		var location = $window.location.origin + '/' + this.name + '/';
+		if(newTab){
+			$window.open(location, '_blank');
+		} else {
+			$window.location = location;
+		}
+	};
+
+	return pSpa;
 });

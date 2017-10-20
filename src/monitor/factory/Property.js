@@ -24,34 +24,50 @@
 angular.module('pluf')
 
 /**
+ * @ngdoc factory
+ * @name PGroup
  * @memberof pluf
- * @ngdoc service
- * @name $act
+ * 
  * @description
  * 
- * 
  */
-.factory('PGate', function(PObject, $pluf) {
-
+.factory('PMonitorProperty', function(PObject, $rootScope, $http, PObjectFactory) {
     /*
-     * Creates new instance
+     * یک نمونه جدید از این موجودیت ایجاد می کند.
      */
-    var pGate = function() {
+    var pMonitorProperty = function() {
 	PObject.apply(this, arguments);
     };
-    // Extends it from PObject
-    pGate.prototype = new PObject();
+    pMonitorProperty.prototype = new PObject();
 
-    pGate.prototype.update = $pluf.createUpdate({
-	method : 'POST',
-	url : '/api/bank/backend/:id'
-    });
+    pMonitorProperty.prototype.refresh = function() {
+	var scope = this;
+	if(!this.path){
+	    this.path = '/api/monitor/'+this.monitor+'/property/'+this.id;
+	}
+	return $http.get(this.path)//
+	.then(function(res) {
+	    // XXX: maso, 1395: handle tablular and scalar types
+	    if (res.data.value !== scope.value) {
+		$rootScope.$emit(scope.path, scope.value, res.data.value);
+	    }
+	    scope.setData(res.data);
+	    return scope;
+	}, function(){
+		if(scope.value){
+			$rootScope.$emit(scope.path, scope.value, false);
+		}
+		scope.setData(false);
+		return scope;
+	});
+    };
 
-    pGate.prototype.remove = $pluf.createDelete({
-	method: 'DELETE',
-	url : '/api/bank/backend/:id',
-    });
+    pMonitorProperty.prototype.watch = function(callback) {
+	if(!this.path){
+	    this.path = '/api/monitor/'+this.monitor+'/property/'+this.id;
+	}
+	return $rootScope.$on(this.path, callback);
+    }
 
-    pGate.prototype.delete = pGate.prototype.remove;
-    return pGate;
+    return pMonitorProperty;
 });

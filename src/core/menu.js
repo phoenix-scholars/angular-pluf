@@ -68,9 +68,7 @@ angular.module('pluf')
  * @example
  * // Assigne header menu into scope variable
  * angular.module('myApp').controller('SidebarController', function($scope, $menu){
- * 	$menu.menu('header').then(function(menu){
- * 		$scope.menu = menu;
- * 	})
+ * 	$scope.menu = $menu.menu('header');
  * });
  *
  * @example
@@ -81,55 +79,50 @@ angular.module('pluf')
  * </ul>
  */
 .service('$menu', function($q, $timeout, PMenu, PMenuItem) {
-	/**
-	 * مخزنی از تمام منوها ایجاد می‌کند. این مخزن می‌تواند به صورت مستقیم در سایر نمایش‌ها و سرویس‌ها
-	 * استفاده شود.
-	 *
-	 * @type {Array}
-	 */
-	this.menus = [];
+    /**
+     * مخزنی از تمام منوها ایجاد می‌کند. این مخزن می‌تواند به صورت مستقیم در سایر نمایش‌ها و سرویس‌ها
+     * استفاده شود.
+     *
+     * @type {Array}
+     */
+    this.menus = [];
 
-	/*
-	 * یک منوایتم رو به منوهای موجود اضافه می‌کند. در صورتی که منو معادل وجود نداشته باشد یک نمونه
-	 * جدید برای آن ایجاد خواهد کردم.
-	 */
-	this._addMenu = function(id, menu) {
-		if (!(id in this.menus)) {
-			this.menus[id] = new PMenu({'id': id});
-		}
-		this.menus[id].item(menu);
-	};
+    /*
+     * یک منوایتم رو به منوهای موجود اضافه می‌کند. در صورتی که منو معادل وجود نداشته باشد یک نمونه
+     * جدید برای آن ایجاد خواهد کردم.
+     */
+    this._addMenu = function(id, menu) {
+	if (!(id in this.menus)) {
+	    this.menus[id] = new PMenu({'id': id});
+	}
+	this.menus[id].item(menu);
+    };
 
-	/**
-	 * یک منو را با شناسه تعیین شده بازیابی می‌کند. در صورتی که منو با شناسه در مورد نظر موجود
-	 * نباشد یک نمونه برای آن ایجاد شده و به عنوان نتیجه برگردانده می‌شود.
-	 *
-	 * @memberof $menu
-	 * @param  {string} id شناسه منو مورد نظر
-	 * @return {promise(PMenu)} منوی ایجاد شده
-	 */
-	this.menu = function(id) {
-		var def = $q.defer();
-		var scope = this;
-		$timeout(function() {
-			if (!(id in scope.menus)) {
-				scope.menus[id] = new PMenu({'id':id});
-			}
-			def.resolve(scope.menus[id]);
-		}, 1);
-		return def.promise;
-	};
+    /**
+     * یک منو را با شناسه تعیین شده بازیابی می‌کند. در صورتی که منو با شناسه در مورد نظر موجود
+     * نباشد یک نمونه برای آن ایجاد شده و به عنوان نتیجه برگردانده می‌شود.
+     *
+     * @memberof $menu
+     * @param  {string} id شناسه منو مورد نظر
+     * @return {promise(PMenu)} منوی ایجاد شده
+     */
+    this.menu = function(id) {
+	if (!(id in this.menus)) {
+	    this.menus[id] = new PMenu({'id':id});
+	}
+	return this.menus[id];
+    };
 
-	/**
-	 * یک گزینه جدید به منو اضافه می‌کند. این روش اضافه کردن منو کلی است و همواره یک منوایتم
-	 * به عنوان گزینه جدید اضافه خواهد شد.
-	 *
-	 * @memberof $menu
-	 * @param {string} شناسه منو مورد نظر
-	 * @param {object} داده‌های مورد نیاز برای ایجاد منوایتم
-	 */
-	this.addItem = function(id, menu) {
-		this._addMenu(id, new PMenuItem(menu));
-		return this;
-	};
+    /**
+     * یک گزینه جدید به منو اضافه می‌کند. این روش اضافه کردن منو کلی است و همواره یک منوایتم
+     * به عنوان گزینه جدید اضافه خواهد شد.
+     *
+     * @memberof $menu
+     * @param {string} شناسه منو مورد نظر
+     * @param {object} داده‌های مورد نیاز برای ایجاد منوایتم
+     */
+    this.addItem = function(id, menu) {
+	this._addMenu(id, new PMenuItem(menu));
+	return this;
+    };
 });
