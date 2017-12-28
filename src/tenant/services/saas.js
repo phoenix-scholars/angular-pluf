@@ -27,13 +27,8 @@ angular.module('pluf')
  * @name $saas
  * @memberof pluf.saas
  * @description مدیریت ملک و نرم افزارها را انجام می‌دهد.
- * 
- * این سرویس مدیریت ملک، نرم افزارها و پرداخت‌ها را انجام می‌دهد. بسته به اینکه ملک جاری چه دسترسی‌هایی داشته باشد
- * نتیجه هر فراخوانی ممکن است متفاوت باشد. یا حتی برخی فراخوانی‌ها ممکن است برای یک ملک مجاز نباشد و با خطا مواجه شود.
- * به عنوان مثال یک ملک ممکن است امکان مدیریت برخی اعمال مربوط به سایر ملک‌ها را داشته
- * باشد (به عبارتی ملک یک ابرملک باشد).
  */
-.service('$saas', function($http, PTenant, PSpa, PInvoice, PSaasGate, PSaasReceipt, PObjectFactory, $pluf, $httpParamSerializerJQLike) {
+.service('$saas', function($http, PTenant, PSpa, PObjectFactory, $pluf, $httpParamSerializerJQLike) {
 
 	var _tenantCache = new PObjectFactory(function(data) {
 		return new PTenant(data);
@@ -41,18 +36,6 @@ angular.module('pluf')
 
 	var _spaCache = new PObjectFactory(function(data) {
 		return new PSpa(data);
-	});
-
-	var _invoiceCache = new PObjectFactory(function(data) {
-		return new PInvoice(data);
-	});
-
-	var _gateCache = new PObjectCache(function(data) {
-		return new PSaasGate(data);
-	});
-
-	var _receiptCache = new PObjectCache(function(data) {
-		return new PSaasReceipt(data);
 	});
 
 	/**
@@ -81,7 +64,7 @@ angular.module('pluf')
 	 */
 	this.tenants = $pluf.createFind({
 		method : 'GET',
-		url : '/api/saas/tenant/find',
+		url : '/api/tenant/find',
 	}, _tenantCache);
 
 	/**
@@ -93,7 +76,7 @@ angular.module('pluf')
 	 * @return {promise<PTenant>} ملک تعیین شده.
 	 */
 	this.tenant = $pluf.createGet({
-		url : '/api/saas/tenant/{id}',
+		url : '/api/tenant/{id}',
 		method : 'GET'
 	}, _tenantCache);
 
@@ -108,7 +91,7 @@ angular.module('pluf')
 	 */
 	this.newTenant = $pluf.createNew({
 		method : 'POST',
-		url : '/api/saas/tenant/new',
+		url : '/api/tenant/new',
 	}, _tenantCache);
 
 	/**
@@ -203,79 +186,4 @@ angular.module('pluf')
 			return res.data.value;
 		});
 	}
-
-	/**
-	 * فهرست تمام فاکتورهایی را تعیین می‌کند که برای ملک جاری در دسترس است.
-	 * 
-	 * @memberof $saas
-	 * @param {PaginatorParameter}
-	 *                paginatorParameter پارامترهای مورد استفاده در صفحه بندی
-	 * @return {promise<PaginatorPage<PInvoice>>} فهرست فاکتورهای ملک جاری
-	 */
-	this.invoices = $pluf.createFind({
-		method : 'GET',
-		url : '/api/saas/invoice/find',
-	}, _invoiceCache);
-
-	/**
-	 * فاکتور تعیین شده با شناسه را برمی‌گرداند.
-	 * 
-	 * @memberof $saas
-	 * @param {integer}
-	 *                id شناسه فاکتور اجاره ملک مورد نظر
-	 * @return {promise<PInvoice>} فاکتور اجاره ملک تعیین شده.
-	 */
-	this.invoice = $pluf.createGet({
-		url : '/api/saas/invoice/{id}',
-		method : 'GET'
-	}, _invoiceCache);
-
-
-	/**
-	 * Gets a saas-gate
-	 * 
-	 * @memberof $saas
-	 * @return Promise<PSaasGate> a saas-gate
-	 */
-	this.gate = $pluf.createGet({
-		method : 'GET',
-		url : '/api/saas/backend/{id}',
-	}, _gateCache);
-
-	/**
-	 * Lists all saas-gates
-	 * 
-	 * @memberof $saas
-	 * @param paginatorParam
-	 * @return Promise<PaginatorPage<PSaasGate>> gates list
-	 */
-	this.gates = $pluf.createFind({
-		method : 'GET',
-		url : '/api/saas/backend/find',
-	}, _gateCache);
-
-
-	/**
-	 * Gets saas-receipt detail by id or secure id
-	 * 
-	 * @memberof $bank
-	 * @return Promise<PSaasReceipt> created receipt
-	 * 
-	 */
-	this.receipt = $pluf.createGet({
-		method : 'GET',
-		url : '/api/saas/receipt/{id}',
-	}, _receiptCache);
-
-	/**
-	 * Lists all receipts
-	 * 
-	 * @memberof $bank
-	 * @return Promise<PaginatorPage<PSaasReceipt>> list of receipts
-	 * 
-	 */
-	this.receipts = $pluf.createFind({
-		method : 'GET',
-		url : '/api/saas/receipt/find',
-	}, _receiptCache);
 });
