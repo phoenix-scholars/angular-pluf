@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 'use strict';
-describe('User service: $saas', function() {
+describe('SaaS service: $saas', function() {
 
 	var $saas;
 	var $rootScope;
@@ -40,8 +40,32 @@ describe('User service: $saas', function() {
 	it('should contain session function', function() {
 		expect(angular.isFunction($saas.session)).toBe(true);
 	});
-	it('should call /api/tenant to get session tenant', function(done) {
+	it('should call /api/saas/tenant/current to get session tenant', function(done) {
 		$saas.session()//
+		.then(function(object) {
+			expect(object).not.toBeNull();
+			expect(object.id).toEqual('current');
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend//
+		.expect('GET', '/api/saas/tenant/current')//
+		.respond(200, {
+			id : 1
+		// TODO: maso, 1395: Paginated page param
+		});
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+
+	it('should contain currenTenant function', function() {
+		expect(angular.isFunction($saas.currentTenant)).toBe(true);
+	});
+	it('should call /api/saas/tenant/current to get current tenant', function(done) {
+		$saas.currentTenant()//
 		.then(function(object) {
 			expect(object).not.toBeNull();
 			done();
@@ -51,19 +75,103 @@ describe('User service: $saas', function() {
 		});
 
 		$httpBackend//
-		.expect('GET', '/api/tenant')//
+		.expect('GET', '/api/saas/tenant/current')//
 		.respond(200, {
 			id : 1
-		// TODO: maso, 1395: Paginated page param
 		});
 		expect($httpBackend.flush).not.toThrow();
 		$rootScope.$apply();
 	});
+	
+//	it('should contain deleteTenant function', function() {
+//		expect(angular.isFunction($saas.deleteTenant)).toBe(true);
+//	});
+//	it('funciton deleteTenant() should call /api/saas/tenant/current to delete current tenant', function(done) {
+//		$saas.deleteTenant()//
+//		.then(function(object) {
+//			expect(object).not.toBeNull();
+//			done();
+//		}, function() {
+//			expect(false).toBe(true);
+//			done();
+//		});
+//
+//		$httpBackend//
+//		.expect('DELETE', '/api/saas/tenant/current')//
+//		.respond(200, {
+//			id : 0
+//		});
+//		expect($httpBackend.flush).not.toThrow();
+//		$rootScope.$apply();
+//	});
+//	it('funciton deleteTenant(id) should call /api/saas/tenant/id to delete a tenant', function(done) {
+//		var myId = 1;
+//		$saas.deleteTenant(myId)//
+//		.then(function(object) {
+//			expect(object).not.toBeNull();
+//			done();
+//		}, function() {
+//			expect(false).toBe(true);
+//			done();
+//		});
+//		
+//		$httpBackend//
+//		.expect('DELETE', '/api/saas/tenant/' + myId)//
+//		.respond(200, {
+//			id : 0
+//		});
+//		expect($httpBackend.flush).not.toThrow();
+//		$rootScope.$apply();
+//	});
 
+//	it('should contain updateTenant function', function() {
+//		expect(angular.isFunction($saas.updateTenant)).toBe(true);
+//	});
+//	it('funciton updateTenant(data) should call /api/saas/tenant/current to update current tenant', function(done) {
+//		var data = {};
+//		$saas.updateTenant(data)//
+//		.then(function(object) {
+//			expect(object).not.toBeNull();
+//			done();
+//		}, function() {
+//			expect(false).toBe(true);
+//			done();
+//		});
+//
+//		$httpBackend//
+//		.expect('POST', '/api/saas/tenant/current')//
+//		.respond(200, {
+//			id : 1
+//		});
+//		expect($httpBackend.flush).not.toThrow();
+//		$rootScope.$apply();
+//	});
+//	it('funciton updateTenant(data, id) should call /api/saas/tenant/current to update a tenant', function(done) {
+//		var data = {
+//			id: 1
+//		};
+//		$saas.updateTenant(data, data.id)//
+//		.then(function(object) {
+//			expect(object).not.toBeNull();
+//			done();
+//		}, function() {
+//			expect(false).toBe(true);
+//			done();
+//		});
+//
+//		$httpBackend//
+//		.expect('POST', '/api/saas/tenant/'+data.id)//
+//		.respond(200, {
+//			id : data.id
+//		});
+//		expect($httpBackend.flush).not.toThrow();
+//		$rootScope.$apply();
+//	});
+	
 	it('should contain tenants function', function() {
 		expect(angular.isFunction($saas.tenants)).toBe(true);
 	});
-	it('should call /api/tenant/find to get list tenants', function(done) {
+	it('should call /api/saas/tenant/find to get list tenants', function(done) {
 		$saas.tenants()//
 		.then(function(object) {
 			expect(object).not.toBeNull();
@@ -74,7 +182,7 @@ describe('User service: $saas', function() {
 		});
 
 		$httpBackend//
-		.expect('GET', '/api/tenant/find')//
+		.expect('GET', '/api/saas/tenant/find')//
 		.respond(200, {
 			items : []
 		// TODO: maso, 1395: Paginated page param
@@ -86,7 +194,7 @@ describe('User service: $saas', function() {
 	it('should contain tenant function', function() {
 		expect(angular.isFunction($saas.tenant)).toBe(true);
 	});
-	it('should call /api/tenant/{id} to get tenants', function(done) {
+	it('should call /api/saas/tenant/{id} to get a tenant', function(done) {
 		var id = 1;
 		$saas.tenant(id)//
 		.then(function(object) {
@@ -98,7 +206,7 @@ describe('User service: $saas', function() {
 		});
 
 		$httpBackend//
-		.expect('GET', '/api/tenant/' + id)//
+		.expect('GET', '/api/saas/tenant/' + id)//
 		.respond(200, {
 			id : id
 		// TODO: maso, 1395: Paginated page param
@@ -110,7 +218,7 @@ describe('User service: $saas', function() {
 	it('should contain newTenant function', function() {
 		expect(angular.isFunction($saas.newTenant)).toBe(true);
 	});
-	it('should call /api/tenant/new to create tenant', function(done) {
+	it('should call /api/saas/tenant/new to create tenant', function(done) {
 		var data = {
 			id : 1,
 			title : 'title'
@@ -125,7 +233,7 @@ describe('User service: $saas', function() {
 		});
 
 		$httpBackend//
-		.expect('POST', '/api/tenant/new')//
+		.expect('POST', '/api/saas/tenant/new')//
 		.respond(200, data);
 		expect($httpBackend.flush).not.toThrow();
 		$rootScope.$apply();
@@ -202,4 +310,143 @@ describe('User service: $saas', function() {
 		$rootScope.$apply();
 	});
 
+	it('should contain invoices function', function() {
+		expect(angular.isFunction($saas.invoices)).toBe(true);
+	});
+	it('should call /api/saas/invoice/find to get list of invoices', function(done) {
+		$saas.invoices()//
+		.then(function(object) {
+			expect(object).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend//
+		.expect('GET', '/api/saas/invoice/find')//
+		.respond(200, {
+			items : []
+		// TODO: maso, 1395: Paginated page param
+		});
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+
+	it('should contain invoice function', function() {
+		expect(angular.isFunction($saas.invoice)).toBe(true);
+	});
+	it('should call /api/saas/invoice/{id} to get Invoice', function(done) {
+		var id = 1;
+		$saas.invoice(id)//
+		.then(function(object) {
+			expect(object).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend//
+		.expect('GET', '/api/saas/invoice/' + id)//
+		.respond(200, {
+			id : id
+		});
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+
+	it('should contain gates function', function() {
+		expect(angular.isFunction($saas.gates)).toBe(true);
+	});
+	it('should call /api/saas/backend/find to get list of gates', function(done) {
+		$saas.gates()//
+		.then(function(object) {
+			expect(object).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend//
+		.expect('GET', '/api/saas/backend/find')//
+		.respond(200, {
+			items : []
+		// TODO: maso, 1395: Paginated page param
+		});
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+
+	it('should contain gate function', function() {
+		expect(angular.isFunction($saas.gate)).toBe(true);
+	});
+	it('should call /api/saas/backend/{id} to get Gate', function(done) {
+		var id = 1;
+		$saas.gate(id)//
+		.then(function(object) {
+			expect(object).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend//
+		.expect('GET', '/api/saas/backend/' + id)//
+		.respond(200, {
+			id : id
+		});
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+	
+	it('should contain receipts function', function() {
+		expect(angular.isFunction($saas.receipts)).toBe(true);
+	});
+	it('should call /api/saas/receipt/find to get list of receipts', function(done) {
+		$saas.receipts()//
+		.then(function(object) {
+			expect(object).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend//
+		.expect('GET', '/api/saas/receipt/find')//
+		.respond(200, {
+			items : []
+		// TODO: maso, 1395: Paginated page param
+		});
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+
+	it('should contain receipt function', function() {
+		expect(angular.isFunction($saas.receipt)).toBe(true);
+	});
+	it('should call /api/saas/receipt/{id} to get receipt', function(done) {
+		var id = 1;
+		$saas.receipt(id)//
+		.then(function(object) {
+			expect(object).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+
+		$httpBackend//
+		.expect('GET', '/api/saas/receipt/' + id)//
+		.respond(200, {
+			id : id
+		});
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+
+	
 });

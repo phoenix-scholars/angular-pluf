@@ -21,7 +21,7 @@
  */
 'use strict';
 
-describe('SasS module: PTenant', function() {
+describe('SaaS module: PTenant', function() {
 	var $rootScope;
 	var $httpBackend;
 	var PTenant;
@@ -42,7 +42,7 @@ describe('SasS module: PTenant', function() {
 		expect(angular.isFunction(tenant.update)).toBe(true);
 	});
 
-	it('should call /api/tenant/{id} to update', function(done) {
+	it('should call /api/saas/tenant/{id} to update', function(done) {
 		var tenant = new PTenant({
 			id : 1
 		});
@@ -56,7 +56,7 @@ describe('SasS module: PTenant', function() {
 		});
 
 		$httpBackend//
-		.expect('POST', '/api/tenant/' + tenant.id)//
+		.expect('POST', '/api/saas/tenant/' + tenant.id)//
 		.respond(200, {
 			id : 1
 		// TODO: maso, 1395: Paginated page param
@@ -65,14 +65,14 @@ describe('SasS module: PTenant', function() {
 		$rootScope.$apply();
 	});
 	
-	it('should contain remove functions', function() {
+	it('should contain delete functions', function() {
 		var tenant = new PTenant({
 			id : 1
 		});
 		expect(angular.isFunction(tenant.delete)).toBe(true);
 	});
 	
-	it('should call /api/tenant/{id} to remove', function(done) {
+	it('should call /api/saas/tenant/{id} to remove', function(done) {
 		var tenant = new PTenant({
 			id : 1
 		});
@@ -86,10 +86,69 @@ describe('SasS module: PTenant', function() {
 		});
 		
 		$httpBackend//
-		.expect('DELETE', '/api/tenant/' + tenant.id)//
+		.expect('DELETE', '/api/saas/tenant/' + tenant.id)//
 		.respond(200, {
 			id : 1
 			// TODO: maso, 1395: Paginated page param
+		});
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+	
+	it('should contain invoices functions', function() {
+		var tenant = new PTenant({
+			id : 1
+		});
+		expect(angular.isFunction(tenant.invoices)).toBe(true);
+	});
+	
+	it('should call /api/saas/tenant/{id}/invoice/find to list invoices', function(done) {
+		var tenant = new PTenant({
+			id : 1
+		});
+		tenant.invoices()//
+		.then(function(page) {
+			expect(page).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+		
+		$httpBackend//
+		.expect('GET', '/api/saas/tenant/' + tenant.id + '/invoice/find')//
+		.respond(200, {
+			id : 1
+			// TODO: maso, 1395: Paginated page param
+		});
+		expect($httpBackend.flush).not.toThrow();
+		$rootScope.$apply();
+	});
+	
+	it('should contain newInvoice functions', function() {
+		var tenant = new PTenant({
+			id : 1
+		});
+		expect(angular.isFunction(tenant.newInvoice)).toBe(true);
+	});
+	
+	it('should call /api/saas/tenant/{id}/invoice/new to create new invoice', function(done) {
+		var tenant = new PTenant({
+			id : 1
+		});
+		tenant.newInvoice()//
+		.then(function(inv) {
+			expect(inv).not.toBeNull();
+			done();
+		}, function() {
+			expect(false).toBe(true);
+			done();
+		});
+		
+		$httpBackend//
+		.expect('POST', '/api/saas/tenant/' + tenant.id + '/invoice/new')//
+		.respond(200, {
+			id : 1
 		});
 		expect($httpBackend.flush).not.toThrow();
 		$rootScope.$apply();
