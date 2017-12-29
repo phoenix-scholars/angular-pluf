@@ -52,7 +52,7 @@ angular.module('pluf')
 	 */
 	pTenant.prototype.delete = $pluf.createDelete({
 		method : 'DELETE',
-		url : '/api/saas/tenant/current'
+		url : '/api/saas/tenant/:id'
 	});
 
 	/**
@@ -63,7 +63,7 @@ angular.module('pluf')
 	 */
 	pTenant.prototype.update =  $pluf.createUpdate({
 		method : 'POST',
-		url : '/api/saas/tenant/current',
+		url : '/api/saas/tenant/:id',
 	});
 
 	/**

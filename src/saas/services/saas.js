@@ -33,7 +33,8 @@ angular.module('pluf')
  * به عنوان مثال یک ملک ممکن است امکان مدیریت برخی اعمال مربوط به سایر ملک‌ها را داشته
  * باشد (به عبارتی ملک یک ابرملک باشد).
  */
-.service('$saas', function($http, PTenant, PSpa, PInvoice, PSaasGate, PSaasReceipt, PObjectFactory, $pluf, $httpParamSerializerJQLike) {
+.service('$saas', function($http, PTenant, PSpa, PInvoice, PSaasGate, PSaasReceipt, 
+		PObjectFactory, PObjectCache, $pluf, $httpParamSerializerJQLike) {
 
 	var _tenantCache = new PObjectFactory(function(data) {
 		return new PTenant(data);
@@ -43,7 +44,7 @@ angular.module('pluf')
 		return new PSpa(data);
 	});
 
-	var _invoiceCache = new PObjectFactory(function(data) {
+	var _invoiceCache = new PObjectCache(function(data) {
 		return new PInvoice(data);
 	});
 
@@ -56,7 +57,7 @@ angular.module('pluf')
 	});
 
 	/**
-	 * نمونه جاری را تعیین می‌کند. به صورت پیش فرض اجرای هر نرم افزار روی یک ملک
+	 * ملک جاری را تعیین می‌کند. به صورت پیش فرض اجرای هر نرم افزار روی یک ملک
 	 * اجرا می‌شود این فراخوانی ملکی را تعیین می‌کند که نرم افزار جاری روی آن
 	 * کار می‌کند.
 	 * 
@@ -64,10 +65,67 @@ angular.module('pluf')
 	 * @return {permision(PTenant)} ملک جاری را تعیین می‌کند.
 	 */
 	this.session = function() {
-		return $http.get('/api/tenant')//
+		return $http.get('/api/saas/tenant/current')//
 		.then(function(res) {
+			res.data.id = 'current';
 			return _tenantCache.restor(res.data.id, res.data);
 		});
+	};
+
+	/**
+	 * همان تابع session() است که ملک جاری را برمی‌گرداند
+	 * @see session()
+	 */
+	this.currentTenant = this.session;
+
+//	/**
+//	 * ملک جاری یا ملک تعیین شده با شناسه را حذف می‌کند.
+//	 * در صورتی که شناسه یک ملک به عنوان ورودی به این تابع داده شود، ملک با شناسه داده شده
+//	 * حذف می‌شود. در صورتی که شناسه‌ای به عنوان ورودی داده نشود ملک جاری حذف می‌شود.
+//	 * 
+//	 * @memberof PTenant
+//	 * @return {promise<PTenant>} ملک حذف شده
+//	 */
+//	this.deleteTenant = function(id){
+//		var myId = id ?  id : 'current';
+//		return $pluf.createDelete({
+//			method : 'DELETE',
+//			url : '/api/saas/tenant/' + myId
+//		})();
+//	};
+//
+//	/**
+//	 * اطلاعات ملک جاری یا ملک تعیین شده با شناسه را به روزرسانی می‌کند.
+//	 * در صورتی که شناسه یک ملک به عنوان پارامتر دوم ورودی به این تابع داده شود، ملک با شناسه داده شده
+//	 * به روزرسانی می‌شود. در صورتی که شناسه‌ای به عنوان پارامتر دوم ورودی داده نشود ملک جاری به روزرسانی می‌شود.
+//	 * 
+//	 * @memberof PTenant
+//	 * @return {promise<PTenant>} خود ملک
+//	 */
+//	this.updateTenant = function(data, id){
+//		var myId = id ? id : 'current';
+//		return $pluf.createUpdate({
+//			method : 'POST',
+//			url : '/api/saas/tenant/' + myId
+//		})(data);
+//	};
+
+	/**
+	 * ملک جاری یا ملک تعیین شده با شناسه را برمی‌گرداند.
+	 * در صورتی که شناسه یک ملک به عنوان ورودی به این تابع داده شود، ملک با شناسه داده شده
+	 * برگردانده می‌شود. در صورتی که شناسه‌ای به عنوان ورودی داده نشود ملک جاری برگردانده می‌شود.
+	 * 
+	 * @memberof $saas
+	 * @param {integer|null}
+	 *                id شناسه ملک مورد نظر
+	 * @return {promise<PTenant>} ملک تعیین شده.
+	 */
+	this.tenant = function (id){
+		var myId = id ? id : 'current';
+		return $pluf.createGet({
+			url : '/api/saas/tenant/' + myId,
+			method : 'GET'
+		}, _tenantCache)();
 	};
 
 	/**
@@ -82,19 +140,6 @@ angular.module('pluf')
 	this.tenants = $pluf.createFind({
 		method : 'GET',
 		url : '/api/saas/tenant/find',
-	}, _tenantCache);
-
-	/**
-	 * ملک تعیین شده با شناسه را برمی‌گرداند.
-	 * 
-	 * @memberof $saas
-	 * @param {integer}
-	 *                id شناسه ملک مورد نظر
-	 * @return {promise<PTenant>} ملک تعیین شده.
-	 */
-	this.tenant = $pluf.createGet({
-		url : '/api/saas/tenant/{id}',
-		method : 'GET'
 	}, _tenantCache);
 
 	/**
