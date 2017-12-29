@@ -4884,6 +4884,205 @@ angular.module('pluf')
 /**
  * @ngdoc factory
  * @memberof pluf.saas
+ * @name PInvoice
+ * @description اطلاعات یک  فاکتور را تعیین می‌کند.
+ * 
+ * @attr {integer} id
+ * @attr {string} name
+ * 
+ */
+.factory('PInvoice', function($pluf, $injector, PObject, PReceipt, PObjectFactory) {
+
+	var _receiptFactory = new PObjectFactory(function(data) {
+		return new PReceipt(data);
+    });
+	
+	var _invoiceFactory = new PObjectFactory(function(data) {
+	    if(!this.pInvoiceInjector){
+	    	this.pInvoiceInjector = $injector.get('PInvoice');
+	    }
+	    return new this.pInvoiceInjector(data);
+	});
+	
+	var pInvoice = function() {
+		PObject.apply(this, arguments);
+	};
+	pInvoice.prototype = new PObject();
+
+//	/**
+//	 * فاکتور را به روز رسانی می‌کنند.
+//	 * 
+//	 * @memberof PInvoice
+//	 * @return {promise<PInvoice>} فاکتور به روز شده
+//	 */
+//	pInvoice.prototype.update = $pluf.createUpdate({
+//		method : 'POST',
+//		url : '/api/saas/invoice/:id',
+//	});
+
+//	/**
+//	 * فاکتور را حذف می‌کند.
+//	 * 
+//	 * @return {PInvoice} فاکتور حذف شده
+//	 */
+//	pInvoice.prototype.delete = $pluf.createDelete({
+//		method : 'DELETE',
+//		url : '/api/spa/:id'
+//	});
+
+
+	pInvoice.prototype.pay = $pluf.createNew({
+		method : 'POST',
+		url : '/api/saas/invoice/:id/pay'
+	}, _receiptFactory);
+		
+	pInvoice.prototype.state = $pluf.createGet({
+		method : 'GET',
+		url : '/api/saas/invoice/:id/state'
+	}, _invoiceFactory);
+
+	return pInvoice;
+});
+
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @name PSaasGate
+ * @description
+ * 
+ * 
+ */
+.factory('PSaasGate', function(PObject, $pluf) {
+
+	/*
+	 * Creates new instance
+	 */
+	var pGate = function() {
+		PObject.apply(this, arguments);
+	};
+	// Extends it from PObject
+	pGate.prototype = new PObject();
+
+//	pGate.prototype.update = $pluf.createUpdate({
+//		method : 'POST',
+//		url : '/api/saas/backend/:id'
+//	});
+//
+//	pGate.prototype.remove = $pluf.createDelete({
+//		method: 'DELETE',
+//		url : '/api/saas/backend/:id',
+//	});
+
+//	pGate.prototype.delete = pGate.prototype.remove;
+	return pGate;
+});
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+
+/**
+ * @memberof pluf
+ * @name PSaasReceipt
+ * @description
+ * 
+ * 
+ */
+.factory('PSaasReceipt', function(PObject, $pluf) {
+
+	/*
+	 * Creates new instance
+	 */
+	var pReceipt = function() {
+		PObject.apply(this, arguments);
+	};
+	// Extends it from PObject
+	pReceipt.prototype = new PObject();
+
+//	pReceipt.prototype.update = $pluf.createUpdate({
+//		method : 'POST',
+//		url : '/api/bank/receipt/:id'
+//	});
+//
+//	pReceipt.prototype.remove = $pluf.createDelete({
+//		method: 'DELETE',
+//		url : '/api/bank/receipt/:id',
+//	});
+//
+//	pReceipt.prototype.delete = pReceipt.prototype.remove;
+	return pReceipt;
+});
+/*
+ * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+'use strict';
+
+angular.module('pluf')
+/**
+ * @ngdoc factory
+ * @memberof pluf.saas
  * @name PTenantSetting
  * @description تنظیم‌های یک ملک را تعیین می‌کند.
  * 
@@ -5022,53 +5221,89 @@ angular.module('pluf')
  * @ngdoc factory
  * @memberof pluf.saas
  * @name PTenant
- * @description ساختار داده‌ای یک ملک را تعیین می‌کنه
+ * @description ساختار داده‌ای یک ملک را تعیین کرده و امکاناتی برای مدیریت ملک فراهم میکند
+ * 
+ * این سرویس مدیریت ملک، نرم افزارها و پرداخت‌های مربوط به ملک را انجام می‌دهد. بسته به اینکه ملک چه دسترسی‌هایی داشته باشد
+ * نتیجه هر فراخوانی ممکن است متفاوت باشد. یا حتی برخی فراخوانی‌ها ممکن است برای یک ملک مجاز نباشد و با خطا مواجه شود.
+ * به عنوان مثال یک ملک ممکن است امکان مدیریت برخی اعمال مربوط به سایر ملک‌ها را داشته
+ * باشد (به عبارتی ملک یک ابرملک باشد).
  */
-.factory('PTenant', function($pluf, $injector, PObject) {
+.factory('PTenant', function($pluf, $injector, PObject, PObjectFactory, PInvoice) {
 
-    var pTenant = function() {
-	PObject.apply(this, arguments);
-    };
-    pTenant.prototype = new PObject();
+	var _invoiceCache = new PObjectFactory(function(data) {
+		return new PInvoice(data);
+	});
+	
+	var pTenant = function() {
+		PObject.apply(this, arguments);
+	};
+	pTenant.prototype = new PObject();
 
-    /**
-     * یک ملک را حذف می‌کند
-     * 
-     * @memberof PTenant
-     * @return {promise<PTenant>} ملک حذف شده
-     */
-    pTenant.prototype.delete = $pluf.createDelete({
-	method : 'DELETE',
-	url : '/api/tenant/:id'
-    });
+	/**
+	 * یک ملک را حذف می‌کند
+	 * 
+	 * @memberof PTenant
+	 * @return {promise<PTenant>} ملک حذف شده
+	 */
+	pTenant.prototype.delete = $pluf.createDelete({
+		method : 'DELETE',
+		url : '/api/saas/tenant/:id'
+	});
 
-    /**
-     * اطلاعات ملک را به روز می‌کند
-     * 
-     * @memberof PTenant
-     * @return {promise<PTenant>} خود ملک
-     */
-    pTenant.prototype.update =  $pluf.createUpdate({
-	method : 'POST',
-	url : '/api/tenant/:id',
-    });
+	/**
+	 * اطلاعات ملک را به روز می‌کند
+	 * 
+	 * @memberof PTenant
+	 * @return {promise<PTenant>} خود ملک
+	 */
+	pTenant.prototype.update =  $pluf.createUpdate({
+		method : 'POST',
+		url : '/api/saas/tenant/:id',
+	});
 
-    /**
-     * تعیین نرم افزار پیش‌فرض
-     * 
-     * نرم افزار پیش‌فرض برای سیستم را تعیین می‌کند.
-     * 
-     * @memberof PTenant
-     * @param {PSpa}
-     *                spa
-     * @return {promise{tenant}}
-     */
-    pTenant.prototype.defaultSpa = function(spa){
-	var $saas = $injector.get('$saas');
-	return $saas.setting('spa.default', spa.name);
-    }
-
-    return pTenant;
+	/**
+	 * تعیین نرم افزار پیش‌فرض
+	 * 
+	 * نرم افزار پیش‌فرض برای سیستم را تعیین می‌کند.
+	 * 
+	 * @memberof PTenant
+	 * @param {PSpa}
+	 *                spa
+	 * @return {promise{tenant}}
+	 */
+	pTenant.prototype.defaultSpa = function(spa){
+		var $saas = $injector.get('$saas');
+		return $saas.setting('spa.default', spa.name);
+	}
+	
+	/**
+	 * فهرست تمام فاکتورهایی را تعیین می‌کند که برای ملک جاری در دسترس است.
+	 * 
+	 * @memberof $saas
+	 * @param {PaginatorParameter}
+	 *                paginatorParameter پارامترهای مورد استفاده در صفحه بندی
+	 * @return {promise<PaginatorPage<PInvoice>>} فهرست فاکتورهای ملک جاری
+	 */
+	pTenant.prototype.invoices = $pluf.createFind({
+		method : 'GET',
+		url : '/api/saas/tenant/:id/invoice/find',
+	}, _invoiceCache);
+	
+	/**
+	 * یک فاکتور اجاره ملک جدید ایجاد می‌کند و ساختار ایجاد شده برای آنرا به عنوان نتیجه
+	 * برمی‌گرداند.
+	 * 
+	 * @memberof $saas
+	 * @param {Struct}
+	 *                tenantData ساختار داده‌ای فاکتور اجاره ملک
+	 * @return {promise<PInvoice>} فاکتور اجاره ملک ایجاد شده
+	 */
+	pTenant.prototype.newInvoice = $pluf.createNew({
+		method : 'POST',
+		url : '/api/saas/tenant/:id/invoice/new',
+	}, _invoiceCache);
+	
+	return pTenant;
 });
 
 /*
@@ -5100,8 +5335,14 @@ angular.module('pluf')
  * @name $saas
  * @memberof pluf.saas
  * @description مدیریت ملک و نرم افزارها را انجام می‌دهد.
+ * 
+ * این سرویس مدیریت ملک، نرم افزارها و پرداخت‌ها را انجام می‌دهد. بسته به اینکه ملک جاری چه دسترسی‌هایی داشته باشد
+ * نتیجه هر فراخوانی ممکن است متفاوت باشد. یا حتی برخی فراخوانی‌ها ممکن است برای یک ملک مجاز نباشد و با خطا مواجه شود.
+ * به عنوان مثال یک ملک ممکن است امکان مدیریت برخی اعمال مربوط به سایر ملک‌ها را داشته
+ * باشد (به عبارتی ملک یک ابرملک باشد).
  */
-.service('$saas', function($http, PTenant, PSpa, PObjectFactory, $pluf, $httpParamSerializerJQLike) {
+.service('$saas', function($http, PTenant, PSpa, PInvoice, PSaasGate, PSaasReceipt, 
+		PObjectFactory, PObjectCache, $pluf, $httpParamSerializerJQLike) {
 
 	var _tenantCache = new PObjectFactory(function(data) {
 		return new PTenant(data);
@@ -5111,8 +5352,20 @@ angular.module('pluf')
 		return new PSpa(data);
 	});
 
+	var _invoiceCache = new PObjectCache(function(data) {
+		return new PInvoice(data);
+	});
+
+	var _gateCache = new PObjectCache(function(data) {
+		return new PSaasGate(data);
+	});
+
+	var _receiptCache = new PObjectCache(function(data) {
+		return new PSaasReceipt(data);
+	});
+
 	/**
-	 * نمونه جاری را تعیین می‌کند. به صورت پیش فرض اجرای هر نرم افزار روی یک ملک
+	 * ملک جاری را تعیین می‌کند. به صورت پیش فرض اجرای هر نرم افزار روی یک ملک
 	 * اجرا می‌شود این فراخوانی ملکی را تعیین می‌کند که نرم افزار جاری روی آن
 	 * کار می‌کند.
 	 * 
@@ -5120,10 +5373,35 @@ angular.module('pluf')
 	 * @return {permision(PTenant)} ملک جاری را تعیین می‌کند.
 	 */
 	this.session = function() {
-		return $http.get('/api/tenant')//
+		return $http.get('/api/saas/tenant/current')//
 		.then(function(res) {
+			res.data.id = 'current';
 			return _tenantCache.restor(res.data.id, res.data);
 		});
+	};
+
+	/**
+	 * همان تابع session() است که ملک جاری را برمی‌گرداند
+	 * @see session()
+	 */
+	this.currentTenant = this.session;
+
+	/**
+	 * ملک جاری یا ملک تعیین شده با شناسه را برمی‌گرداند.
+	 * در صورتی که شناسه یک ملک به عنوان ورودی به این تابع داده شود، ملک با شناسه داده شده
+	 * برگردانده می‌شود. در صورتی که شناسه‌ای به عنوان ورودی داده نشود ملک جاری برگردانده می‌شود.
+	 * 
+	 * @memberof $saas
+	 * @param {integer|null}
+	 *                id شناسه ملک مورد نظر
+	 * @return {promise<PTenant>} ملک تعیین شده.
+	 */
+	this.tenant = function (id){
+		var myId = id ? id : 'current';
+		return $pluf.createGet({
+			url : '/api/saas/tenant/' + myId,
+			method : 'GET'
+		}, _tenantCache)();
 	};
 
 	/**
@@ -5137,20 +5415,7 @@ angular.module('pluf')
 	 */
 	this.tenants = $pluf.createFind({
 		method : 'GET',
-		url : '/api/tenant/find',
-	}, _tenantCache);
-
-	/**
-	 * ملک تعیین شده با شناسه را برمی‌گرداند.
-	 * 
-	 * @memberof $saas
-	 * @param {integer}
-	 *                id شناسه ملک مورد نظر
-	 * @return {promise<PTenant>} ملک تعیین شده.
-	 */
-	this.tenant = $pluf.createGet({
-		url : '/api/tenant/{id}',
-		method : 'GET'
+		url : '/api/saas/tenant/find',
 	}, _tenantCache);
 
 	/**
@@ -5164,7 +5429,7 @@ angular.module('pluf')
 	 */
 	this.newTenant = $pluf.createNew({
 		method : 'POST',
-		url : '/api/tenant/new',
+		url : '/api/saas/tenant/new',
 	}, _tenantCache);
 
 	/**
@@ -5259,6 +5524,81 @@ angular.module('pluf')
 			return res.data.value;
 		});
 	}
+
+	/**
+	 * فهرست تمام فاکتورهایی را تعیین می‌کند که برای ملک جاری در دسترس است.
+	 * 
+	 * @memberof $saas
+	 * @param {PaginatorParameter}
+	 *                paginatorParameter پارامترهای مورد استفاده در صفحه بندی
+	 * @return {promise<PaginatorPage<PInvoice>>} فهرست فاکتورهای ملک جاری
+	 */
+	this.invoices = $pluf.createFind({
+		method : 'GET',
+		url : '/api/saas/invoice/find',
+	}, _invoiceCache);
+
+	/**
+	 * فاکتور تعیین شده با شناسه را برمی‌گرداند.
+	 * 
+	 * @memberof $saas
+	 * @param {integer}
+	 *                id شناسه فاکتور اجاره ملک مورد نظر
+	 * @return {promise<PInvoice>} فاکتور اجاره ملک تعیین شده.
+	 */
+	this.invoice = $pluf.createGet({
+		url : '/api/saas/invoice/{id}',
+		method : 'GET'
+	}, _invoiceCache);
+
+
+	/**
+	 * Gets a saas-gate
+	 * 
+	 * @memberof $saas
+	 * @return Promise<PSaasGate> a saas-gate
+	 */
+	this.gate = $pluf.createGet({
+		method : 'GET',
+		url : '/api/saas/backend/{id}',
+	}, _gateCache);
+
+	/**
+	 * Lists all saas-gates
+	 * 
+	 * @memberof $saas
+	 * @param paginatorParam
+	 * @return Promise<PaginatorPage<PSaasGate>> gates list
+	 */
+	this.gates = $pluf.createFind({
+		method : 'GET',
+		url : '/api/saas/backend/find',
+	}, _gateCache);
+
+
+	/**
+	 * Gets saas-receipt detail by id or secure id
+	 * 
+	 * @memberof $bank
+	 * @return Promise<PSaasReceipt> created receipt
+	 * 
+	 */
+	this.receipt = $pluf.createGet({
+		method : 'GET',
+		url : '/api/saas/receipt/{id}',
+	}, _receiptCache);
+
+	/**
+	 * Lists all receipts
+	 * 
+	 * @memberof $bank
+	 * @return Promise<PaginatorPage<PSaasReceipt>> list of receipts
+	 * 
+	 */
+	this.receipts = $pluf.createFind({
+		method : 'GET',
+		url : '/api/saas/receipt/find',
+	}, _receiptCache);
 });
 
 /*
