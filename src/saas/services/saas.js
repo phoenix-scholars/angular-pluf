@@ -78,38 +78,6 @@ angular.module('pluf')
 	 */
 	this.currentTenant = this.session;
 
-//	/**
-//	 * ملک جاری یا ملک تعیین شده با شناسه را حذف می‌کند.
-//	 * در صورتی که شناسه یک ملک به عنوان ورودی به این تابع داده شود، ملک با شناسه داده شده
-//	 * حذف می‌شود. در صورتی که شناسه‌ای به عنوان ورودی داده نشود ملک جاری حذف می‌شود.
-//	 * 
-//	 * @memberof PTenant
-//	 * @return {promise<PTenant>} ملک حذف شده
-//	 */
-//	this.deleteTenant = function(id){
-//		var myId = id ?  id : 'current';
-//		return $pluf.createDelete({
-//			method : 'DELETE',
-//			url : '/api/saas/tenant/' + myId
-//		})();
-//	};
-//
-//	/**
-//	 * اطلاعات ملک جاری یا ملک تعیین شده با شناسه را به روزرسانی می‌کند.
-//	 * در صورتی که شناسه یک ملک به عنوان پارامتر دوم ورودی به این تابع داده شود، ملک با شناسه داده شده
-//	 * به روزرسانی می‌شود. در صورتی که شناسه‌ای به عنوان پارامتر دوم ورودی داده نشود ملک جاری به روزرسانی می‌شود.
-//	 * 
-//	 * @memberof PTenant
-//	 * @return {promise<PTenant>} خود ملک
-//	 */
-//	this.updateTenant = function(data, id){
-//		var myId = id ? id : 'current';
-//		return $pluf.createUpdate({
-//			method : 'POST',
-//			url : '/api/saas/tenant/' + myId
-//		})(data);
-//	};
-
 	/**
 	 * ملک جاری یا ملک تعیین شده با شناسه را برمی‌گرداند.
 	 * در صورتی که شناسه یک ملک به عنوان ورودی به این تابع داده شود، ملک با شناسه داده شده
