@@ -67,7 +67,7 @@ angular.module('pluf')
 		function($http, $q, $pluf, PObject, PObjectFactory, $injector) {
 
 	var _profileCache = new PObjectFactory(function(data) {
-		if (!this.PRole) {
+		if (!this.PProfile) {
 			this.PProfile = $injector.get('PProfile');
 		}
 		return new this.PProfile(data);
@@ -86,7 +86,7 @@ angular.module('pluf')
 	});
 	var _messageCache = new PObjectFactory(function(data) {
 		if (!this.PMessage) {
-			this.PProfile = $injector.get('PMessage');
+			this.PMessage = $injector.get('PMessage');
 		}
 		return new this.PMessage(data);
 	});

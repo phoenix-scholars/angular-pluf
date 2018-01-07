@@ -34,8 +34,12 @@ angular.module('pluf')
  *              شامل شماره تماس است اما در سیستم کتابداری پروفایل شما شامل شماره
  *              دانشجویی است.
  * 
- * طبعت متغیر این مدل داده‌ای منجر به این شده که این مدل یک مدل کلی به صورت کلید
- * مقدار باشد که شما می‌توانید مقادیر مورد نظر خود را در آن اضافه و کم کنید.
+ * چون پروفایل در سیستم‌های مختلف متفاوت است و فیلدهای مختلفی دارد یک مدل کلی به
+ * صورت کلید مقدار برای پروفایل در نظر گرفته شده است. به این صورت که شما
+ * می‌توانید مقادیر مورد نظر خود را در آن اضافه و کم کنید.
+ * 
+ * به طور مثال فیلدهای زیر در پروفایل‌های مختلف دیده می‌شود با این حال این
+ * ساختار داده‌ای هیچ اجباری برای این فیلدها در پروفایل وجود ندارد.
  * 
  * @attr {Integer} id شناسه
  * @attr {Integer} user شناسه حساب کاربری مربوط به این پروفایل
@@ -52,68 +56,68 @@ angular.module('pluf')
  * @attr {Datetime} modif_dtime تاریخ و زمان آخرین به‌روزرسانی
  */
 .factory('PProfile', function($http, $httpParamSerializerJQLike, $q, PObject) {
-    /*
-     * یک نمونه جدید از این موجودیت ایجاد می کند.
-     */
-    var pProfile = function(data) {
-	if (data) {
-	    this.setData(data);
-	}
-    };
+	/*
+	 * یک نمونه جدید از این موجودیت ایجاد می کند.
+	 */
+	var pProfile = function(data) {
+		if (data) {
+			this.setData(data);
+		}
+	};
 
-    pProfile.prototype = new PObject();
+	pProfile.prototype = new PObject();
 
-    /**
-     * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور انتقال
-     * می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای اعمال شده در
-     * این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و با بارگذاری دوباره
-     * سیستم، به حالت اولیه برگردانده خواهد شد
-     * 
-     * @memberof PProfile
-     * 
-     * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
-     */
-    pProfile.prototype.update = function() {
-	if (!(this.user && this.user > 0)) {
-	    var deferred = $q.defer();
-	    deferred.reject();
-	    return deferred.promise;
-	}
-	var scope = this;
-	return $http({
-	    method : 'POST',
-	    url : '/api/user/' + this.user + '/profile',
-	    data : $httpParamSerializerJQLike(scope),
-	    headers : {
-		'Content-Type' : 'application/x-www-form-urlencoded'
-	    }
-	}).then(function(res) {
-	    scope.setData(res.data);
-	    return scope;
-	});
-    };
+	/**
+	 * تغییرهای اعمال شده در ساختار داده‌ای پروفایل کاربری را به سرور انتقال
+	 * می‌دهد. تا زمانی که این فراخوانی انجام نشود، تمام تغییرهای اعمال شده در
+	 * این ساختار داده‌ای تنها در برنامه کاربر خواهد بود و با بارگذاری دوباره
+	 * سیستم، به حالت اولیه برگردانده خواهد شد
+	 * 
+	 * @memberof PProfile
+	 * 
+	 * @return {promise(PProfile)} ساختار داده‌ای پرفایل کاربری
+	 */
+	pProfile.prototype.update = function() {
+		if (!(this.user && this.user > 0)) {
+			var deferred = $q.defer();
+			deferred.reject();
+			return deferred.promise;
+		}
+		var scope = this;
+		return $http({
+			method : 'POST',
+			url : '/api/user/' + this.user + '/profile',
+			data : $httpParamSerializerJQLike(scope),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
+		}).then(function(res) {
+			scope.setData(res.data);
+			return scope;
+		});
+	};
 
-    /**
-     * پروفایل کاربری را حذف می کند
-     * 
-     * @memberof PProfile
-     * 
-     * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف شده
-     */
-    pProfile.prototype.remove = function() {
-	var scope = this;
-	return $http({
-	    method : 'DELETE',
-	    url : '/api/user/' + this.user + '/profile',
-	    data : $httpParamSerializerJQLike(scope),
-	    headers : {
-		'Content-Type' : 'application/x-www-form-urlencoded'
-	    }
-	}).then(function(data) {
-	    scope.setData(data.data);
-	    return scope;
-	});
-    };
+	/**
+	 * پروفایل کاربری را حذف می کند
+	 * 
+	 * @memberof PProfile
+	 * 
+	 * @returns {promise(PProfile)} ساختار داده‌ای پروفایل کاربری حذف شده
+	 */
+	pProfile.prototype.remove = function() {
+		var scope = this;
+		return $http({
+			method : 'DELETE',
+			url : '/api/user/' + this.user + '/profile',
+			data : $httpParamSerializerJQLike(scope),
+			headers : {
+				'Content-Type' : 'application/x-www-form-urlencoded'
+			}
+		}).then(function(data) {
+			scope.setData(data.data);
+			return scope;
+		});
+	};
 
-    return pProfile;
+	return pProfile;
 });
