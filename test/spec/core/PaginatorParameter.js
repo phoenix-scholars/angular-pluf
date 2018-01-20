@@ -46,6 +46,8 @@ describe('Core object: PaginatorParameter', function() {
 		var soArr = pag.getParameter()._px_so;
 		expect(skArr.length).toEqual(2);
 		expect(soArr.length).toEqual(2);
+		expect(skArr.indexOf('s1')).not.toBeLessThan(0);
+		expect(soArr.indexOf('v1')).not.toBeLessThan(0);
 	});
 	
 	it('check filter params', function() {
@@ -56,6 +58,8 @@ describe('Core object: PaginatorParameter', function() {
 		var fvArr = pag.getParameter()._px_fv;
 		expect(fkArr.length).toEqual(2);
 		expect(fvArr.length).toEqual(2);
+		expect(fkArr.indexOf('f1')).not.toBeLessThan(0);
+		expect(fvArr.indexOf('v1')).not.toBeLessThan(0);
 	});
 
 });
