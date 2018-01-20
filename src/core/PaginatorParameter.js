@@ -49,7 +49,29 @@ angular.module('pluf')
 	var pagParam = function() {
 		// init
 		this.param = {};
+		this.filterMap = {};
+		this.sortMap = {};
+		
+		this._init_filters = function(){
+			var obj = this.filterMap;
+			this.param._px_fk = Object.keys(obj);
+			// this.param._px_fv = Object.values(obj);
+			this.param._px_fv = [];
+			for(var key in this.param._px_fk){
+				this.param._px_fv[key] = obj[key];
+			}
+		};
+		this._init_sorts = function(){
+			var obj = this.sortMap;
+			this.param._px_sk = Object.keys(obj);
+			// this.param._px_so = Object.values(obj);
+			this.param._px_so = [];
+			for(var key in this.param._px_sk){
+				this.param._px_so[key] = obj[key];
+			}
+		};
 	};
+
 	pagParam.prototype = {
 		setSize : function(size) {
 			this.param._px_c = size;
@@ -83,13 +105,47 @@ angular.module('pluf')
 		},
 
 		setOrder : function($key, $order) {
-			this.param._px_sk = $key;
-			this.param._px_so = $order;
+			if(!$order){				
+				this.removeSorter($key, $order);
+			}else{				
+				this.addSorter($key, $order);
+			}
+			this._init_sorts();
+			return this;
+		},
+		addSorter : function($key, $order){
+			if(!$order){
+				return this;
+			}
+			this.sortMap[$key] = $order;
+			this._init_sorts();
+			return this;
+		},
+		removeSorter : function($key){
+			delete this.sortMap[$key];
+			this._init_sorts();
 			return this;
 		},
 		setFilter : function($key, $value) {
-			this.param._px_fk = $key;
-			this.param._px_fv = $value;
+			if(!$value){				
+				this.removeFilter($key, $value);
+			}else{				
+				this.addFilter($key, $value);
+			}
+			this._init_filters();
+			return this;
+		},
+		addFilter : function($key, $value){
+			if(!$value){
+				return this;
+			}
+			this.filterMap[$key] = $value;
+			this._init_filters();
+			return this;
+		},
+		removeFilter : function($key){
+			delete this.filterMap[$key];
+			this._init_filters();
 			return this;
 		},
 		getParameter : function() {
