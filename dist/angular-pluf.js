@@ -2592,8 +2592,9 @@ angular.module('pluf')
 			this.param._px_fk = Object.keys(obj);
 			// this.param._px_fv = Object.values(obj);
 			this.param._px_fv = [];
-			for(var key in this.param._px_fk){
-				this.param._px_fv[key] = obj[key];
+			for(var index=0; index<this.param._px_fk.length; index++){
+				var key = this.param._px_fk[index];
+				this.param._px_fv[index] = obj[key];
 			}
 		};
 		this._init_sorts = function(){
@@ -2601,8 +2602,9 @@ angular.module('pluf')
 			this.param._px_sk = Object.keys(obj);
 			// this.param._px_so = Object.values(obj);
 			this.param._px_so = [];
-			for(var key in this.param._px_sk){
-				this.param._px_so[key] = obj[key];
+			for(var index=0; index<this.param._px_sk.length; index++){
+				var key = this.param._px_sk[index];
+				this.param._px_so[index] = obj[key];
 			}
 		};
 	};
