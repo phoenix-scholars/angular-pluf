@@ -3918,6 +3918,7 @@ angular.module('pluf')
 	 * @return {function}
 	 */
 	this.createFind = function(params, _cache) {
+		params.method = params.method || 'GET';
 		var urlTemplate = params.url;
 		return function(paginatorParameter) {
 			if (paginatorParameter) {
@@ -3948,6 +3949,7 @@ angular.module('pluf')
 	 * @return {function}
 	 */
 	this.createGet = function(params, _cache) {
+		params.method = params.method || 'GET';
 		var urlTemplate = params.url;
 		return function(id) {
 			if (_cache.contains(id)) {
@@ -3968,6 +3970,7 @@ angular.module('pluf')
 	 * 
 	 */
 	this.createUpdate = function(params) {
+		params.method = params.method || 'POST';
 		params.headers = {
 				'Content-Type' : 'application/x-www-form-urlencoded'
 		};
@@ -3991,6 +3994,7 @@ angular.module('pluf')
 	 * 
 	 */
 	this.createDelete = function(params) {
+		params.method = params.method || 'DELETE';
 		var urlTemplate = params.url;
 		return function() {
 			var scope = this;
@@ -4014,6 +4018,7 @@ angular.module('pluf')
 	 * @return {function}
 	 */
 	this.createDeleteAss = function(params, _cache) {
+		params.method = params.method || 'DELETE';
 		var urlTemplate = params.url;
 		return function(child) {
 			var scope = this;
@@ -4041,6 +4046,7 @@ angular.module('pluf')
 	 * @return {function}
 	 */
 	this.createNew = function(params, _cache) {
+		params.method = params.method || 'POST';
 		params.headers = {
 				'Content-Type' : 'application/x-www-form-urlencoded'
 		};
@@ -4059,7 +4065,7 @@ angular.module('pluf')
 	 * Create a get method
 	 */
 	this.get = function(params, _cache) {
-		params.method = 'GET';
+		params.method = params.method || 'GET';
 		if (params.url.indexOf(':') === 0) {
 			// No need to create path dynamically
 			return function(data) {
@@ -4104,7 +4110,7 @@ angular.module('pluf')
 	 * @return {function}
 	 */
 	this.post = function(params, _cache){
-		params.method = 'POST';
+		params.method = params.method || 'POST';
 		params.headers = {
 				'Content-Type' : 'application/x-www-form-urlencoded'
 		};
@@ -4129,7 +4135,7 @@ angular.module('pluf')
 	 * 
 	 */
 	this.put = function (params, _cache){
-		params.method = 'PUT';
+		params.method = params.method || 'PUT';
 		var urlTemplate = params.url;
 		return function(data, pathParam) {
 			if (!data) {
@@ -4151,6 +4157,7 @@ angular.module('pluf')
 	};
 	
 });
+
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
  * 
