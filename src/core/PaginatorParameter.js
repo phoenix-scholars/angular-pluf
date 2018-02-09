@@ -128,6 +128,10 @@ angular.module('pluf')
 			this._init_sorts();
 			return this;
 		},
+		clearSorters: function(){
+			this.sortMap = {};
+		},
+		
 		setFilter : function($key, $value) {
 			if(!$value){				
 				this.removeFilter($key, $value);
@@ -150,6 +154,10 @@ angular.module('pluf')
 			this._init_filters();
 			return this;
 		},
+		clearFilters: function(){
+			this.filterMap = {};
+		},
+		
 		getParameter : function() {
 			return this.param;
 		},
