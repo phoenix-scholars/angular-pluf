@@ -76,7 +76,7 @@ angular.module('pluf')
 
 	pagParam.prototype = {
 		setSize : function(size) {
-			this.param._px_c = size;
+			this.param._px_ps = size;
 			return this;
 		},
 		setQuery : function(query) {
