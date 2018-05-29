@@ -2132,7 +2132,8 @@ angular.module('pluf')
 		if (!this._cache[id]) {
 			return null;
 		}
-		if (this._cache[id].isAnonymous() || this._cache[id].isExpired()) {
+		if (this._cache[id].isAnonymous() || 
+				(angular.isFunction(this._cache[id].isExpired) && this._cache[id].isExpired())) {
 			delete this._cache[id];
 			return null;
 		}
