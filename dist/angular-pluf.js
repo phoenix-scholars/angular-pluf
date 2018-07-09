@@ -1907,233 +1907,6 @@ angular.module('pluf')
 'use strict';
 angular.module('pluf')
 
-/**
- * @memberof pluf
- * @ngdoc factory
- * @name PMenu
- * @description
- * یک منو در حقیقت یک فهرست از منو ایتم‌ها است که در نمایش‌ها به کار گرفته می‌شود. برنامه‌ها
- * می‌توانند منوهای مورد نظر خود را ثبت کرده و در در مکان‌های مورد نظر به کار ببرند. برای ایجاد
- * یک منو می‌توان به دو روش عمل کرد:
- *
- * - ایجاید یک نمونه از این موجودیت
- * - استفاده از سرویس $menu
- *
- * منوهای که به صورت مستقیم ایجاد بشن در سیستم مدیریت منوها ثبت نیستند و نمی‌شه مجدد از آنها
- * استفاده کرد. بهترین روش برای ایجاد یک منو استفاده از سرویس $menu است.
- *
- * @attr {PMenuItem} items فهرست تمام منوها و منوایتم‌هایی که توی این منو قرار دارند. این
- * خصوصیت یکی از مهم‌ترین خصوصیت‌های منو است.
- *
- * @attr {string[]} tags فهرستی از برچسب‌ها را تعیین می‌کند که به این منو داده می‌شود. از
- * این برچسب‌ها برای دسته بندی منوها استفاده می‌شود.
- *
- * @attr {integer} priority
- * اولویت این منو را تعیین می‌کند. در مواردی که نیاز است چندین منو با هم نمایش داده شوند از این
- * خصوصیت برای مرتب ساز آنها استفاده می‌شود.
- *
- * @example
- * <ul>
- * 	<li ng-repete="m in menu.items"
- * 		ng-click="m.active()"
- * 		ng-show="m.visible()">{{m.label}}</li>
- * </ul>
- */
-.factory('PMenu', function() {
-  var pMenu  = function(data) {
-    this.priority = 0;
-    this.tags = [];
-    if (data) {
-      this.setData(data);
-    }
-    this.items = [];
-  };
-  /**
-   * داده‌های اولیه دستور را تعیین می‌کند.
-   *
-   * @memberof PMenu
-   * @param  {object} data ساختار داده اولیه برای ایجاد دستور
-   * @return {PMenu}  خود دستور به عنوان نتیجه برگردانده می‌ود.
-   */
-  pMenu.prototype.setData = function(data) {
-   angular.extend(this, data);
-   return this;
-  };
-
-  /**
-   * یک دستگیره جدید را به فهرست دستگیره‌های موجود در این دستور اضافه می‌کند.
-   *
-   * @memberof PMenu
-   * @param  {PHandler} handler دستگیره جدید برای این دستور
-   * @return {PMenu}   خود دستور به عنوان نتیجه برگردانده می‌شود.
-   */
-  pMenu.prototype.item = function(h){
-    this.items.push(h);
-    return this;
-  };
-
-  /**
-   * تمام منوهایی موجود را حذف می‌کند
-   * 
-   * @memberof PMenu
-   */
-  pMenu.prototype.clear = function(){
-      this.items.splice(0);
-      return this;
-  };
-  
-  /**
-   * یک برچسب جدید به منو اضافه می‌کند. مهم‌ترین کاربرد این برچسب‌ها فهرست کردن و نمایش دسته
-   * بندی شده منوها است.
-   *
-   * @memberof PMenu
-   * @param  {string} tag برچسب جدید
-   * @return {PMenu}   خود دستور را به عنوان نتیجه برمی‌گرداند.
-   */
-  pMenu.prototype.tag = function(tag){
-    this.tags.push(tag);
-  };
-  return pMenu;
-});
-
-/*
- * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-'use strict';
-angular.module('pluf')
-
-/**
- * @memberof pluf
- * @ngdoc factory
- * @name PMenuItem
- * @description یک منو را ایجاد می‌کند
- * 
- * این کلاس یک گزینه از منو را ایجاد می‌کند. هر منو ایتم شامل دو دسته اطلاعات
- * می‌شود که یک دسته برای نمایش و یک دسته برای اجرا است. داده‌هایی که برای نمایش
- * به کار می‌روند محدودیت ندارند و کاربر هر کلید و یا مقداری را می‌تواند برای
- * آنها تعیین کند. اما داده‌های که برای اجرا به کار می‌روند محدود بود و باید
- * حتما مقادیر خاصی برای آنها تعیین شود.
- * 
- * @tutorial menuitem-command
- */
-.factory('PMenuItem', function($window, $act) {
-	var pMenuItem = function(data) {
-		this.priority = 0;
-		this.tags = [];
-		if (data) {
-			this.setData(data);
-		}
-	};
-	/**
-	 * داده‌های اولیه دستور را تعیین می‌کند.
-	 * 
-	 * @memberof PMenuItem
-	 * @param {object}
-	 *            data ساختار داده اولیه برای ایجاد دستور
-	 * @return {pCommand} خود دستور به عنوان نتیجه برگردانده می‌ود.
-	 */
-	pMenuItem.prototype.setData = function(data) {
-		if ('command' in data) {
-			var scope = this;
-			$act.getCommand(data.command).then(function(command) {
-				angular.extend(scope, command);
-				angular.extend(scope, data);
-			});
-		} else {
-			angular.extend(this, data);
-		}
-		return this;
-	};
-
-	/**
-	 * یک برچسب جدید به فهرست برچسب‌های این ایتم اضافه می‌کند. این برچسب‌ها برای
-	 * دسته بندی کردن عمل‌ها در لایه نمایش کاربرد دارد.
-	 * 
-	 * @memberof PMenuItem
-	 * @param {string}
-	 *            tag برچسب جدید
-	 * @return {PCommand} خود دستور را به عنوان نتیجه برمی‌گرداند.
-	 */
-	pMenuItem.prototype.tag = function(tag) {
-		this.tags.push(tag);
-	};
-
-	/**
-	 * منو را فعال کرده و برنامه‌های معادل با آن را اجرا می‌کند. بر اساس اینکه
-	 * توی منو چه داده‌هایی قرار گرفته باشه، اجرا منو متفاوت هست. این فراخوانی
-	 * به ترتیب داده‌های زیر را بررسی کرده و در صورت موجود بودن اجرا می‌کند:
-	 * 
-	 * <ul>
-	 * <li>command</li>
-	 * <li>actioin</li>
-	 * <li>link</li>
-	 * </ul>
-	 * 
-	 */
-	pMenuItem.prototype.active = function() {
-		if ('command' in this) {
-			var args = [ this.command ];
-			if (this.params instanceof Array) {
-				args = args.concat(this.params);
-			}
-			return $act.execute.apply($act, args);
-		} else if ('action' in this) {
-			return this.action();
-		} else if ('link' in this) {
-			$window.location = this.link;
-			return;
-		}
-		throw {
-			status : 404,
-			code : 523,
-			message : 'Menu item is not supported'
-		};
-	};
-	return pMenuItem;
-});
-
-/*
- * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-'use strict';
-angular.module('pluf')
-
 
 /**
  * @memberof pluf
@@ -2359,7 +2132,8 @@ angular.module('pluf')
 		if (!this._cache[id]) {
 			return null;
 		}
-		if (this._cache[id].isAnonymous() || this._cache[id].isExpired()) {
+		if (this._cache[id].isAnonymous() || 
+				(angular.isFunction(this._cache[id].isExpired) && this._cache[id].isExpired())) {
 			delete this._cache[id];
 			return null;
 		}
@@ -2611,7 +2385,7 @@ angular.module('pluf')
 
 	pagParam.prototype = {
 		setSize : function(size) {
-			this.param._px_c = size;
+			this.param._px_ps = size;
 			return this;
 		},
 		setQuery : function(query) {
@@ -2663,6 +2437,10 @@ angular.module('pluf')
 			this._init_sorts();
 			return this;
 		},
+		clearSorters: function(){
+			this.sortMap = {};
+		},
+		
 		setFilter : function($key, $value) {
 			if(!$value){				
 				this.removeFilter($key, $value);
@@ -2685,6 +2463,10 @@ angular.module('pluf')
 			this._init_filters();
 			return this;
 		},
+		clearFilters: function(){
+			this.filterMap = {};
+		},
+		
 		getParameter : function() {
 			return this.param;
 		},
@@ -3513,284 +3295,6 @@ angular.module('pluf')
 
 angular.module('pluf')
 
-
-/**
- * @memberof pluf
- * @ngdoc service
- * @name $menu
- * @description
- * معمولا توی برنامه‌های گرافیکی نیاز دارید دسته‌ای از عمل‌های و دستورها را به صورت یک منو نمایش
- * بدید. برای نمونه نوار ابزاری که بالای یک صفحه میاد یک نمونه از منوهایی است که توی نرم افزارها
- * استفاده می‌شه. یا اینکه منوهای کشویی که از سمت راست و یا چپ صفحه نمایش داده می‌شن هم
- * از این نمونه‌ها هستن.
- *
- * بدترین راه حل این هست که هرجا لازم داشتیم یک فهرست از عمل‌ها رو ایجاد کنیم و توی نمایش قرار
- * بدیم اما این کار مشکل‌هایی  اساسی داره که عبارتند از:
- *
- * - کدهایی با یک کارکرد توی سیستم تکرار می‌شن و مدیریتش مشکل می‌شه
- * - لایه نمایش پیچیده می‌شه
- * - تست عمل‌های اضافه شده مشکل می‌شه
- *
- * نمی‌خوام بگم که بهترین راه حل اینکه بیایم تمام عمل‌ها بزاریم توی یه لیست و این لیست رو هرجایی
- * استفاده کنیم. ولی حداقل این هست که می‌تونیم کارهای پر کاربرد رو به صورت متمرکز تعریف کنیم و
- * از هرجایی استفاده کنیم. توی سیستم مثل اکلیپس از این تکنیک استفاده شده و ما هم اینجا استفاده
- * کردیم.
- *
- * روال کلی این هست که دسته‌ای از دستورها و عمل‌های دلخواه رو با یک کلید به عنوان منو ذخیره
- * می‌کنید و هرجایی که لازم داشتید این منو رو نمایش میدید. یکی از مهم‌ترین کارهایی که می‌تونید
- * استفاده کنید دستورهایی مثل ورود و خروج کاربر هست.
- *
- * با این کار هر کنترولی از سیستم می‌تونه یه سری دستور جدید به منو اضافه کن و با بزرگ شدن نرم افزار
- * این منو هم به صورت خودکار رشد خواهد کرد. نکته اینکه دستورها رو تو خود کنترولها اضافه نکنید مخصوصا
- * زمانی که از مدلهای ng-route استفاده می‌کنید.
- *
- * @example
- * // Create header menu in app
- * angular.module('myApp')
- * 	.run(function($menu){
- * 		$menu.addItem('header', {
- * 			command: 'usr.login'
- * 		}).addItem('header', {
- * 			command: 'logout'
- * 		});
- * 	});
- *
- * @example
- * // Assigne header menu into scope variable
- * angular.module('myApp').controller('SidebarController', function($scope, $menu){
- * 	$scope.menu = $menu.menu('header');
- * });
- *
- * @example
- * <!-- Show all action in menu -->
- * <ul>
- * 	<li ng-repeat="m in menu.items"
- * 			ng-show="m.visible">{{m.label}}</li>
- * </ul>
- */
-.service('$menu', function($q, $timeout, PMenu, PMenuItem) {
-    /**
-     * مخزنی از تمام منوها ایجاد می‌کند. این مخزن می‌تواند به صورت مستقیم در سایر نمایش‌ها و سرویس‌ها
-     * استفاده شود.
-     *
-     * @type {Array}
-     */
-    this.menus = [];
-
-    /*
-     * یک منوایتم رو به منوهای موجود اضافه می‌کند. در صورتی که منو معادل وجود نداشته باشد یک نمونه
-     * جدید برای آن ایجاد خواهد کردم.
-     */
-    this._addMenu = function(id, menu) {
-	if (!(id in this.menus)) {
-	    this.menus[id] = new PMenu({'id': id});
-	}
-	this.menus[id].item(menu);
-    };
-
-    /**
-     * یک منو را با شناسه تعیین شده بازیابی می‌کند. در صورتی که منو با شناسه در مورد نظر موجود
-     * نباشد یک نمونه برای آن ایجاد شده و به عنوان نتیجه برگردانده می‌شود.
-     *
-     * @memberof $menu
-     * @param  {string} id شناسه منو مورد نظر
-     * @return {promise(PMenu)} منوی ایجاد شده
-     */
-    this.menu = function(id) {
-	if (!(id in this.menus)) {
-	    this.menus[id] = new PMenu({'id':id});
-	}
-	return this.menus[id];
-    };
-
-    /**
-     * یک گزینه جدید به منو اضافه می‌کند. این روش اضافه کردن منو کلی است و همواره یک منوایتم
-     * به عنوان گزینه جدید اضافه خواهد شد.
-     *
-     * @memberof $menu
-     * @param {string} شناسه منو مورد نظر
-     * @param {object} داده‌های مورد نیاز برای ایجاد منوایتم
-     */
-    this.addItem = function(id, menu) {
-	this._addMenu(id, new PMenuItem(menu));
-	return this;
-    };
-});
-
-/*
- * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-'use strict';
-
-angular.module('pluf')
-
-
-/**
- * @memberof pluf
- * @ngdoc service
- * @name $notify
- * @description
- * تمام سیستم‌های گرافیکی نیاز به اعلام هشدار و یا پیام‌هایی به کاربران هستند. یکی از راه‌های مناسب
- * برای انجام این کار استفاده از سیستم هشدار است. این سرویس توسط بخش‌های متفاوت گرافیکی
- * شنود می‌شود و با صدور یک پیام، آن را به کاربران نشان می‌دهد.
- *
- * ساختار داده‌ای در نظر گرفته شده برای پیام‌ها کاملا باز است و کاربران می‌توانند هر ساختار داده‌ای را
- * به عنوان پیام ارسال کنند. به صورت پیش فرض ساختاری مانند ساختار زیر به عنوان یک پیام در نظر
- * گرفته می‌شود:
- *
- * <pre><code>
- * {
- * 	title: 'message title',
- * 	message: 'message body',
- * 	action: function(){
- * 		// Message action
- * 	}
- * }
- * </code></pre>
- *
- * این که در سیستم‌های نرم‌افزاری این پیام دقیقا چطور نمایش داده می‌شود کاملا وابسطه به واسط گرافیکی
- * است و طراح گرافیکی در این زمینه کاملا آزاد است. در ادامه دسته‌ای از نمونه‌ها برای استفاده از این
- * سرویس آورده شده است.
- *
- * @example
- * //add info
- * $notify.info({
- * 	title: 'my title',
- * 	message: 'my message'
- * })
- *
- * @example
- * //add error
- * $notify.error({
- * 	title: 'network error',
- * 	message: 'network is not reachable. click to retry',
- * 	action: function(){
- * 		// Trye to reconnect
- * 	}
- * })
- *
- * @example
- * $notify.onMessage(function(message){
- * 	// message is instanceof PMessage
- * 	openDialot(message);
- * })
- */
-.service('$notify', function($rootScope, $timeout, $q, PMessage) {
-	/*
-	 * فهرست شنودگرهای
-	 */
-	this._listeners = [];
-	this._fire = function(list, m) {
-		var deferred = $q.defer();
-		var ms= [];
-		ms.push(new PMessage(m));
-		$timeout(function() {
-			for (var i = 0; i < list.length; i++) {
-				list[i].apply(list[i], ms);
-			}
-			deferred.resolve();
-		}, 10);
-		return deferred.promise;
-	};
-	/**
-	 * یک شنودگر جدید را به فهرست تمام شنودگرها اضافه می‌کند. در صورتی که پیامی در سیستم منتشر
-	 * این شنودگر اجرا خواهد شد.
-	 * @memberof $notify
-	 * @param  {function} listener متدی که باید اجرا شود.
-	 * @return {$notify}   خود سرویس
-	 */
-	this.onMessage = function(l) {
-		this._listeners.push(l);
-		return this;
-	};
-	/**
-	 * یک پیام را به عنوان یک خبر معمولی در سیستم منتشر می‌کند.
-	 * @memberof $notify
-	 * @param  {PMessage} message یک پیام معمولی را تعیین می‌کند.
-	 * @return {promise()}      دستگیره‌ای برای اجرای تمام شنودگرها
-	 */
-	this.info = function(message) {
-		message.type= 'info';
-		return this._fire(this._listeners, message);
-	};
-
-	/**
-	 * یک پیام را به عنوان یک خبر معمولی در سیستم منتشر می‌کند.
-	 * @memberof $notify
-	 * @param  {PMessage} message یک پیام معمولی را تعیین می‌کند.
-	 * @return {promise()}      دستگیره‌ای برای اجرای تمام شنودگرها
-	 */
-	this.warning = function(message) {
-		message.type= 'warning';
-		return this._fire(this._listeners, message);
-	};
-
-	/**
-	 * یک پیام را به عنوان یک خبر معمولی در سیستم منتشر می‌کند.
-	 * @memberof $notify
-	 * @param  {PMessage} message یک پیام معمولی را تعیین می‌کند.
-	 * @return {promise()}      دستگیره‌ای برای اجرای تمام شنودگرها
-	 */
-	this.debug = function(message) {
-		message.type= 'debug';
-		return this._fire(this._listeners, message);
-	};
-
-	/**
-	 * یک پیام را به عنوان یک خبر معمولی در سیستم منتشر می‌کند.
-	 * @memberof $notify
-	 * @param  {PMessage} message یک پیام معمولی را تعیین می‌کند.
-	 * @return {promise()}      دستگیره‌ای برای اجرای تمام شنودگرها
-	 */
-	this.error = function(message) {
-		message.type= 'error';
-		return this._fire(this._listeners, message);
-	};
-});
-
-/*
- * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-'use strict';
-
-angular.module('pluf')
-
 /**
  * @memberof pluf
  * @ngdoc service
@@ -3918,6 +3422,7 @@ angular.module('pluf')
 	 * @return {function}
 	 */
 	this.createFind = function(params, _cache) {
+		params.method = params.method || 'GET';
 		var urlTemplate = params.url;
 		return function(paginatorParameter) {
 			if (paginatorParameter) {
@@ -3948,6 +3453,7 @@ angular.module('pluf')
 	 * @return {function}
 	 */
 	this.createGet = function(params, _cache) {
+		params.method = params.method || 'GET';
 		var urlTemplate = params.url;
 		return function(id) {
 			if (_cache.contains(id)) {
@@ -3968,6 +3474,7 @@ angular.module('pluf')
 	 * 
 	 */
 	this.createUpdate = function(params) {
+		params.method = params.method || 'POST';
 		params.headers = {
 				'Content-Type' : 'application/x-www-form-urlencoded'
 		};
@@ -3991,6 +3498,7 @@ angular.module('pluf')
 	 * 
 	 */
 	this.createDelete = function(params) {
+		params.method = params.method || 'DELETE';
 		var urlTemplate = params.url;
 		return function() {
 			var scope = this;
@@ -4014,6 +3522,7 @@ angular.module('pluf')
 	 * @return {function}
 	 */
 	this.createDeleteAss = function(params, _cache) {
+		params.method = params.method || 'DELETE';
 		var urlTemplate = params.url;
 		return function(child) {
 			var scope = this;
@@ -4041,6 +3550,7 @@ angular.module('pluf')
 	 * @return {function}
 	 */
 	this.createNew = function(params, _cache) {
+		params.method = params.method || 'POST';
 		params.headers = {
 				'Content-Type' : 'application/x-www-form-urlencoded'
 		};
@@ -4059,7 +3569,7 @@ angular.module('pluf')
 	 * Create a get method
 	 */
 	this.get = function(params, _cache) {
-		params.method = 'GET';
+		params.method = params.method || 'GET';
 		if (params.url.indexOf(':') === 0) {
 			// No need to create path dynamically
 			return function(data) {
@@ -4104,7 +3614,7 @@ angular.module('pluf')
 	 * @return {function}
 	 */
 	this.post = function(params, _cache){
-		params.method = 'POST';
+		params.method = params.method || 'POST';
 		params.headers = {
 				'Content-Type' : 'application/x-www-form-urlencoded'
 		};
@@ -4129,7 +3639,7 @@ angular.module('pluf')
 	 * 
 	 */
 	this.put = function (params, _cache){
-		params.method = 'PUT';
+		params.method = params.method || 'PUT';
 		var urlTemplate = params.url;
 		return function(data, pathParam) {
 			if (!data) {
@@ -4151,6 +3661,7 @@ angular.module('pluf')
 	};
 	
 });
+
 /*
  * Copyright (c) 2015 Phoenix Scholars Co. (http://dpq.co.ir)
  * 
