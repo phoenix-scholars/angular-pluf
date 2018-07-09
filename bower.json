@@ -1,5 +1,5 @@
 {
-	"version": "1.2.3",
+	"version": "1.2.4",
 	"name": "angular-pluf",
 	"description": "AngularJS client for Pluf framework",
 	"homepage": "https://github.com/phoenix-scholars/angular-pluf",
@@ -24,9 +24,6 @@
 	"dependencies": {
 		"angular": "1.7.x",
 		"moment-jalaali": "^0.5.1"
-	},
-	"resolutions": {
-		"angular": "1.7.x"
 	},
 	"devDependencies": {
 		"angular-mocks": "1.7.x"
